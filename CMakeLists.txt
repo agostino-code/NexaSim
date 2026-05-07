@@ -21,8 +21,6 @@ option(WITH_INET "Build Artery with INET framework integration" ON)
 option(WITH_VEINS "Build Artery with Veins framework integration" ON)
 
 # Various extensions, adjust them as needed.
-option(WITH_SIMULTE "Build Artery with SimuLTE integration" OFF)
-option(WITH_OTS "Build Artery with support for OpenTrafficSim" OFF)
 option(WITH_TESTBED "Build Artery with testbed feature" OFF)
 option(WITH_ENVMOD "Build Artery with environment model feature" ON)
 option(WITH_STORYBOARD "Build Artery with storyboard feature" ON)
@@ -68,18 +66,15 @@ include(GNUInstallDirs)
 # are set.
 
 find_package(Protobuf QUIET)
-find_package(PkgConfig MODULE QUIET)
 find_package(SEA_V2X CONFIG QUIET)
-
-if(PkgConfig_FOUND)
-    pkg_check_modules(ZEROMQ QUIET IMPORTED_TARGET libzmq)
-endif()
 
 if(SEA_V2X_FOUND)
     mark_as_advanced(SEA_V2X_DIR)
 endif()
 
-add_subdirectory(extern)
+find_package(vanetza REQUIRED)
+find_package(inet REQUIRED)
+find_package(space_veins REQUIRED)
 
 ##########################
 # Primary Artery targets #
@@ -109,8 +104,6 @@ endmacro()
 
 add_subdirectory(src/traci)
 add_subdirectory(src/artery)
-
-add_artery_subdirectory(src/ots REQUIRES INET PkgConfig::ZEROMQ SWITCH WITH_OTS)
 
 # scenarios directory is part of repository but omitted for Docker build context
 if(WITH_SCENARIOS)

@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "type": "command",
+        "command": "python .github/hooks/scripts/restrict-host-commands.py",
+        "timeout": 5000
+      }
+    ]
+  }
+}

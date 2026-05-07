@@ -1,6 +1,0 @@
----
-omnetpp_version: 5.7.1
-omnetpp_checksum: md5:98aab18c7ca876a539240a3be95bf47e
-omnetpp_archive: omnetpp-{{ omnetpp_version }}-src-linux.tgz
-omnetpp_url: https://github.com/omnetpp/omnetpp/releases/download/omnetpp-{{ omnetpp_version }}/{{ omnetpp_archive }}
-omnetpp_dir: /opt/omnetpp-{{ omnetpp_version }}

@@ -26,7 +26,6 @@ target_sources(core PRIVATE
     RtcmMockService.cc
     StationType.cc
     StationaryMiddleware.cc
-    StoryboardSignal.cc
     Timer.cc
     TransportDispatcher.cc
     VehicleDataProvider.cc

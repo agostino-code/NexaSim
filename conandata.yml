@@ -2,3 +2,6 @@ requirements:
   boost: "1.86.0"
   cryptopp: "8.9.0"
   geographiclib: "2.3"
+  vanetza: "26.02"
+  space_veins: "0.3"
+  inet: "4.2.2"

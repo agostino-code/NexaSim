@@ -26,22 +26,14 @@ target_link_libraries(core PUBLIC
     ${Boost_LIBRARIES}
     OmnetPP::envir
     traci
-    Vanetza::vanetza
+    vanetza::vanetza
 )
 
 add_artery_subdirectory(veins SWITCH WITH_VEINS)
 add_artery_subdirectory(inet SWITCH WITH_INET)
-add_artery_subdirectory(storyboard SWITCH WITH_STORYBOARD)
-
-add_artery_subdirectory(transfusion REQUIRES protobuf::libprotobuf SWITCH WITH_TRANSFUSION)
-add_artery_subdirectory(testbed REQUIRES INET SWITCH WITH_TESTBED)
-
-if(TARGET lte)
-    # SimuLTE is a non-integral feature: add it to "artery" but not "core"
-    target_link_libraries(artery INTERFACE lte)
-endif()
 
 add_artery_subdirectory(envmod REQUIRES INET SWITCH WITH_ENVMOD)
+
 if(WITH_ENVMOD)
     set_property(SOURCE application/VehicleMiddleware.cc APPEND PROPERTY COMPILE_DEFINITIONS "WITH_ENVMOD")
 endif()

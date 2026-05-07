@@ -5,4 +5,4 @@ target_sources(core PRIVATE
     VeinsRadioDriver.cc
 )
 
-target_link_libraries(core PUBLIC veins)
+target_link_libraries(core PUBLIC space_veins::space_veins)

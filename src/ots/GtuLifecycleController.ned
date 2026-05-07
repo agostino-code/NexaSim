@@ -1,5 +1,0 @@
-package ots;
-
-moduleinterface GtuLifecycleController
-{
-}
