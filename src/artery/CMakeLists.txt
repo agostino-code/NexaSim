@@ -26,13 +26,14 @@ target_link_libraries(core PUBLIC
     ${Boost_LIBRARIES}
     OmnetPP::envir
     traci
-    vanetza::vanetza
+    Vanetza::vanetza
 )
 
 add_artery_subdirectory(veins SWITCH WITH_VEINS)
 add_artery_subdirectory(inet SWITCH WITH_INET)
+add_artery_subdirectory(ntn SWITCH WITH_NTN)
 
-add_artery_subdirectory(envmod REQUIRES INET SWITCH WITH_ENVMOD)
+add_artery_subdirectory(envmod REQUIRES inet::inet SWITCH WITH_ENVMOD)
 
 if(WITH_ENVMOD)
     set_property(SOURCE application/VehicleMiddleware.cc APPEND PROPERTY COMPILE_DEFINITIONS "WITH_ENVMOD")
