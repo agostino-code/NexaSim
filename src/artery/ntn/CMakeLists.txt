@@ -4,6 +4,6 @@ set_target_properties(core PROPERTIES
 )
 
 target_sources(core PRIVATE
-    LEO_Satellite.cc
-    GroundStation.cc
+    LEO_SatelliteManager.cc
+    GroundStationManager.cc
 )

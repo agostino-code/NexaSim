@@ -2,6 +2,12 @@ package artery.ntn;
 
 import space_veins.modules.nic.SatelliteNic;
 
+simple GroundStationManager
+{
+    parameters:
+        @display("i=block/cogwheel");
+}
+
 module GroundStation
 {
     parameters:
@@ -11,8 +17,11 @@ module GroundStation
     gates:
         input radioIn;
     submodules:
+        manager: GroundStationManager {
+            @display("p=100,50");
+        }
         nic: <nicType> {
-            @display("p=100,100");
+            @display("p=100,120");
         }
         mobility: inet.mobility.static.StaticMobility {
             @display("p=100,200");
