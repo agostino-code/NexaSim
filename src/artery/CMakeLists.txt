@@ -32,6 +32,7 @@ target_link_libraries(core PUBLIC
 add_artery_subdirectory(veins SWITCH WITH_VEINS)
 add_artery_subdirectory(inet SWITCH WITH_INET)
 add_artery_subdirectory(ntn SWITCH WITH_NTN)
+add_artery_subdirectory(nr SWITCH WITH_SIMU5G)
 
 add_artery_subdirectory(envmod REQUIRES inet::inet SWITCH WITH_ENVMOD)
 
