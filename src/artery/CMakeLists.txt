@@ -4,6 +4,7 @@ add_subdirectory(traci)
 add_subdirectory(utility)
 add_subdirectory(networking)
 add_subdirectory(application)
+add_subdirectory(hybrid)
 
 target_sources(core PRIVATE
     StaticNodeManager.cc

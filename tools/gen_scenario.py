@@ -318,13 +318,22 @@ import artery.ntn.GroundStation;
 import artery.ntn.UserTerminalNode;
 import artery.nr.GNB;
 import artery.nr.UE;
+import traci.Manager;
 import inet.physicallayer.unitdisk.UnitDiskRadioMedium;
+import inet.physicallayer.ieee80211.packetlevel.Ieee80211ScalarRadioMedium;
+import inet.visualizer.integrated.IntegratedCanvasVisualizer;
 
 network GeneratedScenario
 {{
     parameters:
-        @display("bgb=1200,800");
+        @display("bgb=1600,1000");
     submodules:
+        visualizer: IntegratedCanvasVisualizer {{
+            @display("p=50,50");
+        }}
+        traci: Manager {{
+            @display("p=50,150");
+        }}
         constellationManager: ConstellationManager {{
             parameters:
                 constellationType = "{self.constellation.get('type', 'starlink_shell')}";
@@ -341,6 +350,9 @@ network GeneratedScenario
         }}
         nrRadioMedium: UnitDiskRadioMedium {{
             @display("p=200,150");
+        }}
+        wlanRadioMedium: Ieee80211ScalarRadioMedium {{
+            @display("p=200,250");
         }}
         satellite[{len(self.satellites)}]: LEO_Satellite {{
             @display("p=400,100");
@@ -449,19 +461,91 @@ seed-set = {seed}
             # Output configuration
             f.write(f"""
 # Satellite Interface & MAC Defaults
-**.mac.typename = "AckingMac"
-**.mac.bitrate = 100Mbps
-**.mac.headerLength = 32B
-**.mac.fullDuplex = true
-**.mac.useAck = false
+*.satellite[*].**.mac.typename = "AckingMac"
+*.satellite[*].**.mac.bitrate = 100Mbps
+*.satellite[*].**.mac.headerLength = 32B
+*.satellite[*].**.mac.fullDuplex = true
+*.satellite[*].**.mac.useAck = false
 
-**.radio.typename = "UnitDiskRadio"
-**.radio.radioMediumModule = "radioMedium"
-**.radio.transmitter.communicationRange = 9999999km
-**.radio.transmitter.bitrate = 100Mbps
-**.radio.transmitter.headerLength = 8bit
-**.radio.transmitter.preambleDuration = 0s
-**.radio.receiver.ignoreInterference = true
+*.groundStation[*].**.mac.typename = "AckingMac"
+*.groundStation[*].**.mac.bitrate = 100Mbps
+*.groundStation[*].**.mac.headerLength = 32B
+*.groundStation[*].**.mac.fullDuplex = true
+*.groundStation[*].**.mac.useAck = false
+
+*.gnb[*].**.mac.typename = "AckingMac"
+*.gnb[*].**.mac.bitrate = 100Mbps
+*.gnb[*].**.mac.headerLength = 32B
+*.gnb[*].**.mac.fullDuplex = true
+*.gnb[*].**.mac.useAck = false
+
+*.ue[*].**.mac.typename = "AckingMac"
+*.ue[*].**.mac.bitrate = 100Mbps
+*.ue[*].**.mac.headerLength = 32B
+*.ue[*].**.mac.fullDuplex = true
+*.ue[*].**.mac.useAck = false
+
+*.userTerminal[*].**.mac.typename = "AckingMac"
+*.userTerminal[*].**.mac.bitrate = 100Mbps
+*.userTerminal[*].**.mac.headerLength = 32B
+*.userTerminal[*].**.mac.fullDuplex = true
+*.userTerminal[*].**.mac.useAck = false
+
+*.satellite[*].**.radio.typename = "UnitDiskRadio"
+*.satellite[*].**.radio.radioMediumModule = "radioMedium"
+*.satellite[*].**.radio.transmitter.communicationRange = 9999999km
+*.satellite[*].**.radio.transmitter.bitrate = 100Mbps
+*.satellite[*].**.radio.transmitter.headerLength = 8bit
+*.satellite[*].**.radio.transmitter.preambleDuration = 0s
+*.satellite[*].**.radio.receiver.ignoreInterference = true
+
+*.groundStation[*].**.radio.typename = "UnitDiskRadio"
+*.groundStation[*].**.radio.radioMediumModule = "radioMedium"
+*.groundStation[*].**.radio.transmitter.communicationRange = 9999999km
+*.groundStation[*].**.radio.transmitter.bitrate = 100Mbps
+*.groundStation[*].**.radio.transmitter.headerLength = 8bit
+*.groundStation[*].**.radio.transmitter.preambleDuration = 0s
+*.groundStation[*].**.radio.receiver.ignoreInterference = true
+
+*.gnb[*].**.radio.typename = "UnitDiskRadio"
+*.gnb[*].**.radio.radioMediumModule = "radioMedium"
+*.gnb[*].**.radio.transmitter.communicationRange = 9999999km
+*.gnb[*].**.radio.transmitter.bitrate = 100Mbps
+*.gnb[*].**.radio.transmitter.headerLength = 8bit
+*.gnb[*].**.radio.transmitter.preambleDuration = 0s
+*.gnb[*].**.radio.receiver.ignoreInterference = true
+
+*.ue[*].**.radio.typename = "UnitDiskRadio"
+*.ue[*].**.radio.radioMediumModule = "radioMedium"
+*.ue[*].**.radio.transmitter.communicationRange = 9999999km
+*.ue[*].**.radio.transmitter.bitrate = 100Mbps
+*.ue[*].**.radio.transmitter.headerLength = 8bit
+*.ue[*].**.radio.transmitter.preambleDuration = 0s
+*.ue[*].**.radio.receiver.ignoreInterference = true
+
+*.userTerminal[*].**.radio.typename = "UnitDiskRadio"
+*.userTerminal[*].**.radio.radioMediumModule = "radioMedium"
+*.userTerminal[*].**.radio.transmitter.communicationRange = 9999999km
+*.userTerminal[*].**.radio.transmitter.bitrate = 100Mbps
+*.userTerminal[*].**.radio.transmitter.headerLength = 8bit
+*.userTerminal[*].**.radio.transmitter.preambleDuration = 0s
+*.userTerminal[*].**.radio.receiver.ignoreInterference = true
+
+*.node[*].satNic.mac.typename = "AckingMac"
+*.node[*].satNic.mac.bitrate = 100Mbps
+*.node[*].satNic.mac.headerLength = 32B
+*.node[*].satNic.mac.fullDuplex = true
+*.node[*].satNic.mac.useAck = false
+*.node[*].satNic.radio.typename = "UnitDiskRadio"
+*.node[*].satNic.radio.radioMediumModule = "radioMedium"
+*.node[*].satNic.radio.transmitter.communicationRange = 9999999km
+*.node[*].satNic.radio.transmitter.bitrate = 100Mbps
+*.node[*].satNic.radio.transmitter.headerLength = 8bit
+*.node[*].satNic.radio.transmitter.preambleDuration = 0s
+*.node[*].satNic.radio.receiver.ignoreInterference = true
+
+*.node[*].wlan[*].radio.radioMediumModule = "wlanRadioMedium"
+*.wlanRadioMedium.carrierFrequency = 5.9GHz
 
 # Radio Medium & Dynamic 3GPP/ITU-R PathLoss Defaults
 **.radioMedium.backgroundNoise.power = -110dBm
@@ -473,7 +557,11 @@ seed-set = {seed}
 **.radioMedium.pathLoss.environmentType = "suburban"
 **.radioMedium.mediumLimitCache.carrierFrequency = 28GHz
 **.nrRadioMedium.mediumLimitCache.carrierFrequency = 3.5GHz
-**.interfaceTableModule = ""
+*.satellite[*].**.interfaceTableModule = ""
+*.groundStation[*].**.interfaceTableModule = ""
+*.gnb[*].**.interfaceTableModule = ""
+*.ue[*].**.interfaceTableModule = ""
+*.userTerminal[*].**.interfaceTableModule = ""
 **.energyStorageModule = ""
 
 # Antenna & Mobility Defaults
@@ -485,6 +573,42 @@ seed-set = {seed}
 **.vector-recording = true
 output-vector-file = "${{resultdir}}/${{configname}}-${{runnumber}}.vec"
 output-scalar-file = "${{resultdir}}/${{configname}}-${{runnumber}}.sca"
+
+# TraCI Co-Simulation with SUMO
+*.traci.launcher.typename = "PosixLauncher"
+*.traci.launcher.sumocfg = "stelvio.sumocfg"
+*.traci.launcher.sumo = "sumo"
+*.traci.core.version = 21
+*.traci.mapper.vehicleType = "artery.inet.HybridCar"
+*.traci.mapper.personType = "artery.inet.Person"
+*.traci.nodes.personSinkModule = ".mobility"
+*.traci.nodes.vehicleSinkModule = ".mobility"
+
+# =========================================================================
+# INET Canvas Visualizers (Matching squidslab/simu-scs-hybrid)
+# =========================================================================
+*.visualizer.dataLinkVisualizer.displayLinks = true
+*.visualizer.dataLinkVisualizer.lineColor = "darkcyan"
+*.visualizer.dataLinkVisualizer.packetFilter = "*"
+*.visualizer.dataLinkVisualizer.fadeTime = 1s
+
+*.visualizer.physicalLinkVisualizer.displayLinks = true
+*.visualizer.physicalLinkVisualizer.lineColor = "green"
+*.visualizer.physicalLinkVisualizer.fadeTime = 1s
+
+*.visualizer.mediumVisualizer.displaySignals = true
+*.visualizer.mediumVisualizer.signalColor = "gold"
+
+*.visualizer.mobilityVisualizer.displayVelocities = true
+*.visualizer.mobilityVisualizer.displayMovementTrails = true
+*.visualizer.mobilityVisualizer.trailLength = 20
+
+# =========================================================================
+# Hybrid Interface Management (Vertical Handover Strategies)
+# =========================================================================
+**.hybridManager.switchingMode = "qos-based"
+**.hybridManager.checkInterval = 0.5s
+**.hybridManager.elevationMaskDeg = 25.0
 """)
         
         print(f"Written: {ini_path}")

@@ -2,10 +2,16 @@
 #include "artery/inet/VanetRxControl.h"
 #include "artery/inet/VanetTxControl.h"
 #include "artery/networking/GeoNetIndication.h"
+#include "artery/networking/GeoNetPacket.h"
 #include "artery/networking/GeoNetRequest.h"
 #include "artery/nic/RadioDriverProperties.h"
 #include <inet/common/InitStages.h>
 #include <inet/common/ModuleAccess.h>
+#include <inet/common/ProtocolGroup.h>
+#include <inet/common/ProtocolTag_m.h>
+#include <inet/common/packet/chunk/cPacketChunk.h>
+#include <inet/linklayer/common/MacAddressTag_m.h>
+#include <inet/linklayer/common/UserPriorityTag_m.h>
 #include <inet/linklayer/ieee80211/mac/Ieee80211Mac.h>
 #include <inet/physicallayer/ieee80211/packetlevel/Ieee80211Radio.h>
 
@@ -93,42 +99,75 @@ void InetRadioDriver::handleMessage(cMessage* msg)
 void InetRadioDriver::handleDataRequest(cMessage* packet)
 {
 	auto request = check_and_cast<GeoNetRequest*>(packet->removeControlInfo());
-	auto ctrl = new VanetTxControl();
-	ctrl->setDest(convert(request->destination_addr));
-	ctrl->setSrc(convert(request->source_addr));
-	ctrl->setEtherType(request->ether_type.host());
+
+	auto inetPacket = new inet::Packet(packet->getName());
+	inetPacket->insertAtBack(inet::makeShared<inet::cPacketChunk>(check_and_cast<cPacket*>(packet)));
+
+	auto macReq = inetPacket->addTag<inet::MacAddressReq>();
+	macReq->setDestAddress(convert(request->destination_addr));
+	macReq->setSrcAddress(convert(request->source_addr));
+
+	auto upReq = inetPacket->addTag<inet::UserPriorityReq>();
 	switch (request->access_category) {
 		case vanetza::access::AccessCategory::VO:
-			ctrl->setUserPriority(7);
+			upReq->setUserPriority(7);
 			break;
 		case vanetza::access::AccessCategory::VI:
-			ctrl->setUserPriority(5);
+			upReq->setUserPriority(5);
 			break;
 		case vanetza::access::AccessCategory::BE:
-			ctrl->setUserPriority(3);
+			upReq->setUserPriority(3);
 			break;
 		case vanetza::access::AccessCategory::BK:
-			ctrl->setUserPriority(1);
+			upReq->setUserPriority(1);
 			break;
 		default:
-			throw cRuntimeError("mapping to user priority (UP) unknown");
+			upReq->setUserPriority(3);
+			break;
 	}
-	packet->setControlInfo(ctrl);
-	delete request;
 
-	send(packet, "lowerLayerOut");
+	static const inet::Protocol geoNetProto("geonet", "GeoNetworking");
+	if (inet::ProtocolGroup::ethertype.findProtocolNumber(&geoNetProto) == -1) {
+		inet::ProtocolGroup::ethertype.addProtocol(request->ether_type.host(), &geoNetProto);
+	}
+	inetPacket->addTagIfAbsent<inet::PacketProtocolTag>()->setProtocol(&geoNetProto);
+	inetPacket->addTagIfAbsent<inet::DispatchProtocolReq>()->setProtocol(&geoNetProto);
+
+	delete request;
+	send(inetPacket, "lowerLayerOut");
 }
 
 void InetRadioDriver::handleDataIndication(cMessage* packet)
 {
-	auto* info = check_and_cast<VanetRxControl*>(packet->removeControlInfo());
-	auto* indication = new GeoNetIndication();
-	indication->source = convert(info->getSrc());
-	indication->destination = convert(info->getDest());
-	packet->setControlInfo(indication);
-	delete info;
+	auto* inetPacket = dynamic_cast<inet::Packet*>(packet);
+	cPacket* innerPacket = nullptr;
+	inet::MacAddress srcAddr, destAddr;
 
-	indicateData(packet);
+	if (inetPacket) {
+		if (auto macInd = inetPacket->findTag<inet::MacAddressInd>()) {
+			srcAddr = macInd->getSrcAddress();
+			destAddr = macInd->getDestAddress();
+		}
+		try {
+			const auto& chunk = inetPacket->peekData<inet::cPacketChunk>();
+			if (chunk && chunk->getPacket()) {
+				innerPacket = chunk->getPacket()->dup();
+			}
+		} catch (const std::exception& e) {
+			innerPacket = nullptr;
+		}
+		delete inetPacket;
+	} else {
+		innerPacket = check_and_cast<cPacket*>(packet);
+	}
+
+	if (innerPacket) {
+		auto* indication = new GeoNetIndication();
+		indication->source = convert(srcAddr);
+		indication->destination = convert(destAddr);
+		innerPacket->setControlInfo(indication);
+		indicateData(innerPacket);
+	}
 }
 
 } // namespace artery

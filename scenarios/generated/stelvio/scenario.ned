@@ -8,12 +8,17 @@ import artery.nr.GNB;
 import artery.nr.UE;
 import traci.Manager;
 import inet.physicallayer.unitdisk.UnitDiskRadioMedium;
+import inet.physicallayer.ieee80211.packetlevel.Ieee80211ScalarRadioMedium;
+import inet.visualizer.integrated.IntegratedCanvasVisualizer;
 
 network GeneratedScenario
 {
     parameters:
-        @display("bgb=1200,800");
+        @display("bgb=1600,1000");
     submodules:
+        visualizer: IntegratedCanvasVisualizer {
+            @display("p=50,50");
+        }
         traci: Manager {
             @display("p=50,150");
         }
@@ -33,6 +38,9 @@ network GeneratedScenario
         }
         nrRadioMedium: UnitDiskRadioMedium {
             @display("p=200,150");
+        }
+        wlanRadioMedium: Ieee80211ScalarRadioMedium {
+            @display("p=200,250");
         }
         satellite[72]: LEO_Satellite {
             @display("p=400,100");

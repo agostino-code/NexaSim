@@ -4,7 +4,7 @@ import artery.application.VehicleMiddleware;
 import artery.networking.Vanetza;
 import artery.nic.IRadioDriver;
 import inet.node.inet.INetworkNode;
-import inet.linklayer.contract.IWirelessNic;
+import inet.linklayer.contract.IWirelessInterface;
 import inet.mobility.contract.IMobility;
 import inet.networklayer.common.InterfaceTable;
 
@@ -38,7 +38,7 @@ module Car like INetworkNode
                 @display("p=50,300");
         }
 
-        wlan[numRadios]: <default("VanetNic")> like IWirelessNic {
+        wlan[numRadios]: <default("VanetNic")> like IWirelessInterface {
             parameters:
                 @display("p=250,400,row,100;q=queue");
                 radio.antenna.mobilityModule = absPath(withAntennaMobility ? "^.antennaMobility" : "^.mobility");

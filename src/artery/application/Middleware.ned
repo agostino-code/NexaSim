@@ -19,8 +19,8 @@ simple Middleware like IMiddleware
 		@signal[StoryboardSignal](type=StoryboardSignal);
 
 		double updateInterval = default(0.1s) @unit(s);
-		string datetime;
-		xml services;
+		string datetime = default("2026-09-17 12:00:00");
+		xml services = default(xml("<services/>"));
 		xml mcoPolicy = default(xml("<mco default=\"CCH\" />"));
 
 		string positionProviderModule = default(".vanetza[0].position");

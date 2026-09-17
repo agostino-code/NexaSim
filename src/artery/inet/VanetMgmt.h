@@ -14,6 +14,8 @@ namespace artery
 
 class VanetMgmt : public inet::ieee80211::Ieee80211MgmtAdhoc
 {
+protected:
+    void handleCommand(int msgkind, omnetpp::cObject *ctrl) override {}
 };
 
 } // namespace artery

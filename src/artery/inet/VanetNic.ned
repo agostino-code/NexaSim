@@ -5,21 +5,21 @@ import inet.linklayer.ieee80211.Ieee80211Interface;
 module VanetNic extends Ieee80211Interface
 {
     parameters:
-        macType = default("VanetMac");
-        mgmtType = default("VanetMgmt");
+        mac.typename = default("VanetMac");
+        mgmt.typename = default("VanetMgmt");
         opMode = "p";
-        bitrate = default(6 Mbps);
+        bitrate = default(-1bps);
 
         mac.modeSet = opMode;
         mac.qosStation = true;
         mac.rx.typename = default("ChannelLoadRx");
 
-        radioType = default("VanetRadio");
-        radio.bandName = "5 GHz";
-        radio.bandwidth = 10 MHz;
-        radio.channelNumber = default(180);
+        radio.typename = default("VanetRadio");
+        radio.opMode = "p";
+        radio.bandName = "5.9 GHz";
+        radio.channelNumber = default(4);
         radio.carrierFrequency = default(5.9 GHz);
-        radio.receiverType = default("VanetReceiver");
+        radio.receiver.typename = default("VanetReceiver");
 
         mac.hcf.rateSelection.dataFrameBitrate = bitrate;
         mac.hcf.rateSelection.mgmtFrameBitrate = bitrate;

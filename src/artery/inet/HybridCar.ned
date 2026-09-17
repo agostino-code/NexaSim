@@ -1,11 +1,12 @@
 package artery.inet;
 
 import artery.application.VehicleMiddleware;
+import artery.hybrid.HybridInterfaceManager;
 import artery.networking.Vanetza;
 import artery.nic.IRadioDriver;
 import artery.ntn.UserTerminal;
 import inet.node.inet.INetworkNode;
-import inet.linklayer.contract.IWirelessNic;
+import inet.linklayer.contract.IWirelessInterface;
 import inet.mobility.contract.IMobility;
 import inet.networklayer.common.InterfaceTable;
 import space_veins.modules.nic.SatelliteInterface;
@@ -43,7 +44,7 @@ module HybridCar like INetworkNode
                 @display("p=50,300");
         }
 
-        wlan[numRadios]: <default("VanetNic")> like IWirelessNic {
+        wlan[numRadios]: <default("VanetNic")> like IWirelessInterface {
             parameters:
                 @display("p=250,400,row,100;q=queue");
                 radio.antenna.mobilityModule = absPath(withAntennaMobility ? "^.antennaMobility" : "^.mobility");
@@ -92,6 +93,11 @@ module HybridCar like INetworkNode
             parameters:
                 @display("p=250,100");
                 mobilityModule = ".mobility";
+        }
+
+        hybridManager: HybridInterfaceManager {
+            parameters:
+                @display("p=400,100");
         }
 
     connections allowunconnected:
