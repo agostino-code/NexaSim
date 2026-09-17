@@ -40,21 +40,16 @@ echo "[4/5] Starting NoVNC HTML5 WebSocket gateway on port 6080..."
 websockify --web /usr/share/novnc 6080 localhost:5900 &
 WEBSOCKIFY_PID=$!
 
-# 6. Launch SUMO-GUI in background on the virtual display
-echo "[5/5] Launching SUMO-GUI on virtual desktop..."
-sumo-gui -c /artery/scenarios/generated/stelvio/stelvio.sumocfg --start &
-SUMO_PID=$!
-
 echo ""
 echo "=========================================================="
-echo " NexaSim Dual GUI (OMNeT++ Qtenv + SUMO-GUI) is ready!    "
+echo " NexaSim OMNeT++ Qtenv Virtual Desktop is ready!          "
 echo " Connect via your browser: http://localhost:6080/vnc.html "
 echo "=========================================================="
 echo ""
 
-# Run OMNeT++ with Qtenv
+# Run OMNeT++ with Qtenv and override TraCI launcher to open SUMO-GUI
 if [ $# -eq 0 ]; then
-    bash /artery/tools/opp_run.sh -f /artery/scenarios/generated/stelvio/omnetpp.ini -u Qtenv
+    bash /artery/tools/opp_run.sh -f /artery/scenarios/generated/stelvio/omnetpp.ini -u Qtenv --*.traci.launcher.sumo=\"sumo-gui\"
 else
-    bash /artery/tools/opp_run.sh "$@" -u Qtenv
+    bash /artery/tools/opp_run.sh "$@" -u Qtenv --*.traci.launcher.sumo=\"sumo-gui\"
 fi
