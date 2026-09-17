@@ -1,0 +1,12 @@
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <vType id="car" accel="2.6" decel="4.5" sigma="0.5" length="4.5" minGap="2.5" maxSpeed="33.3" color="0,200,255"/>
+    <vType id="incident_car" accel="2.0" decel="5.0" sigma="0.2" length="4.8" minGap="2.5" maxSpeed="25.0" color="255,50,0"/>
+
+    <route id="r_uphill" edges="e_up_1 e_up_2 e_up_3 e_up_4 e_up_5 e_up_6"/>
+    <route id="r_downhill" edges="e_down_6 e_down_5 e_down_4 e_down_3 e_down_2 e_down_1"/>
+
+    <!-- 24 Vehicles distributed along the pass -->
+    <flow id="veh_up" type="car" route="r_uphill" begin="0" end="300" number="12" departLane="best" departSpeed="10.0"/>
+    <flow id="veh_down" type="car" route="r_downhill" begin="0" end="300" number="11" departLane="best" departSpeed="10.0"/>
+    <vehicle id="veh_incident_7" type="incident_car" route="r_uphill" depart="2.0" departLane="best" departSpeed="12.0"/>
+</routes>

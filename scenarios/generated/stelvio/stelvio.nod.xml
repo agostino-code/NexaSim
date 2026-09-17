@@ -1,0 +1,9 @@
+<nodes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/nodes_file.xsd">
+    <node id="trafoi" x="0.0" y="0.0" type="priority"/>
+    <node id="knott" x="800.0" y="300.0" type="priority"/>
+    <node id="franzenshohe" x="1600.0" y="900.0" type="priority"/>
+    <node id="tornante18" x="2200.0" y="1400.0" type="priority"/>
+    <node id="tornante4" x="2700.0" y="2100.0" type="priority"/>
+    <node id="summit" x="3200.0" y="2600.0" type="priority"/>
+    <node id="umbrail" x="3800.0" y="2800.0" type="priority"/>
+</nodes>

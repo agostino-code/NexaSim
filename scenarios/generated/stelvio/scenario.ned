@@ -6,6 +6,7 @@ import artery.ntn.GroundStation;
 import artery.ntn.UserTerminalNode;
 import artery.nr.GNB;
 import artery.nr.UE;
+import traci.Manager;
 import inet.physicallayer.unitdisk.UnitDiskRadioMedium;
 
 network GeneratedScenario
@@ -13,6 +14,9 @@ network GeneratedScenario
     parameters:
         @display("bgb=1200,800");
     submodules:
+        traci: Manager {
+            @display("p=50,150");
+        }
         constellationManager: ConstellationManager {
             parameters:
                 constellationType = "starlink_shell";

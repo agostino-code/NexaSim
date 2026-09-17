@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 2026-09-17 07:52:30 by Eclipse SUMO netconvert Version 1.21.0
+<netconvertConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <node-files value="/artery/scenarios/generated/stelvio/stelvio.nod.xml"/>
+        <edge-files value="/artery/scenarios/generated/stelvio/stelvio.edg.xml"/>
+    </input>
+
+    <output>
+        <output-file value="/artery/scenarios/generated/stelvio/stelvio.net.xml"/>
+    </output>
+
+</netconvertConfiguration>
+-->
+
+<net version="1.20" junctionCornerDetail="5" limitTurnSpeed="5.50" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
+
+    <location netOffset="0.00,0.00" convBoundary="0.00,0.00,3800.00,2800.00" origBoundary="0.00,0.00,3800.00,2800.00" projParameter="!"/>
+
+    <edge id=":franzenshohe_0" function="internal">
+        <lane id=":franzenshohe_0_0" index="0" speed="12.45" length="0.75" shape="1598.91,901.39 1598.81,901.20 1598.72,901.07 1598.61,900.96 1598.44,900.83"/>
+    </edge>
+    <edge id=":franzenshohe_1" function="internal">
+        <lane id=":franzenshohe_1_0" index="0" speed="8.09" length="2.24" shape="1600.36,898.27 1600.88,898.67 1601.21,898.99 1601.46,899.37 1601.77,899.96"/>
+    </edge>
+    <edge id=":knott_0" function="internal">
+        <lane id=":knott_0_0" index="0" speed="15.20" length="0.35" shape="799.32,301.49 799.24,301.43 799.18,301.39 799.12,301.36 799.02,301.31"/>
+    </edge>
+    <edge id=":knott_1" function="internal">
+        <lane id=":knott_1_0" index="0" speed="15.20" length="1.06" shape="800.33,298.40 800.62,298.53 800.81,298.63 800.99,298.75 801.24,298.93"/>
+    </edge>
+    <edge id=":summit_0" function="internal">
+        <lane id=":summit_0_0" index="0" speed="8.09" length="2.24" shape="3200.21,2601.76 3199.59,2601.54 3199.17,2601.34 3198.81,2601.06 3198.33,2600.60"/>
+    </edge>
+    <edge id=":summit_1" function="internal">
+        <lane id=":summit_1_0" index="0" speed="13.80" length="0.75" shape="3200.60,2598.33 3200.76,2598.49 3200.88,2598.58 3201.01,2598.65 3201.22,2598.72"/>
+    </edge>
+    <edge id=":tornante18_0" function="internal">
+        <lane id=":tornante18_0_0" index="0" speed="4.07" length="1.51" shape="2199.12,1402.11 2198.94,1401.77 2198.70,1401.49 2198.39,1401.29 2198.02,1401.16"/>
+    </edge>
+    <edge id=":tornante18_1" function="internal">
+        <lane id=":tornante18_1_0" index="0" speed="6.40" length="4.54" shape="2198.80,1398.05 2199.90,1398.45 2200.81,1399.07 2201.55,1399.89 2202.09,1400.92"/>
+    </edge>
+    <edge id=":tornante4_0" function="internal">
+        <lane id=":tornante4_0_0" index="0" speed="12.45" length="0.95" shape="2699.09,2101.36 2698.89,2101.16 2698.77,2101.01 2698.65,2100.86 2698.49,2100.62"/>
+    </edge>
+    <edge id=":tornante4_1" function="internal">
+        <lane id=":tornante4_1_0" index="0" speed="12.45" length="0.32" shape="2701.16,2098.85 2701.21,2098.93 2701.25,2098.98 2701.29,2099.03 2701.36,2099.09"/>
+    </edge>
+    <edge id=":trafoi_0" function="internal">
+        <lane id=":trafoi_0_0" index="0" speed="3.65" length="4.67" shape="-0.46,1.53 -1.38,0.42 -1.53,-0.46 -0.92,-1.11 0.46,-1.53"/>
+    </edge>
+    <edge id=":umbrail_0" function="internal">
+        <lane id=":umbrail_0_0" index="0" speed="3.65" length="4.67" shape="3800.51,2798.48 3801.39,2799.62 3801.52,2800.51 3800.89,2801.14 3799.49,2801.52"/>
+    </edge>
+
+    <edge id="e_down_1" from="knott" to="trafoi" priority="3" shape="800.00,300.00 400.00,120.00 0.00,0.00">
+        <lane id="e_down_1_0" index="0" speed="16.60" length="855.68" shape="799.02,301.31 399.44,121.50 -0.46,1.53"/>
+    </edge>
+    <edge id="e_down_2" from="franzenshohe" to="knott" priority="3" shape="1600.00,900.00 1200.00,600.00 800.00,300.00">
+        <lane id="e_down_2_0" index="0" speed="13.80" length="998.89" shape="1598.44,900.83 1199.04,601.28 799.32,301.49"/>
+    </edge>
+    <edge id="e_down_3" from="tornante18" to="franzenshohe" priority="3" shape="2200.00,1400.00 2000.00,1350.00 1900.00,1150.00 1700.00,1100.00 1600.00,900.00">
+        <lane id="e_down_3_0" index="0" speed="11.10" length="858.60" shape="2198.02,1401.16 1998.90,1351.37 1898.90,1151.37 1698.90,1101.37 1598.91,901.39"/>
+    </edge>
+    <edge id="e_down_4" from="tornante4" to="tornante18" priority="3" shape="2700.00,2100.00 2600.00,1950.00 2500.00,1750.00 2300.00,1650.00 2200.00,1400.00">
+        <lane id="e_down_4_0" index="0" speed="11.10" length="895.15" shape="2698.49,2100.62 2598.61,1950.80 2498.81,1751.19 2298.74,1651.16 2199.12,1402.11"/>
+    </edge>
+    <edge id="e_down_5" from="summit" to="tornante4" priority="3" shape="3200.00,2600.00 2900.00,2300.00 2700.00,2100.00">
+        <lane id="e_down_5_0" index="0" speed="13.80" length="706.03" shape="3198.33,2600.60 2898.87,2301.13 2699.09,2101.36"/>
+    </edge>
+    <edge id="e_down_6" from="umbrail" to="summit" priority="3" shape="3800.00,2800.00 3500.00,2700.00 3200.00,2600.00">
+        <lane id="e_down_6_0" index="0" speed="13.80" length="631.70" shape="3799.49,2801.52 3499.49,2701.52 3200.21,2601.76"/>
+    </edge>
+    <edge id="e_up_1" from="trafoi" to="knott" priority="3" shape="0.00,0.00 400.00,120.00 800.00,300.00">
+        <lane id="e_up_1_0" index="0" speed="16.60" length="856.10" shape="0.46,-1.53 400.56,118.50 800.33,298.40"/>
+    </edge>
+    <edge id="e_up_2" from="knott" to="franzenshohe" priority="3" shape="800.00,300.00 1200.00,600.00 1600.00,900.00">
+        <lane id="e_up_2_0" index="0" speed="13.80" length="998.89" shape="801.24,298.93 1200.96,598.72 1600.36,898.27"/>
+    </edge>
+    <edge id="e_up_3" from="franzenshohe" to="tornante18" priority="3" shape="1600.00,900.00 1700.00,1100.00 1900.00,1150.00 2000.00,1350.00 2200.00,1400.00">
+        <lane id="e_up_3_0" index="0" speed="11.10" length="855.66" shape="1601.77,899.96 1701.10,1098.63 1901.10,1148.63 2001.10,1348.63 2198.80,1398.05"/>
+    </edge>
+    <edge id="e_up_4" from="tornante18" to="tornante4" priority="3" shape="2200.00,1400.00 2300.00,1650.00 2500.00,1750.00 2600.00,1950.00 2700.00,2100.00">
+        <lane id="e_up_4_0" index="0" speed="11.10" length="894.45" shape="2202.09,1400.92 2301.26,1648.84 2501.19,1748.81 2601.39,1949.20 2701.16,2098.85"/>
+    </edge>
+    <edge id="e_up_5" from="tornante4" to="summit" priority="3" shape="2700.00,2100.00 2900.00,2300.00 3200.00,2600.00">
+        <lane id="e_up_5_0" index="0" speed="13.80" length="706.03" shape="2701.36,2099.09 2901.13,2298.87 3200.60,2598.33"/>
+    </edge>
+    <edge id="e_up_6" from="summit" to="umbrail" priority="3" shape="3200.00,2600.00 3500.00,2700.00 3800.00,2800.00">
+        <lane id="e_up_6_0" index="0" speed="13.80" length="631.70" shape="3201.22,2598.72 3500.51,2698.48 3800.51,2798.48"/>
+    </edge>
+
+    <junction id="franzenshohe" type="priority" x="1600.00" y="900.00" incLanes="e_down_3_0 e_up_2_0" intLanes=":franzenshohe_0_0 :franzenshohe_1_0" shape="1597.48,902.11 1603.20,899.24 1602.68,898.27 1602.45,897.95 1602.18,897.67 1601.82,897.37 1601.32,896.99">
+        <request index="0" response="00" foes="00" cont="0"/>
+        <request index="1" response="00" foes="00" cont="0"/>
+    </junction>
+    <junction id="knott" type="priority" x="800.00" y="300.00" incLanes="e_down_2_0 e_up_1_0" intLanes=":knott_0_0 :knott_1_0" shape="798.36,302.77 802.20,297.65 801.78,297.34 801.63,297.24 801.46,297.16 801.26,297.06 800.99,296.94">
+        <request index="0" response="00" foes="00" cont="0"/>
+        <request index="1" response="00" foes="00" cont="0"/>
+    </junction>
+    <junction id="summit" type="priority" x="3200.00" y="2600.00" incLanes="e_down_6_0 e_up_5_0" intLanes=":summit_0_0 :summit_1_0" shape="3199.70,2603.27 3201.73,2597.20 3197.20,2601.73 3198.00,2602.49 3198.32,2602.72 3198.67,2602.90 3199.11,2603.07">
+        <request index="0" response="00" foes="00" cont="0"/>
+        <request index="1" response="00" foes="00" cont="0"/>
+    </junction>
+    <junction id="tornante18" type="priority" x="2200.00" y="1400.00" incLanes="e_down_4_0 e_up_3_0" intLanes=":tornante18_0_0 :tornante18_1_0" shape="2197.64,1402.71 2203.58,1400.33 2202.55,1398.55 2201.87,1397.85 2201.09,1397.28 2200.19,1396.83 2199.19,1396.50">
+        <request index="0" response="00" foes="00" cont="0"/>
+        <request index="1" response="00" foes="00" cont="0"/>
+    </junction>
+    <junction id="tornante4" type="priority" x="2700.00" y="2100.00" incLanes="e_down_5_0 e_up_4_0" intLanes=":tornante4_0_0 :tornante4_1_0" shape="2697.96,2102.49 2702.49,2097.96 2697.16,2101.51 2697.43,2101.90 2697.53,2102.03 2697.63,2102.15 2697.77,2102.30">
+        <request index="0" response="00" foes="00" cont="0"/>
+        <request index="1" response="00" foes="00" cont="0"/>
+    </junction>
+    <junction id="trafoi" type="priority" x="0.00" y="0.00" incLanes="e_down_1_0" intLanes=":trafoi_0_0" shape="0.00,0.00 -0.92,3.07 0.00,0.00">
+        <request index="0" response="0" foes="0" cont="0"/>
+    </junction>
+    <junction id="umbrail" type="priority" x="3800.00" y="2800.00" incLanes="e_up_6_0" intLanes=":umbrail_0_0" shape="3800.00,2800.00 3801.01,2796.96 3800.00,2800.00">
+        <request index="0" response="0" foes="0" cont="0"/>
+    </junction>
+
+    <connection from="e_down_1" to="e_up_1" fromLane="0" toLane="0" via=":trafoi_0_0" dir="t" state="M"/>
+    <connection from="e_down_2" to="e_down_1" fromLane="0" toLane="0" via=":knott_0_0" dir="s" state="M"/>
+    <connection from="e_down_3" to="e_down_2" fromLane="0" toLane="0" via=":franzenshohe_0_0" dir="s" state="M"/>
+    <connection from="e_down_4" to="e_down_3" fromLane="0" toLane="0" via=":tornante18_0_0" dir="r" state="M"/>
+    <connection from="e_down_5" to="e_down_4" fromLane="0" toLane="0" via=":tornante4_0_0" dir="s" state="M"/>
+    <connection from="e_down_6" to="e_down_5" fromLane="0" toLane="0" via=":summit_0_0" dir="s" state="M"/>
+    <connection from="e_up_1" to="e_up_2" fromLane="0" toLane="0" via=":knott_1_0" dir="s" state="M"/>
+    <connection from="e_up_2" to="e_up_3" fromLane="0" toLane="0" via=":franzenshohe_1_0" dir="s" state="M"/>
+    <connection from="e_up_3" to="e_up_4" fromLane="0" toLane="0" via=":tornante18_1_0" dir="l" state="M"/>
+    <connection from="e_up_4" to="e_up_5" fromLane="0" toLane="0" via=":tornante4_1_0" dir="s" state="M"/>
+    <connection from="e_up_5" to="e_up_6" fromLane="0" toLane="0" via=":summit_1_0" dir="s" state="M"/>
+    <connection from="e_up_6" to="e_down_6" fromLane="0" toLane="0" via=":umbrail_0_0" dir="t" state="M"/>
+
+    <connection from=":franzenshohe_0" to="e_down_2" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from=":franzenshohe_1" to="e_up_3" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from=":knott_0" to="e_down_1" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from=":knott_1" to="e_up_2" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from=":summit_0" to="e_down_5" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from=":summit_1" to="e_up_6" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from=":tornante18_0" to="e_down_3" fromLane="0" toLane="0" dir="r" state="M"/>
+    <connection from=":tornante18_1" to="e_up_4" fromLane="0" toLane="0" dir="l" state="M"/>
+    <connection from=":tornante4_0" to="e_down_4" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from=":tornante4_1" to="e_up_5" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from=":trafoi_0" to="e_up_1" fromLane="0" toLane="0" dir="t" state="M"/>
+    <connection from=":umbrail_0" to="e_down_6" fromLane="0" toLane="0" dir="t" state="M"/>
+
+</net>
