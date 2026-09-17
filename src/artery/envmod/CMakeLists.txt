@@ -18,3 +18,5 @@ add_artery_feature(envmod
     service/CollectivePerceptionMockService.cc
     service/EnvmodPrinter.cc
 )
+
+target_link_libraries(envmod PUBLIC INET::INET)

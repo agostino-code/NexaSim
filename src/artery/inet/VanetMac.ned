@@ -1,14 +1,14 @@
 package artery.inet;
 
 import inet.linklayer.ieee80211.IIeee80211Mac;
-import inet.linklayer.ieee80211.mac.MACProtocolBase;
+import inet.linklayer.base.MacProtocolBase;
 import inet.linklayer.ieee80211.mac.contract.IRx;
 import inet.linklayer.ieee80211.mac.contract.IStatistics;
 import inet.linklayer.ieee80211.mac.contract.ITx;
 import inet.linklayer.ieee80211.mac.coordinationfunction.Dcf;
 
 // VanetMac is almost identical to INET's Ieee80211Mac except for the "hcf" submodule
-module VanetMac extends MACProtocolBase like IIeee80211Mac
+module VanetMac extends MacProtocolBase like IIeee80211Mac
 {
     parameters:
         string address = default("auto"); // MAC address as hex string (12 hex digits), or
@@ -29,6 +29,9 @@ module VanetMac extends MACProtocolBase like IIeee80211Mac
         @statistic[rcvdPkFromLL](title="packets received from lower layer"; source=packetReceivedFromLower; record=count,"sum(packetBytes)","vector(packetBytes)"; interpolationmode=none);
 
         @signal[NF_MODESET_CHANGED](type=inet::physicallayer::Ieee80211ModeSet);
+    gates:
+        input mgmtIn;
+        output mgmtOut;
     submodules:
         dcf: Dcf {
             parameters:

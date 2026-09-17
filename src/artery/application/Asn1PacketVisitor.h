@@ -23,6 +23,9 @@
 #include <vanetza/net/osi_layer.hpp>
 #include <boost/variant/static_visitor.hpp>
 #include <omnetpp/clog.h>
+#ifdef PI
+#undef PI
+#endif
 #include <memory>
 #include <typeinfo>
 

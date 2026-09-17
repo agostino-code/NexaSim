@@ -8,6 +8,10 @@
 #include "artery/inet/AntennaMobility.h"
 #include "artery/utility/InitStages.h"
 
+#include <omnetpp.h>
+
+using namespace omnetpp;
+
 namespace artery
 {
 

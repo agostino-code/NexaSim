@@ -24,4 +24,4 @@ target_sources(core PRIVATE
     VanetTxControl.cc
 )
 
-target_link_libraries(core PUBLIC inet::inet)
+target_link_libraries(core PUBLIC INET::INET)

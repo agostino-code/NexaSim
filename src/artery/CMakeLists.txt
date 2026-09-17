@@ -20,6 +20,8 @@ set_target_properties(core PROPERTIES
 target_include_directories(core PUBLIC
     ${PROJECT_SOURCE_DIR}/src
     ${Boost_INCLUDE_DIRS}
+    $<TARGET_PROPERTY:Vanetza::vanetza,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:INET::INET,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 target_link_libraries(core PUBLIC
@@ -27,14 +29,15 @@ target_link_libraries(core PUBLIC
     OmnetPP::envir
     traci
     Vanetza::vanetza
+    INET::INET
 )
 
 add_artery_subdirectory(veins SWITCH WITH_VEINS)
 add_artery_subdirectory(inet SWITCH WITH_INET)
-add_artery_subdirectory(ntn SWITCH WITH_NTN)
-add_artery_subdirectory(nr SWITCH WITH_SIMU5G)
+add_artery_subdirectory(ntn REQUIRES space_veins::space_veins SWITCH WITH_NTN)
+add_artery_subdirectory(nr REQUIRES Simu5G::simu5g SWITCH WITH_SIMU5G)
 
-add_artery_subdirectory(envmod REQUIRES inet::inet SWITCH WITH_ENVMOD)
+add_artery_subdirectory(envmod REQUIRES INET::INET SWITCH WITH_ENVMOD)
 
 if(WITH_ENVMOD)
     set_property(SOURCE application/VehicleMiddleware.cc APPEND PROPERTY COMPILE_DEFINITIONS "WITH_ENVMOD")

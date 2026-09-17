@@ -2,7 +2,8 @@
 #define ARTERY_ANTENNAMOBILITY_H_BMWHZWNJ
 
 #include <inet/mobility/contract/IMobility.h>
-#include <inet/common/geometry/common/Rotation.h>
+#include <inet/common/geometry/common/EulerAngles.h>
+#include <inet/common/geometry/common/Quaternion.h>
 
 namespace artery
 {
@@ -13,9 +14,11 @@ public:
     // inet::IMobility interface
     double getMaxSpeed() const override;
     inet::Coord getCurrentPosition() override;
-    inet::Coord getCurrentSpeed() override;
-    inet::EulerAngles getCurrentAngularPosition() override;
-    inet::EulerAngles getCurrentAngularSpeed() override;
+    inet::Coord getCurrentVelocity() override;
+    inet::Coord getCurrentAcceleration() override;
+    inet::Quaternion getCurrentAngularPosition() override;
+    inet::Quaternion getCurrentAngularVelocity() override;
+    inet::Quaternion getCurrentAngularAcceleration() override;
     inet::Coord getConstraintAreaMax() const override;
     inet::Coord getConstraintAreaMin() const override;
 
@@ -27,7 +30,7 @@ private:
     inet::IMobility* mParentMobility = nullptr;
     inet::Coord mOffsetCoord;
     inet::EulerAngles mOffsetAngles;
-    inet::Rotation mOffsetRotation;
+    inet::Quaternion mOffsetRotation;
 };
 
 } // namespace artery

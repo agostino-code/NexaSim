@@ -9,9 +9,11 @@
 #include "artery/envmod/sensor/BaseSensor.h"
 #include "artery/application/Middleware.h"
 #include "artery/application/Facilities.h"
-#include "artery/utility/Identity.h"
 #include <inet/common/ModuleAccess.h>
+#include <omnetpp.h>
 #include <cassert>
+
+using namespace omnetpp;
 
 namespace artery
 {

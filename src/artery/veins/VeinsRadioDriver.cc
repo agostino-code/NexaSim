@@ -45,27 +45,6 @@ vanetza::MacAddress convert(veins::LAddress::L2Type addr)
     }
 }
 
-int user_priority(vanetza::access::AccessCategory ac)
-{
-    using AC = vanetza::access::AccessCategory;
-    int up = 0;
-    switch (ac) {
-        case AC::BK:
-            up = 1;
-            break;
-        case AC::BE:
-            up = 3;
-            break;
-        case AC::VI:
-            up = 5;
-            break;
-        case AC::VO:
-            up = 7;
-            break;
-    }
-    return up;
-}
-
 const simsignal_t channelBusySignal = veins::Mac1609_4::sigChannelBusy;
 
 } // namespace
@@ -127,7 +106,7 @@ void VeinsRadioDriver::handleDataRequest(cMessage* packet)
     frame->encapsulate(check_and_cast<cPacket*>(packet));
     frame->setSenderAddress(convert(request->source_addr));
     frame->setRecipientAddress(convert(request->destination_addr));
-    frame->setUserPriority(user_priority(request->access_category));
+    frame->setUserPriority(vanetza::access::user_priority(request->access_category));
     frame->setChannelNumber(static_cast<int>(veins::Channel::cch));
 
     delete request;

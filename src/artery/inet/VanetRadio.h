@@ -8,6 +8,7 @@
 #define ARTERY_VANETRADIO_H_FNQDI1V8
 
 #include "artery/nic/ChannelLoadSampler.h"
+#include <inet/common/packet/Packet.h>
 #include "inet/physicallayer/ieee80211/packetlevel/Ieee80211Radio.h"
 
 namespace artery
@@ -24,7 +25,7 @@ public:
     static const omnetpp::simsignal_t RadioFrameSignal;
 
 protected:
-    void handleLowerPacket(inet::physicallayer::RadioFrame*) override;
+    void handleLowerPacket(inet::Packet* packet) override;
 };
 
 } // namespace artery

@@ -58,7 +58,7 @@ double NLOSv::computePathLoss(const phy::ITransmission* transmission, const phy:
     auto radioMedium = transmission->getTransmitter()->getMedium();
     auto narrowbandSignalAnalogModel = check_and_cast<const phy::INarrowbandSignal *>(transmission->getAnalogModel());
     const mps propagationSpeed = radioMedium->getPropagation()->getPropagationSpeed();
-    const Hz carrierFrequency = Hz(narrowbandSignalAnalogModel->getCarrierFrequency());
+    const Hz carrierFrequency = Hz(narrowbandSignalAnalogModel->getCenterFrequency());
     const m waveLength = propagationSpeed / carrierFrequency;
     const m distance { transmission->getStartPosition().distance(arrival->getStartPosition()) };
 

@@ -1,8 +1,8 @@
 package artery.inet;
 
-import inet.linklayer.ieee80211.Ieee80211Nic;
+import inet.linklayer.ieee80211.Ieee80211Interface;
 
-module VanetNic extends Ieee80211Nic
+module VanetNic extends Ieee80211Interface
 {
     parameters:
         macType = default("VanetMac");

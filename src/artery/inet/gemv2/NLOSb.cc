@@ -58,7 +58,7 @@ inet::m getWaveLength(const inet::physicallayer::ITransmission* transmission)
     auto radioMedium = transmission->getTransmitter()->getMedium();
     auto narrowbandSignalAnalogModel = check_and_cast<const phy::INarrowbandSignal *>(transmission->getAnalogModel());
     const mps propagationSpeed = radioMedium->getPropagation()->getPropagationSpeed();
-    const Hz carrierFrequency = Hz(narrowbandSignalAnalogModel->getCarrierFrequency());
+    const Hz carrierFrequency = Hz(narrowbandSignalAnalogModel->getCenterFrequency());
     const m waveLength = propagationSpeed / carrierFrequency;
     return waveLength;
 }

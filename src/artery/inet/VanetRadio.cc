@@ -15,10 +15,10 @@ Define_Module(VanetRadio)
 
 const omnetpp::simsignal_t VanetRadio::RadioFrameSignal = omnetpp::cComponent::registerSignal("RadioFrame");
 
-void VanetRadio::handleLowerPacket(inet::physicallayer::RadioFrame* frame)
+void VanetRadio::handleLowerPacket(inet::Packet* packet)
 {
-    phy::Ieee80211Radio::handleLowerPacket(frame);
-    emit(RadioFrameSignal, frame);
+    phy::Ieee80211Radio::handleLowerPacket(packet);
+    emit(RadioFrameSignal, packet);
 }
 
 } // namespace artery

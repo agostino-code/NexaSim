@@ -3,6 +3,8 @@
 #include <omnetpp.h>
 #include <set>
 
+using namespace omnetpp;
+
 namespace artery
 {
 
@@ -29,10 +31,7 @@ protected:
     void receiveSignal(cResultFilter* prev, simtime_t_cref t, cObject* object, cObject* details) override
     {
         if (auto gbc = dynamic_cast<GbcMockMessage*>(object)) {
-            auto rx = omnetpp::check_and_cast<inet::Coord*>(details);
-            inet::Coord tx { gbc->getSourcePosition().x.value(), gbc->getSourcePosition().y.value() };
-            const auto range = tx.distance(*rx);
-            fire(this, t, range, details);
+            fire(this, t, object, details);
         }
     }
 };

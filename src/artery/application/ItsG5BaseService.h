@@ -21,6 +21,9 @@
 
 #include <omnetpp/clistener.h>
 #include <omnetpp/csimplemodule.h>
+#ifdef PI
+#undef PI
+#endif
 #include <vanetza/btp/data_interface.hpp>
 #include <vanetza/btp/data_request.hpp>
 #include "artery/application/Facilities.h"

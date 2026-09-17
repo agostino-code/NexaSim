@@ -7,30 +7,46 @@
 #ifndef ARTERY_VANETRXCONTROL_H_YHJMCGWD
 #define ARTERY_VANETRXCONTROL_H_YHJMCGWD
 
-#include <inet/linklayer/common/Ieee802Ctrl.h>
-#include <inet/physicallayer/ieee80211/packetlevel/Ieee80211ControlInfo_m.h>
+#include <inet/linklayer/common/MacAddress.h>
+#include <omnetpp/cobject.h>
 #include <memory>
 
 namespace artery
 {
 
-class VanetRxControl : public inet::Ieee802Ctrl
+class VanetRxControl : public omnetpp::cObject
 {
 public:
-    using ReceptionIndication = inet::physicallayer::Ieee80211ReceptionIndication;
+    using ReceptionIndication = omnetpp::cObject;
 
     VanetRxControl() = default;
-    VanetRxControl(const VanetRxControl&);
-    VanetRxControl& operator=(const VanetRxControl&);
+    VanetRxControl(const VanetRxControl& other);
+    VanetRxControl& operator=(const VanetRxControl& other);
     VanetRxControl* dup() const override { return new VanetRxControl(*this); }
 
-    void setReceptionIndication(ReceptionIndication* tx) { mRxIndication.reset(tx); }
-    ReceptionIndication* getReceptionIndication() { return mRxIndication.get(); }
-    const ReceptionIndication* getReceptionIndication() const { return mRxIndication.get(); }
-    ReceptionIndication* removeReceptionIndication() { return mRxIndication.release(); }
+    void setDest(const inet::MacAddress& addr) { mDest = addr; }
+    const inet::MacAddress& getDest() const { return mDest; }
+
+    void setSrc(const inet::MacAddress& addr) { mSrc = addr; }
+    const inet::MacAddress& getSrc() const { return mSrc; }
+
+    void setEtherType(int eth) { mEtherType = eth; }
+    int getEtherType() const { return mEtherType; }
+
+    void setUserPriority(int up) { mUserPriority = up; }
+    int getUserPriority() const { return mUserPriority; }
+
+    void setReceptionIndication(omnetpp::cObject* rx) { mRxIndication.reset(rx); }
+    omnetpp::cObject* getReceptionIndication() { return mRxIndication.get(); }
+    const omnetpp::cObject* getReceptionIndication() const { return mRxIndication.get(); }
+    omnetpp::cObject* removeReceptionIndication() { return mRxIndication.release(); }
 
 private:
-    std::unique_ptr<ReceptionIndication> mRxIndication;
+    inet::MacAddress mDest;
+    inet::MacAddress mSrc;
+    int mEtherType = 0;
+    int mUserPriority = 0;
+    std::unique_ptr<omnetpp::cObject> mRxIndication;
 };
 
 } // namespace artery

@@ -18,16 +18,16 @@ Register_Class(InetRadioDriver)
 
 namespace {
 
-vanetza::MacAddress convert(const inet::MACAddress& mac)
+vanetza::MacAddress convert(const inet::MacAddress& mac)
 {
 	vanetza::MacAddress result;
 	mac.getAddressBytes(result.octets.data());
 	return result;
 }
 
-inet::MACAddress convert(const vanetza::MacAddress& mac)
+inet::MacAddress convert(const vanetza::MacAddress& mac)
 {
-	inet::MACAddress result;
+	inet::MacAddress result;
 	result.setAddressBytes(const_cast<uint8_t*>(mac.octets.data()));
 	return result;
 }
@@ -47,14 +47,21 @@ void InetRadioDriver::initialize(int stage)
 	if (stage == inet::INITSTAGE_LOCAL) {
 		RadioDriverBase::initialize();
 		cModule* host = inet::getContainingNode(this);
-		mLinkLayer = inet::findModuleFromPar<inet::ieee80211::Ieee80211Mac>(par("macModule"), host);
-		mLinkLayer->subscribe(channelLoadSignal, this);
-		mRadio = inet::findModuleFromPar<inet::ieee80211::Ieee80211Radio>(par("radioModule"), host);
-		mRadio->subscribe(radioChannelChangedSignal, this);
-	} else if (stage == inet::InitStages::INITSTAGE_LINK_LAYER_2) {
+		mLinkLayer = inet::findModuleFromPar<cModule>(par("macModule"), host);
+		if (mLinkLayer) {
+			mLinkLayer->subscribe(channelLoadSignal, this);
+		}
+		mRadio = inet::findModuleFromPar<cModule>(par("radioModule"), host);
+		if (mRadio) {
+			mRadio->subscribe(radioChannelChangedSignal, this);
+		}
+	} else if (stage == inet::INITSTAGE_LINK_LAYER) {
 		ASSERT(mChannelNumber > 0);
 		auto properties = new RadioDriverProperties();
-		properties->LinkLayerAddress = convert(mLinkLayer->getAddress());
+		auto mac = dynamic_cast<inet::ieee80211::Ieee80211Mac*>(mLinkLayer);
+		if (mac) {
+			properties->LinkLayerAddress = convert(mac->getAddress());
+		}
 		properties->ServingChannel = mChannelNumber;
 		indicateProperties(properties);
 	}
@@ -88,7 +95,7 @@ void InetRadioDriver::handleDataRequest(cMessage* packet)
 	auto request = check_and_cast<GeoNetRequest*>(packet->removeControlInfo());
 	auto ctrl = new VanetTxControl();
 	ctrl->setDest(convert(request->destination_addr));
-	ctrl->setSourceAddress(convert(request->source_addr));
+	ctrl->setSrc(convert(request->source_addr));
 	ctrl->setEtherType(request->ether_type.host());
 	switch (request->access_category) {
 		case vanetza::access::AccessCategory::VO:

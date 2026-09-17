@@ -45,14 +45,4 @@ bool VanetReceiver::computeIsReceptionAttempted(const phy::IListening* listening
     }
 }
 
-const phy::ReceptionIndication* VanetReceiver::computeReceptionIndication(const phy::ISNIR* snir) const
-{
-    using namespace phy;
-    auto basicIndication = const_cast<ReceptionIndication*>(Ieee80211ScalarReceiver::computeReceptionIndication(snir));
-    auto wlanIndication = check_and_cast<Ieee80211ReceptionIndication*>(basicIndication);
-    auto reception = check_and_cast<const ScalarReception*>(snir->getReception());
-    wlanIndication->setMinRSSI(reception->getPower());
-    return wlanIndication;
-}
-
 } // namespace artery

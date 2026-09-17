@@ -1,0 +1,97 @@
+# Constellation Configuration Schema
+# Used by scenario_generator.py to validate and generate OMNeT++ scenarios
+
+constellation:
+  # Constellation type: walker_delta, walker_star, starlink_shell, custom
+  type: "starlink_shell"
+  
+  # Shells (Starlink has multiple orbital shells)
+  shells:
+    - name: "shell_1"
+      altitude_km: 550
+      inclination_deg: 53.0
+      num_planes: 72
+      sats_per_plane: 22
+      phase_offset: 0  # F parameter in Walker notation
+      raan_spread: 360  # RAAN spread across planes
+      # Or use explicit TLE file
+      # tle_file: "data/starlink_shell1.tle"
+    
+    # Example: Second shell (Starlink Gen2)
+    # - name: "shell_2"
+    #   altitude_km: 340
+    #   inclination_deg: 53.0
+    #   num_planes: 48
+    #   sats_per_plane: 50
+
+  # Inter-Satellite Links configuration
+  isl:
+    enabled: true
+    type: "laser"  # laser | ka_band | v_band
+    max_range_km: 5000
+    num_ports_per_sat: 4  # Typically 4 for cross-links (2 intra-plane, 2 inter-plane)
+    wavelength_nm: 1550  # For laser
+    tx_power_dbm: 20
+    rx_sensitivity_dbm: -40
+    pointing_accuracy_deg: 0.01
+    acquisition_time_ms: 100
+
+  # Satellite node configuration
+  satellite:
+    nic_type: "space_veins.modules.nic.SatelliteNic"
+    isl_nic_type: "artery.ntn.ISLNic"
+    mobility_type: "space_veins.modules.mobility.SGP4Mobility"
+    manager_type: "artery.ntn.LEO_SatelliteManager"
+    # Antenna configuration
+    antenna:
+      type: "phased_array"
+      num_elements: 64
+      beamwidth_deg: 10
+      max_gain_dbi: 30
+      scan_range_deg: 60
+    # Power/model
+    tx_power_dbm: 30
+    noise_figure_db: 3
+    frequency_ghz: 28  # Ka-band user link
+    bandwidth_mhz: 500
+
+  # Ground stations (gateways)
+  ground_stations:
+    - name: "gw_berlin"
+      lat: 52.5200
+      lon: 13.4050
+      altitude_m: 50
+      feeder_link:
+        frequency_ghz: 28  # Ka-band
+        bandwidth_mhz: 1000
+        antenna_diameter_m: 2.4
+        tx_power_dbm: 45
+      user_link:
+        frequency_ghz: 28
+        bandwidth_mhz: 500
+      elevation_mask_deg: 10
+
+    # Add more gateways as needed
+    # - name: "gw_tokyo"
+    #   lat: 35.6762
+    #   lon: 139.6503
+    #   ...
+
+# Simulation parameters
+simulation:
+  duration_s: 300
+  warmup_s: 30
+  rng_seed: 42
+
+# Output configuration
+output:
+  metrics:
+    - "throughput"
+    - "latency"
+    - "handover_count"
+    - "link_budget"
+    - "isl_utilization"
+    - "satellite_load"
+  format: "csv"
+  directory: "output/constellation"
+  write_interval_s: 1.0

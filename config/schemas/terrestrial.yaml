@@ -1,0 +1,124 @@
+# Terrestrial Network Configuration Schema
+
+terrestrial:
+  # gNodeB deployment
+  gnb:
+    deployment: "grid"  # grid | hexagonal | poisson | file
+    density_per_km2: 10
+    inter_site_distance_m: 500  # For grid/hex
+    # Or explicit positions file
+    # positions_file: "data/gnb_positions.csv"
+    
+    # gNB types
+    types:
+      - name: "macro"
+        ratio: 0.7
+        height_m: 25
+        tx_power_dbm: 46
+        antenna_gain_dbi: 18
+        beamwidth_deg: 65
+        frequency_ghz: 3.5
+        bandwidth_mhz: 100
+        numerology: 1  # 30 kHz SCS
+        mimo_layers: 4
+      
+      - name: "micro"
+        ratio: 0.2
+        height_m: 10
+        tx_power_dbm: 38
+        antenna_gain_dbi: 12
+        beamwidth_deg: 90
+        frequency_ghz: 3.5
+        bandwidth_mhz: 100
+        numerology: 1
+        mimo_layers: 2
+      
+      - name: "mmwave"
+        ratio: 0.1
+        height_m: 8
+        tx_power_dbm: 35
+        antenna_gain_dbi: 25
+        beamwidth_deg: 30
+        frequency_ghz: 28
+        bandwidth_mhz: 400
+        numerology: 2  # 60 kHz SCS
+        mimo_layers: 2
+
+  # Channel model (3GPP 38.901)
+  channel_model: "UMa"  # UMa | UMi | RMa | InH
+  
+  # Carrier aggregation
+  carrier_aggregation:
+    enabled: true
+    max_cc: 4
+    # Component carriers
+    component_carriers:
+      - frequency_ghz: 3.5
+        bandwidth_mhz: 100
+      - frequency_ghz: 28
+        bandwidth_mhz: 400
+
+  # Core network (Simu5G EPC)
+  core_network:
+    amf_instances: 1
+    smf_instances: 1
+    upf_instances: 1
+    network_slicing:
+      enabled: true
+      slices:
+        - name: "embb"
+          priority: 1
+          max_bitrate_mbps: 1000
+        - name: "urllc"
+          priority: 8
+          max_latency_ms: 1
+          guaranteed_bitrate_mbps: 10
+        - name: "v2x"
+          priority: 5
+          max_latency_ms: 10
+          reliability: 0.999
+
+# User Equipment configuration
+ue:
+  count: 100
+  mobility_model: "urban_pedestrian"  # urban_pedestrian | urban_vehicle | rural_vehicle | static
+  speed_kmh: 
+    mean: 5
+    std: 2
+    min: 0
+    max: 60
+  # Dual connectivity
+  dual_connectivity:
+    enabled: true
+    mode: "mrdc"  # mrdc | nr_dc
+    split_bearer: true
+    # Split: terrestrial UL, satellite DL (or vice versa)
+    ul_preference: "terrestrial"
+    dl_preference: "best"
+
+# Terrestrial-NTN integration
+integration:
+  # Handover parameters
+  handover:
+    enabled: true
+    # Trigger criteria
+    rsrp_threshold_dbm: -110
+    rsrq_threshold_db: -15
+    sinr_threshold_db: -5
+    # Hysteresis
+    hysteresis_db: 3
+    time_to_trigger_ms: 160
+    # Make-before-break
+    make_before_break: true
+    preparation_time_ms: 50
+    execution_time_ms: 20
+    
+  # Traffic steering
+  traffic_steering:
+    policy: "latency_based"  # latency_based | throughput_based | cost_based | manual
+    # Weights for multi-criteria
+    weights:
+      latency: 0.4
+      throughput: 0.3
+      reliability: 0.2
+      cost: 0.1

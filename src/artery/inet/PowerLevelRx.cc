@@ -39,9 +39,9 @@ void PowerLevelRx::initialize(int stage)
 {
     Rx::initialize(stage);
     if (stage == inet::INITSTAGE_LOCAL) {
-        mCcaSignalThreshold = inet::mW { inet::math::dBm2mW(par("ccaSignalThreshold")) };
-        mCcaNoiseThreshold = inet::mW { inet::math::dBm2mW(par("ccaNoiseThreshold")) };
-        mCbrThreshold = inet::mW { inet::math::dBm2mW(par("cbrThreshold")) };
+        mCcaSignalThreshold = inet::mW(inet::math::dBmW2mW(par("ccaSignalThreshold").doubleValue()));
+        mCcaNoiseThreshold = inet::mW(inet::math::dBmW2mW(par("ccaNoiseThreshold").doubleValue()));
+        mCbrThreshold = inet::mW(inet::math::dBmW2mW(par("cbrThreshold").doubleValue()));
         mCbrWithTx = par("cbrWithTx");
 
         mChannelReportInterval = simtime_t { 100, SIMTIME_MS };

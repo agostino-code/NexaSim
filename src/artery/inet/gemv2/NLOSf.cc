@@ -53,7 +53,7 @@ double NLOSf::computePathLoss(const physicallayer::ITransmission *transmission, 
     auto radioMedium = transmission->getTransmitter()->getMedium();
     auto narrowbandSignalAnalogModel = check_and_cast<const physicallayer::INarrowbandSignal *>(transmission->getAnalogModel());
     const mps propagationSpeed = radioMedium->getPropagation()->getPropagationSpeed();
-    const Hz carrierFrequency = narrowbandSignalAnalogModel->getCarrierFrequency();
+    const Hz carrierFrequency = narrowbandSignalAnalogModel->getCenterFrequency();
     const m waveLength = propagationSpeed / carrierFrequency;
     const m dist { transmission->getStartPosition().distance(arrival->getStartPosition()) };
 

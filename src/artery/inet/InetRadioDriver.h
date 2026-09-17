@@ -27,8 +27,8 @@ class InetRadioDriver : public RadioDriverBase, public omnetpp::cListener
         void handleDataRequest(omnetpp::cMessage*) override;
 
     private:
-        inet::ieee80211::Ieee80211Mac* mLinkLayer = nullptr;
-        inet::physicallayer::Ieee80211Radio* mRadio = nullptr;
+        omnetpp::cModule* mLinkLayer = nullptr;
+        omnetpp::cModule* mRadio = nullptr;
         int mChannelNumber = 0;
 };
 

@@ -6,3 +6,5 @@ set_target_properties(core PROPERTIES
 target_sources(core PRIVATE
     NRManager.cc
 )
+
+target_link_libraries(core PUBLIC Simu5G::simu5g INET::INET)

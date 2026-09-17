@@ -23,7 +23,6 @@ public:
 
 protected:
     void initialize(int stage) override;
-    const inet::physicallayer::ReceptionIndication* computeReceptionIndication(const inet::physicallayer::ISNIR*) const override;
 
 private:
     double mCaptureThreshold;

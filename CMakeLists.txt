@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 cmake_policy(VERSION 3.20...3.31)
 
-project(Artery LANGUAGES CXX C)
+project(NexaSim VERSION 1.0.0 LANGUAGES CXX C)
 
 enable_testing()
 
@@ -12,23 +12,20 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-##################
-# Artery Options #
-##################
+###################
+# NexaSim Options #
+###################
 
-# These are essential componets that are better to be turned on.
-option(WITH_INET "Build Artery with INET framework integration" ON)
-option(WITH_VEINS "Build Artery with Veins framework integration" ON)
+# Core domain integrations
+option(WITH_INET "Build NexaSim with INET framework integration" ON)
+option(WITH_VEINS "Build NexaSim with Veins framework integration" ON)
+option(WITH_NTN "Build NexaSim with NTN/space_veins integration" ON)
+option(WITH_SIMU5G "Build NexaSim with Simu5G/NR integration" ON)
+option(WITH_ENVMOD "Build NexaSim with environment model feature" ON)
 
-# Various extensions, adjust them as needed.
-option(WITH_TESTBED "Build Artery with testbed feature" OFF)
-option(WITH_ENVMOD "Build Artery with environment model feature" ON)
-option(WITH_STORYBOARD "Build Artery with storyboard feature" ON)
-option(WITH_TRANSFUSION "Build Artery with transfusion feature" OFF)
-
-# Miscellaneous stuff, does not affect functionality directly.
-option(WITH_SCENARIOS "Build Artery with scenarios" ON)
-option(VSCODE_LAUNCH_INTEGRATION "Generate VS Code configuration for debugging Artery (requires debug build)" OFF)
+# Scenarios & Tools
+option(WITH_SCENARIOS "Build NexaSim with scenarios" ON)
+option(VSCODE_LAUNCH_INTEGRATION "Generate VS Code configuration for debugging (requires debug build)" OFF)
 
 ##############################
 # Artery build configuration #
@@ -43,18 +40,30 @@ endif()
 # running simulations with opp_run requires shared libraries
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(BUILD_SHARED_LIBS ON CACHE INTERNAL "Cached for propagation to sub-projects with older CMake versions")
+add_compile_definitions(PI=PI)
 
 ###############################
 # Required packages & scripts #
 ###############################
 
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}/Release/generators" "${CMAKE_BINARY_DIR}/generators" "${CMAKE_CURRENT_BINARY_DIR}/generators")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_BINARY_DIR}/Release/generators" "${CMAKE_BINARY_DIR}/generators" "${CMAKE_CURRENT_BINARY_DIR}/generators")
+
+set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
+set(Boost_NO_SYSTEM_PATHS ON)
+
 find_package(OmnetPP 5.5.1 MODULE REQUIRED)
-find_package(Boost 1.59 REQUIRED COMPONENTS date_time system CONFIG)
+find_package(Boost REQUIRED CONFIG)
+if(NOT TARGET boost::boost)
+    add_library(boost::boost INTERFACE IMPORTED)
+    if(TARGET Boost::headers)
+        target_link_libraries(boost::boost INTERFACE Boost::headers)
+    endif()
+endif()
 
 include(AddOppRun)
 include(AddOppTarget)
 include(AddVSCode)
-include(CheckGitSubmodule)
 include(ArteryCodegen)
 include(AddArterySubdirectory)
 include(GNUInstallDirs)
@@ -72,18 +81,22 @@ if(SEA_V2X_FOUND)
     mark_as_advanced(SEA_V2X_DIR)
 endif()
 
-find_package(vanetza REQUIRED)
-find_package(inet REQUIRED)
+find_package(Vanetza REQUIRED)
+find_package(INET REQUIRED)
 find_package(space_veins REQUIRED)
+find_package(Simu5G REQUIRED)
 
 ##########################
 # Primary Artery targets #
 ##########################
 
 add_library(artery INTERFACE)
+add_library(NexaSim::NexaSim ALIAS artery)
+add_library(Artery::Artery ALIAS artery)
 
 add_library(core SHARED)
 add_library(Artery::Core ALIAS core)
+add_library(NexaSim::Core ALIAS core)
 
 macro(add_artery_feature name)
     add_library(${name} SHARED ${ARGN})
@@ -94,6 +107,7 @@ macro(add_artery_feature name)
         OMNETPP_LIBRARY ON
         NED_FOLDERS ${ned_folder})
     target_link_libraries(${name} PRIVATE core)
+    target_include_directories(${name} PUBLIC ${PROJECT_SOURCE_DIR}/src ${PROJECT_BINARY_DIR}/opp_messages)
     target_link_libraries(artery INTERFACE Artery::${name})
     install(TARGETS ${name} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endmacro()
@@ -102,8 +116,8 @@ endmacro()
 # Artery #
 ##########
 
-add_subdirectory(src/traci)
 add_subdirectory(src/artery)
+add_subdirectory(src/traci)
 
 # scenarios directory is part of repository but omitted for Docker build context
 if(WITH_SCENARIOS)

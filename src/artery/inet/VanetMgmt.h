@@ -14,9 +14,6 @@ namespace artery
 
 class VanetMgmt : public inet::ieee80211::Ieee80211MgmtAdhoc
 {
-protected:
-    inet::ieee80211::Ieee80211DataFrame* encapsulate(omnetpp::cPacket*) override;
-    omnetpp::cPacket* decapsulate(inet::ieee80211::Ieee80211DataFrame*) override;
 };
 
 } // namespace artery

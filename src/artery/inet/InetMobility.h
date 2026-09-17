@@ -18,9 +18,11 @@ public:
     // inet::IMobility interface
     double getMaxSpeed() const override;
     inet::Coord getCurrentPosition() override;
-    inet::Coord getCurrentSpeed() override;
-    inet::EulerAngles getCurrentAngularPosition() override;
-    inet::EulerAngles getCurrentAngularSpeed() override;
+    inet::Coord getCurrentVelocity() override;
+    inet::Coord getCurrentAcceleration() override;
+    inet::Quaternion getCurrentAngularPosition() override;
+    inet::Quaternion getCurrentAngularVelocity() override;
+    inet::Quaternion getCurrentAngularAcceleration() override;
     inet::Coord getConstraintAreaMax() const override;
     inet::Coord getConstraintAreaMin() const override;
 

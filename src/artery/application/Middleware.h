@@ -19,6 +19,9 @@
 #include <omnetpp/clistener.h>
 #include <omnetpp/csimplemodule.h>
 #include <omnetpp/simtime.h>
+#ifdef PI
+#undef PI
+#endif
 #include <vanetza/btp/data_request.hpp>
 #include <vanetza/btp/port_dispatcher.hpp>
 #include <memory>

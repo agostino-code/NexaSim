@@ -5,11 +5,7 @@
 #include <inet/features.h>
 #include <cmath>
 
-#ifdef WITH_VISUALIZERS
-#   include <inet/visualizer/mobility/MobilityCanvasVisualizer.h>
-#else
-#   include <cstdio>
-#endif
+#include <cstdio>
 
 namespace artery
 {
@@ -20,7 +16,7 @@ Define_Module(InetVehicleMobility)
 
 int InetMobility::numInitStages() const
 {
-    return inet::INITSTAGE_PHYSICAL_ENVIRONMENT_2 + 1;
+    return inet::INITSTAGE_PHYSICAL_ENVIRONMENT + 1;
 }
 
 void InetMobility::initialize(int stage)
@@ -31,7 +27,7 @@ void InetMobility::initialize(int stage)
         WATCH(mPosition);
         WATCH(mSpeed);
         WATCH(mOrientation);
-    } else if (stage == inet::INITSTAGE_PHYSICAL_ENVIRONMENT_2) {
+    } else if (stage == inet::INITSTAGE_PHYSICAL_ENVIRONMENT) {
         if (mVisualRepresentation) {
             auto visualizationTarget = mVisualRepresentation->getParentModule();
             mCanvasProjection = inet::CanvasProjection::getCanvasProjection(visualizationTarget->getCanvas());
@@ -51,19 +47,29 @@ inet::Coord InetMobility::getCurrentPosition()
     return mPosition;
 }
 
-inet::Coord InetMobility::getCurrentSpeed()
+inet::Coord InetMobility::getCurrentVelocity()
 {
     return mSpeed;
 }
 
-inet::EulerAngles InetMobility::getCurrentAngularPosition()
+inet::Coord InetMobility::getCurrentAcceleration()
 {
-    return mOrientation;
+    return inet::Coord::ZERO;
 }
 
-inet::EulerAngles InetMobility::getCurrentAngularSpeed()
+inet::Quaternion InetMobility::getCurrentAngularPosition()
 {
-    return inet::EulerAngles::ZERO;
+    return inet::Quaternion(mOrientation);
+}
+
+inet::Quaternion InetMobility::getCurrentAngularVelocity()
+{
+    return inet::Quaternion::IDENTITY;
+}
+
+inet::Quaternion InetMobility::getCurrentAngularAcceleration()
+{
+    return inet::Quaternion::IDENTITY;
 }
 
 inet::Coord InetMobility::getConstraintAreaMax() const
@@ -85,7 +91,7 @@ void InetMobility::initialize(const Position& pos, Angle heading, double speed)
     const inet::Coord direction { cos(rad), -sin(rad) };
     mPosition = inet::Coord { pos.x / meter, pos.y / meter, mAntennaHeight };
     mSpeed = direction * speed;
-    mOrientation.alpha = -rad;
+    mOrientation.alpha = inet::rad(-rad);
 }
 
 void InetMobility::update(const Position& pos, Angle heading, double speed)
@@ -100,10 +106,6 @@ void InetMobility::updateVisualRepresentation()
 {
     // following code is taken from INET's MobilityBase::updateVisualRepresentation
     if (hasGUI() && mVisualRepresentation) {
-#ifdef WITH_VISUALIZERS
-        using inet::visualizer::MobilityCanvasVisualizer;
-        MobilityCanvasVisualizer::setPosition(mVisualRepresentation, mCanvasProjection->computeCanvasPoint(getCurrentPosition()));
-#else
         auto position = mCanvasProjection->computeCanvasPoint(getCurrentPosition());
         char buf[32];
         snprintf(buf, sizeof(buf), "%lf", position.x);
@@ -112,7 +114,6 @@ void InetMobility::updateVisualRepresentation()
         snprintf(buf, sizeof(buf), "%lf", position.y);
         buf[sizeof(buf) - 1] = 0;
         mVisualRepresentation->getDisplayString().setTagArg("p", 1, buf);
-#endif
     }
 }
 

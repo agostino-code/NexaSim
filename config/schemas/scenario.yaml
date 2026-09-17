@@ -1,0 +1,109 @@
+# Main Scenario Configuration Schema
+# This file combines constellation and terrestrial configs
+
+scenario:
+  name: "integrated_tn_ntn"
+  description: "Integrated Terrestrial 5G + LEO NTN Simulation"
+  version: "1.0"
+  
+  # Area of interest
+  area:
+    # Bounding box: [min_lon, min_lat, max_lon, max_lat]
+    bbox: [13.0, 52.3, 13.6, 52.7]  # Berlin area
+    # Or center + radius
+    # center: [13.4, 52.5]
+    # radius_km: 20
+
+  # Time
+  time:
+    start: "2024-01-01T00:00:00Z"
+    duration_s: 300
+    warmup_s: 30
+    timezone: "UTC"
+
+  # Constellation configuration (inline or reference)
+  constellation: 
+    # Either inline config or reference to constellation.yaml
+    # type: "starlink_shell"
+    # shells: [...]
+    # Or:
+    # file: "constellation.yaml"
+    
+    # Inline example:
+    type: "starlink_shell"
+    shells:
+      - name: "shell_1"
+        altitude_km: 550
+        inclination_deg: 53.0
+        num_planes: 12  # Reduced for simulation
+        sats_per_plane: 6
+        phase_offset: 0
+    isl:
+      enabled: true
+      type: "laser"
+      max_range_km: 5000
+      num_ports_per_sat: 4
+    ground_stations:
+      - name: "gw_berlin"
+        lat: 52.5200
+        lon: 13.4050
+        altitude_m: 50
+        feeder_link:
+          frequency_ghz: 28
+          bandwidth_mhz: 1000
+        elevation_mask_deg: 10
+
+  # Terrestrial configuration (inline or reference)
+  terrestrial:
+    gnb:
+      deployment: "grid"
+      density_per_km2: 5
+      inter_site_distance_m: 1000
+      types:
+        - name: "macro"
+          ratio: 1.0
+          height_m: 25
+          tx_power_dbm: 46
+          frequency_ghz: 3.5
+          bandwidth_mhz: 100
+    channel_model: "UMa"
+    core_network:
+      network_slicing:
+        enabled: true
+        slices:
+          - name: "embb"
+          - name: "urllc"
+    ue:
+      count: 50
+      mobility_model: "urban_pedestrian"
+      dual_connectivity:
+        enabled: true
+    integration:
+      handover:
+        enabled: true
+        rsrp_threshold_dbm: -110
+        hysteresis_db: 3
+        make_before_break: true
+
+  # Output configuration
+  output:
+    directory: "output/${scenario.name}_${timestamp}"
+    metrics:
+      - "throughput"
+      - "latency"
+      - "handover_count"
+      - "link_budget"
+      - "isl_utilization"
+      - "satellite_load"
+      - "ue_connectivity"
+    format: "csv"
+    write_interval_s: 1.0
+    # Visualization
+    visualization:
+      enabled: true
+      type: "3d"  # 2d | 3d | none
+      update_interval_s: 5.0
+      export_animation: false
+
+  # Random seed for reproducibility
+  seed: 42

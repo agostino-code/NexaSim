@@ -107,9 +107,7 @@ void GbcMockService::generatePacket()
 
 void GbcMockService::indicate(const vanetza::btp::DataIndication&, cPacket* packet)
 {
-    const auto cartesian = mPositionProvider->getCartesianPosition();
-    inet::Coord position { cartesian.x.value(), cartesian.y.value() };
-    emit(scSignalReceived, omnetpp::check_and_cast<GbcMockMessage*>(packet), &position);
+    emit(scSignalReceived, omnetpp::check_and_cast<GbcMockMessage*>(packet));
     delete packet;
 }
 

@@ -10,7 +10,10 @@ namespace artery
 {
 
 VanetTxControl::VanetTxControl(const VanetTxControl& other) :
-    inet::Ieee802Ctrl(other),
+    mDest(other.mDest),
+    mSrc(other.mSrc),
+    mEtherType(other.mEtherType),
+    mUserPriority(other.mUserPriority),
     mTxRequest(other.getTransmissionRequest() ? other.getTransmissionRequest()->dup() : nullptr)
 {
 }
@@ -18,8 +21,11 @@ VanetTxControl::VanetTxControl(const VanetTxControl& other) :
 VanetTxControl& VanetTxControl::operator=(const VanetTxControl& other)
 {
     if (&other != this) {
-        inet::Ieee802Ctrl::operator=(other);
-        const TransmissionRequest* request = other.getTransmissionRequest();
+        mDest = other.mDest;
+        mSrc = other.mSrc;
+        mEtherType = other.mEtherType;
+        mUserPriority = other.mUserPriority;
+        const omnetpp::cObject* request = other.getTransmissionRequest();
         mTxRequest.reset(request ? request->dup() : nullptr);
     }
     return *this;
