@@ -1,6 +1,5 @@
-# Artery's Docker container does not include any GUI.
-# The idea of having Artery in a container is to run multiple instances with different parameter sets, e.g. running a large parameter study on a cluster.
-# You may want to use Vagrant for a setup with GUI instead.
+# NexaSim 3D Unified Simulator (Horizon Europe NexaSphere)
+# Supports both High-Performance Headless (Cmdenv) and Interactive Web-based GUI (Qtenv + NoVNC)
 
 # Distribution tag
 ARG TAG=bookworm-slim
@@ -8,6 +7,7 @@ ARG TAG=bookworm-slim
 FROM debian:${TAG} AS setup
 
 SHELL [ "/bin/bash", "-c"]
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y        \
     bison build-essential flex git python3-dev  \
     libxml2-dev wget zlib1g-dev cmake           \
@@ -17,6 +17,11 @@ RUN apt-get update && apt-get install -y        \
     ninja-build curl python3-venv clang-tidy    \
     pkg-config libzmq5-dev libprotobuf-dev      \
     protobuf-compiler python3-pip               \
+    # Qt5 & OpenGL dependencies for OMNeT++ Qtenv
+    qtbase5-dev qtdeclarative5-dev              \
+    libqt5opengl5-dev libqt5svg5-dev            \
+    # Virtual X11, Window Manager & NoVNC Web GUI stack
+    xvfb x11vnc fluxbox novnc websockify        \
     && pip3 install --break-system-packages conan \
     && rm -rf /var/lib/apt/lists/*
 
@@ -30,9 +35,10 @@ ARG OMNETPP_TAG=omnetpp-5.6.2
 RUN git clone --recurse --depth 1 --branch ${OMNETPP_TAG} https://github.com/omnetpp/omnetpp
 WORKDIR /omnetpp
 RUN mv configure.user.dist configure.user
+# Build OMNeT++ with Qtenv support (OSG/OSG-Earth disabled for stability in lightweight VNC)
 RUN source setenv -f                                            \
-    && ./configure WITH_QTENV=no WITH_OSG=no WITH_OSGEARTH=no   \
-    && make -j$(nproc --all) base MODE=release
+    && ./configure WITH_QTENV=yes WITH_OSG=no WITH_OSGEARTH=no  \
+    && make -j$(nproc --all) MODE=release
 
 WORKDIR /
 RUN git clone --recurse --depth 1 --branch ${SUMO_TAG} https://github.com/eclipse-sumo/sumo
@@ -65,3 +71,4 @@ RUN cd /usr/local/bin && \
 ENV PATH=/omnetpp/bin:$PATH
 ENV OMNETPP_ROOT=/omnetpp
 ENV SUMO_HOME=/usr/local/share/sumo
+ENV DISPLAY=:99

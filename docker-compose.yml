@@ -89,6 +89,29 @@ services:
   artery-analyze:
     <<: *analyze-service
 
+  # NexaSim Interactive Web GUI service (OMNeT++ Qtenv via NoVNC)
+  nexasim-gui: &gui-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: final
+    volumes:
+      - .:/artery
+      - artery-conan2-cache:/root/.conan2
+      - ./output:/artery/output
+      - ./config:/artery/config
+      - ./scenarios:/artery/scenarios
+    working_dir: /artery
+    ports:
+      - "6080:6080"
+    command: >
+      bash tools/start_gui.sh -f /artery/scenarios/generated/stelvio/omnetpp.ini
+    depends_on:
+      - nexasim-build
+
+  artery-gui:
+    <<: *gui-service
+
 volumes:
   artery-conan2-cache:
   artery-build-cache:
