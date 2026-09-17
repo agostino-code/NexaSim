@@ -1,10 +1,10 @@
-# Artery Development Agent Instructions
+# NexaSim Development Agent Instructions
 
-## Project Context: NexaSphere
-This project is being adapted for **NexaSphere**, a Horizon Europe research and innovation project.
+## Project Context: NexaSphere (NexaSim Simulator)
+This repository contains **NexaSim**, a 3D Unified Terrestrial & Non-Terrestrial Network Simulator developed for **NexaSphere**, a Horizon Europe research and innovation project.
 - **Goal**: Designing and validating a unified three-dimensional (3D) communication network.
-- **Domains**: Integrates terrestrial (TN), non-terrestrial (NTN), and aerial systems (aviation, automotive, rail).
-- **Current Objective**: Move away from internal submodules (`extern/`) and transition towards Conan-based dependency management for easier reproducibility. We are also looking into integrating satellite simulation via [space_veins](https://github.com/veins/space_veins).
+- **Domains**: Integrates terrestrial (TN: V2X, 5G-NR), non-terrestrial (NTN: LEO constellations, ISL, User Terminals), and aerial systems.
+- **Architecture**: Zero-submodule architecture using Conan 2 for all external dependencies (INET 4.2.2, Simu5G 1.1.0, space_veins 0.3, Vanetza 26.02).
 
 ## Development Environment
 - **Docker Only**: All commands (build, run, test, Conan operations) MUST be executed inside the `artery-dev` Docker container. Do not run host-level commands unless explicitly requested.

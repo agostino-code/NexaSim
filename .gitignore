@@ -1,12 +1,15 @@
 ansible/*.retry
-scenarios/**/*.pyc
-scenarios/*/results/*
-scenarios/*/.cmdenv-log
-scenarios/*/.qtenvrc
-scenarios/*/.tkenvrc
+*.pyc
+**/.cmdenv-log
+**/.qtenvrc
+**/.tkenvrc
+sumo-*.log
 src/artery/messages/*_m.cc
 src/artery/messages/*_m.h
 .vagrant/
+
+# Simulation runtime output directory
+output/
 
 # Building website with mkdocs
 www/

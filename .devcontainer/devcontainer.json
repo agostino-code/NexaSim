@@ -1,0 +1,44 @@
+{
+    "name": "NexaSim 3D Network Simulator (OMNeT++ 5.6.2 & SUMO)",
+    "build": {
+        "context": "..",
+        "dockerfile": "Dockerfile",
+        "args": {
+            "USER": "devcontainer",
+            "OMNETPP_TAG": "omnetpp-5.6.2",
+            "SUMO_TAG": "v1_21_0"
+        }
+    },
+    "containerUser": "devcontainer",
+    "remoteEnv": {
+        "DISPLAY": "${localEnv:DISPLAY}",
+        "CONAN_HOME": "/home/devcontainer/.conan2"
+    },
+    "mounts": [
+        {
+            "source": "/tmp/.X11-unix",
+            "target": "/tmp/.X11-unix",
+            "type": "bind"
+        },
+        {
+            "source": "artery-conan2-cache",
+            "target": "/home/devcontainer/.conan2",
+            "type": "volume"
+        }
+    ],
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-vscode.cmake-tools",
+                "twxs.cmake",
+                "ms-python.python"
+            ],
+            "settings": {
+                "cmake.configureOnOpen": false,
+                "terminal.integrated.defaultProfile.linux": "bash"
+            }
+        }
+    },
+    "postCreateCommand": "sudo mkdir -p /root && sudo ln -sfn /home/devcontainer/.conan2 /root/.conan2 && sudo chmod 755 /root && sudo chmod -R 755 /home/devcontainer/.conan2 2>/dev/null || true && conan export recipes/inet --version 4.2.2 && conan export recipes/space_veins --version 0.3 && conan export recipes/simu5g --version 1.1.0 && conan export recipes/vanetza --version 26.02 && conan profile detect --force"
+}

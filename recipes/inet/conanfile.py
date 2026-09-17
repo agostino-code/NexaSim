@@ -27,13 +27,13 @@ class InetConan(ConanFile):
 
         # In Conan 2, self.run() accetta env come stringa, per "PATH" preferiamo iniettarlo localmente al comando
         self.output.info("Generating makefiles...")
-        self.run(f"export PATH={bin_dir}:$PATH && opp_featuretool disable wirelesstutorial configuratortutorial", cwd=self.source_folder)
-        self.run(f"export PATH={bin_dir}:$PATH && make makefiles", cwd=self.source_folder)
+        self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && opp_featuretool disable wirelesstutorial configuratortutorial", cwd=self.source_folder)
+        self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && make makefiles", cwd=self.source_folder)
         
         # Compila in base a CMAKE_BUILD_TYPE mappandolo sui MODE di OMNeT++ 
         mode = "debug" if self.settings.build_type == "Debug" else "release"
         self.output.info(f"Compiling INET in {mode} mode...")
-        self.run(f"export PATH={bin_dir}:$PATH && make -j{os.cpu_count()} MODE={mode}", cwd=self.source_folder)
+        self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && make -j{os.cpu_count()} MODE={mode}", cwd=self.source_folder)
 
     def package(self):
         # Copia headers
@@ -51,6 +51,11 @@ class InetConan(ConanFile):
         os.symlink("include", os.path.join(self.package_folder, "src"))
 
     def package_info(self):
+        self.cpp_info.set_property("cmake_file_name", "INET")
+        self.cpp_info.set_property("cmake_find_mode", "both")
+        self.cpp_info.set_property("cmake_target_name", "INET::INET")
+        self.cpp_info.set_property("cmake_target_alias", "inet::inet")
+
         self.cpp_info.libs = ["INET"]
         self.cpp_info.includedirs = ["include"]
         self.cpp_info.libdirs = ["lib"]

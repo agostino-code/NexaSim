@@ -5,4 +5,4 @@ requirements:
   vanetza: "26.02"
   space_veins: "0.3"
   inet: "4.2.2"
-  simu5g: "1.2.0"
+  simu5g: "1.1.0"

@@ -16,7 +16,8 @@ RUN apt-get update && apt-get install -y        \
     libgeographiclib-dev libxerces-c-dev        \
     ninja-build curl python3-venv clang-tidy    \
     pkg-config libzmq5-dev libprotobuf-dev      \
-    protobuf-compiler                           \
+    protobuf-compiler python3-pip               \
+    && pip3 install --break-system-packages conan \
     && rm -rf /var/lib/apt/lists/*
 
 FROM setup AS build
@@ -62,4 +63,5 @@ RUN cd /usr/local/bin && \
     chmod +x clang-tidy-diff.py
 
 ENV PATH=/omnetpp/bin:$PATH
+ENV OMNETPP_ROOT=/omnetpp
 ENV SUMO_HOME=/usr/local/share/sumo

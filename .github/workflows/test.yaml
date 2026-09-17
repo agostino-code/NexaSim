@@ -1,37 +1,46 @@
-name: Run integration tests
+name: Build and Test NexaSim
 
 on:
   workflow_call:
+  push:
+    branches: [master, test]
+  pull_request:
+    branches: [master, test]
 
 jobs:
-  integration-tests:
+  validate-scenarios:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/riebl/artery-gh-runner:latest
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          submodules: recursive
-          fetch-depth: 0
+          python-version: '3.10'
 
-      - name: Create virtual environment
-        run: python3 -m venv .venv
+      - name: Install dependencies
+        run: pip install pyyaml
 
-      - name: Install pip dependencies
-        run: . .venv/bin/activate && pip install -r tools/ci/requirements.txt
-
-      - name: Configure and build CMake
+      - name: Validate all scenario YAML definitions
         run: |
-          tools/build.py -cb --config Release \
-            --generator Ninja                 \
-            -D WITH_SIMULTE:BOOL=ON           \
-            -D WITH_OTS:BOOL=ON               \
-            -D WITH_TESTBED:BOOL=ON           \
-            -D WITH_TRANSFUSION:BOOL=ON
+          for f in scenarios/library/*.yaml; do
+            echo "Validating $f..."
+            python tools/gen_scenario.py "$f" --validate
+          done
 
-      - name: Run tests
-        run: . .venv/bin/activate && PYTHONPATH=$PWD python3 tools/ci/run.py -l build/Release/run-artery.ini -s scenarios
+  build-and-run:
+    runs-on: ubuntu-latest
+    needs: validate-scenarios
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build NexaSim (Docker & Conan 2)
+        run: docker compose run --rm nexasim-build
+
+      - name: Run validation scenario
+        run: docker compose run --rm nexasim-scenario
+
+      - name: Analyze simulation results
+        run: docker compose run --rm nexasim-analyze

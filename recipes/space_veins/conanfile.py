@@ -39,15 +39,15 @@ class SpaceVeinsConan(ConanFile):
         self.output.info("Building veins...")
         veins_src = os.path.join(self.source_folder, "lib", "veins", "src")
         veins_out = os.path.join(self.source_folder, "lib", "veins", "out", f"gcc-{opp_mode}", "src")
-        self.run(f"export PATH={bin_dir}:$PATH && opp_makemake -f --deep --no-deep-includes --make-so -I. -o veins -O out -p VEINS", cwd=veins_src)
-        self.run(f"export PATH={bin_dir}:$PATH && make -j{os.cpu_count()} MODE={opp_mode}", cwd=veins_src)
+        self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && opp_makemake -f --deep --no-deep-includes --make-so -I. -o veins -O out -p VEINS", cwd=veins_src)
+        self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && make -j{os.cpu_count()} MODE={opp_mode}", cwd=veins_src)
 
         # Build veins_inet
         self.output.info("Building veins_inet...")
         veins_inet_src = os.path.join(self.source_folder, "lib", "veins", "subprojects", "veins_inet", "src")
         veins_inet_out = os.path.join(self.source_folder, "lib", "veins", "subprojects", "veins_inet", "out", f"gcc-{opp_mode}", "src")
-        self.run(f"export PATH={bin_dir}:$PATH && opp_makemake -f --deep --no-deep-includes --make-so -I. -o veins_inet -O out -p VEINS_INET -I{inet_inc} -L{inet_lib} -lINET -I{veins_src} -L{veins_out} -lveins", cwd=veins_inet_src)
-        self.run(f"export PATH={bin_dir}:$PATH && make -j{os.cpu_count()} MODE={opp_mode}", cwd=veins_inet_src)
+        self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && opp_makemake -f --deep --no-deep-includes --make-so -I. -o veins_inet -O out -p VEINS_INET -I{inet_inc} -L{inet_lib} -lINET -I{veins_src} -L{veins_out} -lveins", cwd=veins_inet_src)
+        self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && make -j{os.cpu_count()} MODE={opp_mode}", cwd=veins_inet_src)
 
         # Build space_veins
         self.output.info("Configuring space_veins project...")
@@ -58,8 +58,8 @@ class SpaceVeinsConan(ConanFile):
             f"-I{veins_src} -L{veins_out} -lveins "
             f"-I{veins_inet_src} -L{veins_inet_out} -lveins_inet"
         )
-        self.run(f"export PATH={bin_dir}:$PATH && {makemake_cmd}", cwd=space_veins_src)
-        self.run(f"export PATH={bin_dir}:$PATH && make -j{os.cpu_count()} MODE={opp_mode}", cwd=space_veins_src)
+        self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && {makemake_cmd}", cwd=space_veins_src)
+        self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && make -j{os.cpu_count()} MODE={opp_mode}", cwd=space_veins_src)
 
     def package(self):
         # Copia headers space_veins
@@ -86,6 +86,10 @@ class SpaceVeinsConan(ConanFile):
         copy(self, "*.msg", src=os.path.join(self.source_folder, "src"), dst=os.path.join(self.package_folder, "share/msg"), keep_path=False)
 
     def package_info(self):
+        self.cpp_info.set_property("cmake_file_name", "space_veins")
+        self.cpp_info.set_property("cmake_find_mode", "both")
+        self.cpp_info.set_property("cmake_target_name", "space_veins::space_veins")
+        
         self.cpp_info.libs = ["space_veins", "veins_inet", "veins"]
         self.cpp_info.includedirs = ["include"]
         self.cpp_info.libdirs = ["lib"]

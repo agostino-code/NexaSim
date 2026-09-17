@@ -1,10 +1,10 @@
-name: CI on main branch
+name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [master, test]
   pull_request:
-    branches: [master]
+    branches: [master, test]
 
 jobs:
   lint:

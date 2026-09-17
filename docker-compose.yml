@@ -1,0 +1,92 @@
+services:
+  # NexaSim Build environment
+  nexasim-build: &build-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build
+    volumes:
+      - .:/artery
+      - artery-conan2-cache:/root/.conan2
+      - artery-build-cache:/root/.cache
+    environment:
+      - CONAN_HOME=/root/.conan2
+    command: >
+      bash -c "
+        cd /artery &&
+        conan export recipes/inet --version 4.2.2 &&
+        conan export recipes/space_veins --version 0.3 &&
+        conan export recipes/simu5g --version 1.1.0 &&
+        conan export recipes/vanetza --version 26.02 &&
+        conan profile detect --force &&
+        conan install . --build=missing --build=vanetza -s build_type=Release &&
+        cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=/artery/build/Release/generators/conan_toolchain.cmake -DOMNETPP_ROOT=/omnetpp -G Ninja &&
+        cmake --build build --parallel
+      "
+
+  artery-build:
+    <<: *build-service
+
+  # NexaSim Runtime environment
+  nexasim-run: &run-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: final
+    volumes:
+      - .:/artery
+      - artery-conan2-cache:/root/.conan2
+      - ./output:/artery/output
+      - ./config:/artery/config
+      - ./scenarios:/artery/scenarios
+    working_dir: /artery
+    environment:
+      - DISPLAY=${DISPLAY:-host.docker.internal:0.0}
+      - CONAN_HOME=/root/.conan2
+
+  artery-run:
+    <<: *run-service
+
+  # NexaSim Scenario runner
+  nexasim-scenario: &scenario-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: final
+    volumes:
+      - .:/artery
+      - artery-conan2-cache:/root/.conan2
+      - ./output:/artery/output
+      - ./config:/artery/config
+      - ./scenarios:/artery/scenarios
+    working_dir: /artery
+    command: >
+      bash -c "
+        python tools/run_scenario.py scenarios/library/stelvio_pass_hybrid.yaml -o output
+      "
+    depends_on:
+      - nexasim-build
+
+  artery-scenario:
+    <<: *scenario-service
+
+  # NexaSim Analysis service
+  nexasim-analyze: &analyze-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: final
+    volumes:
+      - ./output:/artery/output
+    working_dir: /artery
+    command: >
+      bash -c "
+        python tools/analyze_results.py output/stelvio_pass_hybrid/
+      "
+
+  artery-analyze:
+    <<: *analyze-service
+
+volumes:
+  artery-conan2-cache:
+  artery-build-cache:
