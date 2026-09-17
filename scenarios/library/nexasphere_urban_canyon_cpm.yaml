@@ -1,0 +1,97 @@
+# NexaSphere Scenario: Urban Canyon & Collective Perception (CPM)
+# Focus: High-density city skyscrapers, zenith-only satellite visibility, dense 5G microcells, ETSI CPM sharing
+
+scenario:
+  name: "nexasphere_urban_canyon_cpm"
+  description: "Dense urban financial district with high-rise buildings, microcell 5G-NR beamforming, zenith LEO satellite window, and V2X Collective Perception"
+  version: "1.0"
+  
+  area:
+    name: "Milan_CityLife_Financial_District"
+    center_lat: 45.4780
+    center_lon: 9.1560
+    altitude_m: 120
+    bbox: [9.1400, 45.4650, 9.1750, 45.4900]
+    elevation_mask_deg: 48.0   # High-rise skyscrapers block satellites below 48 degrees
+
+  time:
+    start: "2026-08-26T15:00:00Z"
+    duration_s: 180
+    warmup_s: 10
+    timezone: "Europe/Rome"
+
+  # Non-Terrestrial Network (LEO Constellation 550 km)
+  constellation:
+    type: "starlink_shell"
+    shells:
+      - name: "shell_urban"
+        altitude_km: 550
+        inclination_deg: 53.0
+        num_planes: 12
+        sats_per_plane: 6
+        phase_offset: 0
+    isl:
+      enabled: true
+      type: "laser"
+      wavelength_nm: 1550
+      max_range_km: 5000
+      num_ports_per_sat: 4
+    ground_stations:
+      - name: "gw_milan_metropolitan"
+        lat: 45.4642
+        lon: 9.1900
+        altitude_m: 120
+        feeder_link:
+          frequency_ghz: 28.0
+          bandwidth_mhz: 1000
+
+  # Terrestrial 5G Network (Dense Urban Microcells)
+  terrestrial:
+    gnb:
+      deployment: "custom"
+      sites:
+        - name: "gnb_citylife_tower_1"
+          lat: 45.4770
+          lon: 9.1550
+          height_m: 25
+          tx_power_dbm: 38
+          frequency_ghz: 3.5
+          bandwidth_mhz: 100
+        - name: "gnb_citylife_tower_2"
+          lat: 45.4790
+          lon: 9.1580
+          height_m: 25
+          tx_power_dbm: 38
+          frequency_ghz: 3.5
+          bandwidth_mhz: 100
+        - name: "gnb_piazza_tre_torri"
+          lat: 45.4760
+          lon: 9.1600
+          height_m: 15
+          tx_power_dbm: 35
+          frequency_ghz: 28.0
+          bandwidth_mhz: 400
+
+    channel_model: "UMa"
+
+    # Urban Connected Vehicles
+    ue:
+      count: 18
+      mobility_model: "urban_grid_intersection"
+      speed_kmh: 50
+      dual_connectivity:
+        enabled: true
+        primary_rat: "terrestrial_5g"
+        fallback_rat: "satellite_ntn"
+      phased_array:
+        elements: 64
+        gain_dbi: 30.0
+        scan_angle_max_deg: 45.0
+
+  output:
+    directory: "output/nexasphere_urban_canyon_cpm"
+    metrics:
+      - "cpm_message_age_ms"
+      - "urban_satellite_visibility_duration"
+      - "beamforming_sinr_db"
+      - "microcell_handover_rate"

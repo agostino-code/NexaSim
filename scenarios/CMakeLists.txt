@@ -1,3 +1,9 @@
-add_subdirectory(artery)
-add_subdirectory(ntn)
-add_subdirectory(nr_test)
+add_subdirectory(generated/stelvio)
+add_subdirectory(generated/uav_corridor)
+add_subdirectory(generated/maritime_sar)
+add_subdirectory(generated/rail_highspeed)
+add_subdirectory(generated/highway_platooning)
+add_subdirectory(generated/urban_canyon_cpm)
+add_subdirectory(generated/emergency_corridor)
+
+

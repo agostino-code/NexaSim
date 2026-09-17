@@ -1,0 +1,209 @@
+# Passo dello Stelvio Alpine 3D Hybrid Network Simulation
+# NexaSphere / NexaSim Horizon Europe Research Project
+# TN-NTN Multi-Tier Simulation: 5G-NR + Starlink-like LEO + V2X Emergency Failover
+
+scenario:
+  name: "stelvio_pass_alpine_hybrid"
+  description: "Stelvio Pass Alpine Hybrid Network (5G-NR + Starlink LEO) with Mountain Blind-Spot Accident Response"
+  version: "1.0"
+  
+  # Geographic Area: Passo dello Stelvio (Italy / Switzerland border)
+  # Summit Elevation: ~2,757m, deep valleys, steep rock faces
+  area:
+    name: "Passo_dello_Stelvio"
+    center_lat: 46.5286
+    center_lon: 10.4531
+    altitude_m: 2757
+    bbox: [10.4000, 46.5000, 10.5000, 46.5600]
+    elevation_mask_deg: 28.0   # Steep mountain peaks block low-elevation satellites
+  
+  # Simulation Time
+  time:
+    start: "2026-08-26T10:00:00Z"
+    duration_s: 300
+    warmup_s: 15
+    timezone: "Europe/Rome"
+
+  # Non-Terrestrial Network (LEO Constellation - Starlink Shell at 550 km)
+  constellation:
+    type: "starlink_shell"
+    shells:
+      - name: "starlink_shell_550"
+        altitude_km: 550
+        inclination_deg: 53.0
+        num_planes: 12
+        sats_per_plane: 6
+        phase_offset: 0
+    
+    # Inter-Satellite Laser Links (ISL)
+    isl:
+      enabled: true
+      type: "laser"
+      wavelength_nm: 1550
+      max_range_km: 5000
+      num_ports_per_sat: 4
+      tx_power_dbm: 20
+      rx_sensitivity_dbm: -40
+      pointing_accuracy_deg: 0.01
+      acquisition_time_ms: 80
+    
+    # Ground Station / Feeder Link for Mountain Rescue Coordination
+    ground_stations:
+      - name: "gw_bolzano_rescue_center"
+        lat: 46.4983
+        lon: 11.3548
+        altitude_m: 262
+        feeder_link:
+          frequency_ghz: 28.0
+          bandwidth_mhz: 1000
+        user_link:
+          frequency_ghz: 28.0
+          bandwidth_mhz: 500
+        elevation_mask_deg: 15.0
+      - name: "gw_sondrio_alpine_dispatch"
+        lat: 46.1691
+        lon: 9.8708
+        altitude_m: 300
+        feeder_link:
+          frequency_ghz: 28.0
+          bandwidth_mhz: 1000
+        elevation_mask_deg: 15.0
+
+  # Terrestrial 5G Network (Strategic Base Stations in Alpine Valley & Summit)
+  terrestrial:
+    gnb:
+      deployment: "custom"
+      sites:
+        - name: "gnb_trafoi_valley"
+          lat: 46.5540
+          lon: 10.5100
+          height_m: 30
+          tx_power_dbm: 46
+          frequency_ghz: 3.5
+          bandwidth_mhz: 100
+          mimo_layers: 4
+          coverage_radius_m: 1800
+        - name: "gnb_franzenshohe_midway"
+          lat: 46.5380
+          lon: 10.4720
+          height_m: 25
+          tx_power_dbm: 43
+          frequency_ghz: 3.5
+          bandwidth_mhz: 100
+          mimo_layers: 4
+          coverage_radius_m: 1200
+        - name: "gnb_stelvio_summit"
+          lat: 46.5286
+          lon: 10.4531
+          height_m: 20
+          tx_power_dbm: 46
+          frequency_ghz: 3.5
+          bandwidth_mhz: 100
+          mimo_layers: 4
+          coverage_radius_m: 2500
+
+    # Dead zone: Deep rock gorge between switchbacks (Tornanti 14 to 32)
+    blind_spots:
+      - name: "gorge_shadow_zone"
+        lat_min: 46.5300
+        lat_max: 46.5370
+        lon_min: 46.4550
+        lon_max: 46.4700
+        attenuation_db: 45.0  # Total 5G blackout due to rock walls
+
+    channel_model: "RMa"      # Rural Macro / Mountainous channel model
+    alpine_weather:
+      condition: "snow_and_rain"
+      rain_rate_mm_hr: 15.0
+      snow_attenuation_db_per_km: 1.8
+      atmospheric_loss_db: 2.5
+
+    # Core Network Slicing
+    core_network:
+      network_slicing:
+        enabled: true
+        slices:
+          - name: "urllc_emergency"
+            priority: 10
+            max_latency_ms: 5
+            guaranteed_bitrate_mbps: 20
+          - name: "v2x_safety"
+            priority: 8
+            max_latency_ms: 10
+            reliability: 0.9999
+          - name: "embb_passengers"
+            priority: 2
+            max_bitrate_mbps: 100
+
+    # Hybrid User Terminals (Cars & Emergency Vehicles)
+    ue:
+      count: 24
+      mobility_model: "alpine_pass_traversal"
+      speed_kmh: 45
+      dual_connectivity:
+        enabled: true
+        mode: "mrdc"
+        primary_rat: "terrestrial_5g"
+        fallback_rat: "satellite_ntn"
+        seamless_failover: true
+      
+      # Vehicle Phased Array Dish Antenna
+      phased_array:
+        elements: 64
+        gain_dbi: 32.0
+        scan_angle_max_deg: 60.0
+        beamwidth_deg: 8.5
+        tracking_rate_deg_per_sec: 45.0
+
+    # Multi-RAT Integration & Handover Strategy
+    integration:
+      handover:
+        enabled: true
+        rsrp_threshold_dbm: -108
+        hysteresis_db: 3.5
+        time_to_trigger_ms: 100
+        make_before_break: true
+        preparation_time_ms: 30
+        execution_time_ms: 15
+      
+      emergency_routing:
+        mode: "hybrid_v2v_satellite"
+        v2v_sidelink_enabled: true
+        v2v_relay_range_m: 450
+        v2v_frequency_ghz: 5.9
+
+  # Accident / Incident Simulation Parameters
+  incident:
+    enabled: true
+    trigger_time_s: 45.0
+    location:
+      name: "Tornante_18_Blind_Curve"
+      lat: 46.5332
+      lon: 46.4625
+      altitude_m: 2310
+    vehicle_id: 7
+    event_type: "severe_collision_road_blocked"
+    message_type: "ETSI_DENM_and_eCall"
+    data_payload_bytes: 1200
+    alert_interval_ms: 100
+
+  # Output & KPIs
+  output:
+    directory: "output/stelvio_alpine_hybrid_${timestamp}"
+    metrics:
+      - "emergency_alert_latency"
+      - "satellite_acquisition_time"
+      - "handover_success_rate"
+      - "coverage_ratio_5g_vs_ntn_vs_outage"
+      - "throughput_embb_vs_emergency"
+      - "v2v_relay_hops"
+      - "weather_rain_snow_attenuation"
+      - "isl_laser_jitter_and_ber"
+    format: "csv"
+    write_interval_s: 0.5
+    visualization:
+      enabled: true
+      type: "3d_terrain"
+      update_interval_s: 2.0
+
+  seed: 42

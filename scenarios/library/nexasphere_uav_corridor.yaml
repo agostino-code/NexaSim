@@ -1,0 +1,91 @@
+# NexaSphere Scenario: Aerial UAV Corridor & 3D Hybrid Connectivity
+# Focus: Inspection drones transitioning between Terrestrial 5G and LEO Satellite Backhaul
+
+scenario:
+  name: "nexasphere_uav_corridor"
+  description: "Autonomous inspection drones along infrastructure corridor with 5G-NR to LEO Satellite handover"
+  version: "1.0"
+  
+  area:
+    name: "Alpine_Aerial_Corridor"
+    center_lat: 46.2000
+    center_lon: 11.1200
+    altitude_m: 800
+    bbox: [11.0000, 46.1000, 11.2500, 46.3000]
+    elevation_mask_deg: 15.0
+
+  time:
+    start: "2026-08-26T12:00:00Z"
+    duration_s: 180
+    warmup_s: 10
+    timezone: "UTC"
+
+  # Non-Terrestrial Network (LEO Constellation 550 km)
+  constellation:
+    type: "starlink_shell"
+    shells:
+      - name: "shell_uav"
+        altitude_km: 550
+        inclination_deg: 53.0
+        num_planes: 8
+        sats_per_plane: 4
+        phase_offset: 0
+    isl:
+      enabled: true
+      type: "laser"
+      wavelength_nm: 1550
+      max_range_km: 5000
+      num_ports_per_sat: 4
+    ground_stations:
+      - name: "gw_trento_control_center"
+        lat: 46.0748
+        lon: 11.1217
+        altitude_m: 194
+        feeder_link:
+          frequency_ghz: 28.0
+          bandwidth_mhz: 1000
+
+  # Terrestrial 5G Network (Sparse Line-of-Sight Base Stations)
+  terrestrial:
+    gnb:
+      deployment: "custom"
+      sites:
+        - name: "gnb_corridor_entry"
+          lat: 46.1200
+          lon: 11.1000
+          height_m: 35
+          tx_power_dbm: 43
+          frequency_ghz: 3.5
+          bandwidth_mhz: 100
+        - name: "gnb_valley_hub"
+          lat: 46.2200
+          lon: 11.1500
+          height_m: 35
+          tx_power_dbm: 43
+          frequency_ghz: 3.5
+          bandwidth_mhz: 100
+
+    channel_model: "UMa"
+
+    # Airborne Drones / UAV Terminals
+    ue:
+      count: 6
+      mobility_model: "uav_linear_corridor"
+      speed_kmh: 80
+      altitude_m: 250
+      dual_connectivity:
+        enabled: true
+        primary_rat: "terrestrial_5g"
+        fallback_rat: "satellite_ntn"
+      phased_array:
+        elements: 32
+        gain_dbi: 26.0
+        scan_angle_max_deg: 50.0
+
+  output:
+    directory: "output/nexasphere_uav_corridor"
+    metrics:
+      - "throughput"
+      - "latency"
+      - "handover_count"
+      - "aerial_coverage_ratio"

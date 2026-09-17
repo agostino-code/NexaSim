@@ -1,0 +1,100 @@
+# NexaSphere Scenario: High-Speed Rail (HSR) TN-NTN Handover
+# Focus: 300 km/h train traversing tunnels, Doppler shift tracking, 5G-to-LEO seamless handover
+
+scenario:
+  name: "nexasphere_rail_highspeed"
+  description: "High-speed passenger train (300 km/h) transitioning between trackside 5G gNodeBs and roof-mounted LEO phased-array dish"
+  version: "1.0"
+  
+  area:
+    name: "Bologna_Florence_HSR_Corridor"
+    center_lat: 44.1500
+    center_lon: 11.2500
+    altitude_m: 350
+    bbox: [11.1000, 43.8000, 11.4000, 44.5000]
+    elevation_mask_deg: 12.0
+
+  time:
+    start: "2026-08-26T14:00:00Z"
+    duration_s: 180
+    warmup_s: 10
+    timezone: "UTC"
+
+  # Non-Terrestrial Network (LEO Constellation 550 km)
+  constellation:
+    type: "starlink_shell"
+    shells:
+      - name: "shell_rail"
+        altitude_km: 550
+        inclination_deg: 53.0
+        num_planes: 8
+        sats_per_plane: 4
+        phase_offset: 0
+    isl:
+      enabled: true
+      type: "laser"
+      wavelength_nm: 1550
+      max_range_km: 5000
+      num_ports_per_sat: 4
+    ground_stations:
+      - name: "gw_bologna_central"
+        lat: 44.5058
+        lon: 11.3430
+        altitude_m: 54
+        feeder_link:
+          frequency_ghz: 28.0
+          bandwidth_mhz: 1000
+
+  # Terrestrial 5G Network (Trackside Linear Deployment)
+  terrestrial:
+    gnb:
+      deployment: "custom"
+      sites:
+        - name: "gnb_rail_north"
+          lat: 44.4000
+          lon: 11.3000
+          height_m: 20
+          tx_power_dbm: 46
+          frequency_ghz: 3.5
+          bandwidth_mhz: 100
+        - name: "gnb_rail_south"
+          lat: 43.9500
+          lon: 11.2000
+          height_m: 20
+          tx_power_dbm: 46
+          frequency_ghz: 3.5
+          bandwidth_mhz: 100
+
+    # Apennine Tunnel Outage (Total 5G and Satellite loss inside tunnel)
+    blind_spots:
+      - name: "apennine_base_tunnel"
+        lat_min: 44.1000
+        lat_max: 44.2500
+        lon_min: 11.2100
+        lon_max: 11.2600
+        attenuation_db: 50.0
+
+    channel_model: "RMa"
+
+    # High-Speed Train Terminals
+    ue:
+      count: 4
+      mobility_model: "high_speed_linear_track"
+      speed_kmh: 300
+      dual_connectivity:
+        enabled: true
+        primary_rat: "terrestrial_5g"
+        fallback_rat: "satellite_ntn"
+      phased_array:
+        elements: 64
+        gain_dbi: 32.0
+        scan_angle_max_deg: 60.0
+        tracking_rate_deg_per_sec: 60.0
+
+  output:
+    directory: "output/nexasphere_rail_highspeed"
+    metrics:
+      - "doppler_shift_hz"
+      - "handover_delay_ms"
+      - "passenger_throughput_mbps"
+      - "tunnel_reacquisition_time_ms"

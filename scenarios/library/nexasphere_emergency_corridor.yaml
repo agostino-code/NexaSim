@@ -1,0 +1,103 @@
+# NexaSphere Scenario: Connected Ambulance & Emergency Telemedicine Corridor
+# Focus: High-speed ambulance (120 km/h), 4K Telemedicine streaming, 5G-to-LEO traffic steering, V2X Preemption
+
+scenario:
+  name: "nexasphere_emergency_corridor"
+  description: "Connected ambulance in emergency code red with 4K ultrasound video streaming and dynamic 5G/LEO Multi-RAT steering"
+  version: "1.0"
+  
+  area:
+    name: "Tuscan_Hills_Hospital_Corridor"
+    center_lat: 43.7800
+    center_lon: 11.2500
+    altitude_m: 220
+    bbox: [11.1500, 43.7000, 11.3500, 43.8500]
+    elevation_mask_deg: 14.0
+
+  time:
+    start: "2026-08-26T16:00:00Z"
+    duration_s: 180
+    warmup_s: 10
+    timezone: "Europe/Rome"
+
+  # Non-Terrestrial Network (LEO Constellation 550 km)
+  constellation:
+    type: "starlink_shell"
+    shells:
+      - name: "shell_emergency"
+        altitude_km: 550
+        inclination_deg: 53.0
+        num_planes: 8
+        sats_per_plane: 4
+        phase_offset: 0
+    isl:
+      enabled: true
+      type: "laser"
+      wavelength_nm: 1550
+      max_range_km: 5000
+      num_ports_per_sat: 4
+    ground_stations:
+      - name: "gw_careggi_university_hospital"
+        lat: 43.8058
+        lon: 11.2470
+        altitude_m: 80
+        feeder_link:
+          frequency_ghz: 28.0
+          bandwidth_mhz: 1000
+
+  # Terrestrial 5G Network (Suburban / Rural Cells)
+  terrestrial:
+    gnb:
+      deployment: "custom"
+      sites:
+        - name: "gnb_florence_suburb"
+          lat: 43.7900
+          lon: 11.2300
+          height_m: 25
+          tx_power_dbm: 46
+          frequency_ghz: 3.5
+          bandwidth_mhz: 100
+        - name: "gnb_rural_clinic"
+          lat: 43.7200
+          lon: 11.2800
+          height_m: 25
+          tx_power_dbm: 46
+          frequency_ghz: 3.5
+          bandwidth_mhz: 100
+
+    channel_model: "RMa"
+
+    # Connected Emergency Fleet & Surrounding Civilian Cars
+    ue:
+      count: 12
+      mobility_model: "emergency_corridor_fast"
+      speed_kmh: 120
+      dual_connectivity:
+        enabled: true
+        primary_rat: "terrestrial_5g"
+        fallback_rat: "satellite_ntn"
+      phased_array:
+        elements: 64
+        gain_dbi: 32.0
+        scan_angle_max_deg: 60.0
+
+  # Emergency Telemedicine Transmission
+  incident:
+    enabled: true
+    trigger_time_s: 20.0
+    location:
+      name: "Rural_Junction_Route_2"
+      lat: 43.7500
+      lon: 11.2600
+      altitude_m: 240
+    vehicle_id: 1
+    event_type: "code_red_ambulance_approaching"
+    message_type: "ETSI_DENM_Preemption_and_4K_Telemetry"
+
+  output:
+    directory: "output/nexasphere_emergency_corridor"
+    metrics:
+      - "telemedicine_video_throughput_mbps"
+      - "emergency_preemption_alert_latency"
+      - "multi_rat_steering_switching_delay_ms"
+      - "packet_jitter_ms"

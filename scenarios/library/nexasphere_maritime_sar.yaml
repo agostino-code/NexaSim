@@ -1,0 +1,94 @@
+# NexaSphere Scenario: Offshore Maritime Search & Rescue (SAR)
+# Focus: Long-range offshore vessel tracking, LEO constellation coverage, ISL backhaul
+
+scenario:
+  name: "nexasphere_maritime_sar"
+  description: "Offshore maritime emergency response in open sea with pure NTN LEO satellite connectivity and laser ISL routing"
+  version: "1.0"
+  
+  area:
+    name: "Adriatic_Offshore_Zone"
+    center_lat: 42.5000
+    center_lon: 15.5000
+    altitude_m: 0
+    bbox: [14.5000, 41.5000, 16.5000, 43.5000]
+    elevation_mask_deg: 5.0    # Flat sea horizon allows low elevation satellite visibility
+
+  time:
+    start: "2026-08-26T08:00:00Z"
+    duration_s: 240
+    warmup_s: 10
+    timezone: "UTC"
+
+  # Non-Terrestrial Network (LEO Constellation 600 km)
+  constellation:
+    type: "starlink_shell"
+    shells:
+      - name: "shell_maritime"
+        altitude_km: 600
+        inclination_deg: 53.0
+        num_planes: 10
+        sats_per_plane: 6
+        phase_offset: 0
+    isl:
+      enabled: true
+      type: "laser"
+      wavelength_nm: 1550
+      max_range_km: 5000
+      num_ports_per_sat: 4
+    ground_stations:
+      - name: "gw_ancona_coastguard"
+        lat: 43.6158
+        lon: 13.5189
+        altitude_m: 10
+        feeder_link:
+          frequency_ghz: 28.0
+          bandwidth_mhz: 1000
+      - name: "gw_bari_sar_hub"
+        lat: 41.1171
+        lon: 16.8719
+        altitude_m: 5
+        feeder_link:
+          frequency_ghz: 28.0
+          bandwidth_mhz: 1000
+
+  # Terrestrial Network (Zero 5G coverage offshore -> pure NTN evaluation)
+  terrestrial:
+    gnb:
+      deployment: "custom"
+      sites: []
+
+    channel_model: "RMa"
+
+    # Search and Rescue Vessels & Sensor Buoys
+    ue:
+      count: 10
+      mobility_model: "maritime_vessel_drift"
+      speed_kmh: 30
+      dual_connectivity:
+        enabled: false
+      phased_array:
+        elements: 64
+        gain_dbi: 30.0
+        scan_angle_max_deg: 65.0
+
+  # Maritime Emergency Event
+  incident:
+    enabled: true
+    trigger_time_s: 30.0
+    location:
+      name: "Offshore_Sector_4"
+      lat: 42.4500
+      lon: 15.6000
+      altitude_m: 0
+    vehicle_id: 3
+    event_type: "man_overboard_distress_beacon"
+    message_type: "eCall_and_AIS_Distress"
+
+  output:
+    directory: "output/nexasphere_maritime_sar"
+    metrics:
+      - "distress_alert_latency"
+      - "satellite_tracking_elevation"
+      - "isl_hop_count"
+      - "throughput"

@@ -1,0 +1,97 @@
+# NexaSphere Scenario: Autonomous Truck Platooning on Cross-Border Highway
+# Focus: Ultra-low latency V2V intra-platoon control (5.9 GHz) + Leader Hybrid 5G/LEO Cloud Gateway
+
+scenario:
+  name: "nexasphere_highway_platooning"
+  description: "Autonomous 4-truck platoon on cross-border highway (A22 Brenner corridor) with V2V string stability and hybrid LEO satellite fleet management"
+  version: "1.0"
+  
+  area:
+    name: "Brenner_Highway_Corridor"
+    center_lat: 46.8500
+    center_lon: 11.5000
+    altitude_m: 1100
+    bbox: [11.3500, 46.7000, 11.6500, 47.0000]
+    elevation_mask_deg: 18.0
+
+  time:
+    start: "2026-08-26T09:00:00Z"
+    duration_s: 200
+    warmup_s: 10
+    timezone: "Europe/Rome"
+
+  # Non-Terrestrial Network (LEO Constellation 550 km)
+  constellation:
+    type: "starlink_shell"
+    shells:
+      - name: "shell_highway"
+        altitude_km: 550
+        inclination_deg: 53.0
+        num_planes: 8
+        sats_per_plane: 4
+        phase_offset: 0
+    isl:
+      enabled: true
+      type: "laser"
+      wavelength_nm: 1550
+      max_range_km: 5000
+      num_ports_per_sat: 4
+    ground_stations:
+      - name: "gw_bolzano_logistics"
+        lat: 46.4983
+        lon: 11.3548
+        altitude_m: 262
+        feeder_link:
+          frequency_ghz: 28.0
+          bandwidth_mhz: 1000
+
+  # Terrestrial 5G Network (Intermittent Highway Coverage)
+  terrestrial:
+    gnb:
+      deployment: "custom"
+      sites:
+        - name: "gnb_highway_toll_north"
+          lat: 46.9500
+          lon: 11.5500
+          height_m: 30
+          tx_power_dbm: 46
+          frequency_ghz: 3.5
+          bandwidth_mhz: 100
+        - name: "gnb_highway_service_south"
+          lat: 46.7500
+          lon: 11.4500
+          height_m: 30
+          tx_power_dbm: 46
+          frequency_ghz: 3.5
+          bandwidth_mhz: 100
+
+    channel_model: "RMa"
+
+    # Truck Platoon Terminals
+    ue:
+      count: 4
+      mobility_model: "highway_platooning_linear"
+      speed_kmh: 90
+      dual_connectivity:
+        enabled: true
+        primary_rat: "terrestrial_5g"
+        fallback_rat: "satellite_ntn"
+      phased_array:
+        elements: 64
+        gain_dbi: 32.0
+        scan_angle_max_deg: 60.0
+
+    integration:
+      emergency_routing:
+        mode: "hybrid_v2v_satellite"
+        v2v_sidelink_enabled: true
+        v2v_frequency_ghz: 5.9
+        v2v_relay_range_m: 300
+
+  output:
+    directory: "output/nexasphere_highway_platooning"
+    metrics:
+      - "v2v_intra_platoon_latency"
+      - "leader_cloud_throughput"
+      - "handover_packet_loss_pct"
+      - "platoon_string_stability"
