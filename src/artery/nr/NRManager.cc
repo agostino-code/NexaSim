@@ -495,8 +495,24 @@ void NRManager::splitBearer(int ueId, double nrRatio) {
 }
 
 void NRManager::evaluateTrafficSteering(int ueId) {
-    // Evaluate whether to steer traffic to NR or NTN
-    // Based on latency, throughput, reliability requirements
+    auto it = ues.find(ueId);
+    if (it == ues.end()) return;
+    
+    double bestQuality = 0.0;
+    for (const auto& [name, gnb] : gnbs) {
+        double quality = calculateLinkBudget(gnb, it->second);
+        if (quality > bestQuality) {
+            bestQuality = quality;
+        }
+    }
+    
+    double targetNrRatio = 1.0;
+    if (bestQuality < 0.2) {
+        targetNrRatio = 0.0; // Handover completely to NTN
+    } else if (bestQuality < 0.5) {
+        targetNrRatio = 0.4; // Dual connectivity split
+    }
+    splitBearer(ueId, targetNrRatio);
 }
 
 void NRManager::configureFromYAML(const std::string& yamlContent) {

@@ -718,9 +718,12 @@ inet::Coord UserTerminal::getCurrentPosition() {
 
 inet::Coord UserTerminal::getCurrentVelocity() {
     if (mobilityModule) {
-        // Query mobility module for velocity
+        auto mob = dynamic_cast<inet::IMobility*>(mobilityModule);
+        if (mob) {
+            return mob->getCurrentVelocity();
+        }
     }
-    return inet::Coord(0, 0, 0);  // Placeholder
+    return inet::Coord(0, 0, 0);
 }
 
 void UserTerminal::notifyConstellationManager(const std::string& event, int satId) {

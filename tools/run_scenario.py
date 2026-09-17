@@ -12,7 +12,7 @@ from pathlib import Path
 def main():
     parser = argparse.ArgumentParser(description='Run Artery simulation scenario')
     parser.add_argument('config', help='YAML scenario configuration file')
-    parser.add_argument('-o', '--output', default='output', help='Output directory')
+    parser.add_argument('-o', '--output', default='scenarios/generated', help='Output directory')
     parser.add_argument('--generate-only', action='store_true', help='Only generate scenario files')
     parser.add_argument('--debug', action='store_true', help='Run with debug build')
     parser.add_argument('--gui', action='store_true', help='Run with Qtenv GUI')
@@ -25,8 +25,12 @@ def main():
     scenario_gen = artery_root / 'tools' / 'gen_scenario.py'
     
     # Generate scenario
-    scenario_name = Path(args.config).stem
-    output_dir = Path(args.output) / scenario_name
+    output_path = Path(args.output)
+    if output_path.parent.name == 'generated' or (output_path / 'omnetpp.ini').exists():
+        output_dir = output_path
+    else:
+        scenario_name = Path(args.config).stem
+        output_dir = output_path / scenario_name
     
     print(f"Generating scenario from {args.config}...")
     result = subprocess.run([
@@ -44,22 +48,27 @@ def main():
         print("Scenario files generated. Exiting.")
         return
     
-    # Run simulation
-    exe_name = 'artery' + ('.exe' if sys.platform == 'win32' else '')
-    artery_exe = build_dir / exe_name
-    
-    if not artery_exe.exists():
-        print(f"Error: Artery executable not found at {artery_exe}")
-        print("Please build the project first: cmake --build build --config Release")
-        sys.exit(1)
-    
     # Find the generated ini file
     ini_file = output_dir / 'omnetpp.ini'
     if not ini_file.exists():
         print(f"Error: Generated ini file not found: {ini_file}")
         sys.exit(1)
-    
-    cmd = [str(artery_exe), '-f', str(ini_file)]
+
+    # Find runner (prefer opp_run.sh in Linux/Docker container, fallback to standalone binary)
+    opp_run_sh = artery_root / 'tools' / 'opp_run.sh'
+    exe_name = 'artery' + ('.exe' if sys.platform == 'win32' else '')
+    artery_exe = build_dir / exe_name
+
+    ini_abs_path = str(ini_file.resolve())
+
+    if opp_run_sh.exists() and sys.platform != 'win32':
+        cmd = ['bash', str(opp_run_sh), '-f', ini_abs_path]
+    elif artery_exe.exists():
+        cmd = [str(artery_exe), '-f', ini_abs_path]
+    else:
+        print(f"Error: Neither {opp_run_sh} nor {artery_exe} found.")
+        print("Please build the project first: docker compose run --rm nexasim-build")
+        sys.exit(1)
     if args.gui:
         cmd.extend(['-u', 'Qtenv'])
     else:

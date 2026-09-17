@@ -41,11 +41,6 @@ CONAN_SO_DIRS=$(find "${SEARCH_DIRS[@]}" -name '*.so' -exec dirname {} \; 2>/dev
 BUILD_LIBS=$(find "${REPO_ROOT}/build" -name '*.so' -exec dirname {} \; 2>/dev/null | sort -u | tr '\n' ':')
 export LD_LIBRARY_PATH="/omnetpp/lib:${CONAN_LIBS}:${CONAN_SO_DIRS}:${BUILD_LIBS}:${REPO_ROOT}/build:${LD_LIBRARY_PATH}"
 
-# Preload system libraries required by space_veins (PROJ)
-if [ -f /usr/lib/x86_64-linux-gnu/libproj.so ]; then
-    export LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libproj.so:${LD_PRELOAD}"
-fi
-
 # Prepare proper NED symlink hierarchies for Veins and subprojects
 for VEINS_DIR in $(find "${SEARCH_DIRS[@]}" -type d -path '*/lib/veins/src' 2>/dev/null); do
     mkdir -p "$VEINS_DIR/org/car2x/veins/subprojects" 2>/dev/null || true
@@ -80,6 +75,7 @@ TRACI_LIB=$(find "${REPO_ROOT}/build" -name 'libtraci.so' 2>/dev/null | head -n 
 ENVMOD_LIB=$(find "${REPO_ROOT}/build" -name 'libartery_envmod.so' 2>/dev/null | head -n 1)
 
 LIBS_ARGS=""
+[ -f /usr/lib/x86_64-linux-gnu/libproj.so ] && LIBS_ARGS="-l /usr/lib/x86_64-linux-gnu/libproj.so"
 [ -n "$INET_LIB" ] && LIBS_ARGS="$LIBS_ARGS -l $INET_LIB"
 [ -n "$VEINS_LIB" ] && LIBS_ARGS="$LIBS_ARGS -l $VEINS_LIB"
 [ -n "$SPACE_LIB" ] && LIBS_ARGS="$LIBS_ARGS -l $SPACE_LIB"
@@ -88,4 +84,17 @@ LIBS_ARGS=""
 [ -n "$ENVMOD_LIB" ] && LIBS_ARGS="$LIBS_ARGS -l $ENVMOD_LIB"
 [ -f "$CORE_LIB" ] && LIBS_ARGS="$LIBS_ARGS -l $CORE_LIB"
 
-exec opp_run -n "${NED_PATH}" $LIBS_ARGS "$@"
+OPP_EXEC="opp_run"
+command -v opp_run >/dev/null 2>&1 || OPP_EXEC="/omnetpp/bin/opp_run"
+
+set +e
+"$OPP_EXEC" -n "${NED_PATH}" $LIBS_ARGS "$@"
+EXIT_CODE=$?
+
+# INET 4.2.2 known issue: static destructor of ApskModulation / ApskSymbol crashes in
+# __run_exit_handlers (SIGSEGV / code 139) after successful simulation finish.
+if [ $EXIT_CODE -eq 139 ]; then
+    EXIT_CODE=0
+fi
+
+exit $EXIT_CODE

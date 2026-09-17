@@ -62,7 +62,7 @@ services:
     working_dir: /artery
     command: >
       bash -c "
-        python tools/run_scenario.py scenarios/library/stelvio_pass_hybrid.yaml -o output
+        python3 tools/run_scenario.py scenarios/library/stelvio_pass_hybrid.yaml -o scenarios/generated/stelvio
       "
     depends_on:
       - nexasim-build
@@ -77,11 +77,13 @@ services:
       dockerfile: Dockerfile
       target: final
     volumes:
+      - .:/artery
       - ./output:/artery/output
+      - ./scenarios:/artery/scenarios
     working_dir: /artery
     command: >
       bash -c "
-        python tools/analyze_results.py output/stelvio_pass_hybrid/
+        python3 tools/analyze_results.py scenarios/generated/stelvio/
       "
 
   artery-analyze:
