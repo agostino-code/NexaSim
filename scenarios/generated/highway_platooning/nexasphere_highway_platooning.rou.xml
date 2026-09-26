@@ -1,0 +1,17 @@
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <vType id="truck_leader" accel="1.8" decel="4.0" sigma="0.1" length="16.5" minGap="4.0" maxSpeed="25.0" color="0,120,255"/>
+    <vType id="truck_follower" accel="2.2" decel="4.5" sigma="0.0" length="16.5" minGap="2.0" maxSpeed="25.0" color="0,200,100"/>
+    <vType id="civilian_car" accel="2.6" decel="4.5" sigma="0.5" length="4.5" minGap="2.5" maxSpeed="30.0" color="200,200,200"/>
+
+    <route id="r_highway_fwd" edges="e_fwd_1 e_fwd_2"/>
+    <route id="r_highway_rev" edges="e_rev_2 e_rev_1"/>
+
+    <!-- Platoon Convoy (Leader + Followers) -->
+    <vehicle id="veh_0" type="truck_leader" route="r_highway_fwd" depart="0.0" departLane="0" departSpeed="25.0"/>
+    <vehicle id="veh_1" type="truck_follower" route="r_highway_fwd" depart="1.0" departLane="0" departSpeed="25.0"/>
+    <vehicle id="veh_2" type="truck_follower" route="r_highway_fwd" depart="2.0" departLane="0" departSpeed="25.0"/>
+    <vehicle id="veh_3" type="truck_follower" route="r_highway_fwd" depart="3.0" departLane="0" departSpeed="25.0"/>
+
+    <!-- Additional traffic flow -->
+    <flow id="veh_traffic" type="civilian_car" route="r_highway_rev" begin="5" end="200" number="0" departLane="best" departSpeed="25.0"/>
+</routes>

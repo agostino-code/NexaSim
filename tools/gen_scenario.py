@@ -22,6 +22,19 @@ from dataclasses import dataclass, asdict
 from datetime import datetime
 import math
 
+try:
+    from tools.sumo_generator import generate_sumo_scenario
+except ImportError:
+    from sumo_generator import generate_sumo_scenario
+
+try:
+    from tools.schema import validate_scenario_file
+except ImportError:
+    try:
+        from schema import validate_scenario_file
+    except ImportError:
+        validate_scenario_file = None
+
 @dataclass
 class Satellite:
     name: str
@@ -109,13 +122,16 @@ class ScenarioGenerator:
         """Generate all scenario files"""
         os.makedirs(output_dir, exist_ok=True)
         self.build()
-        
+
         # Write OMNeT++ files
         self._write_ned_file(output_dir)
         self._write_ini_file(output_dir)
         self._write_tle_file(output_dir)
         self._write_mobility_file(output_dir)
-        
+
+        # Generate procedural SUMO network, routes, and config
+        generate_sumo_scenario(self.config, Path(output_dir))
+
         print(f"Scenario generated in {output_dir}")
     
     def _generate_constellation(self):
@@ -380,6 +396,7 @@ network GeneratedScenario
         ini_path = os.path.join(output_dir, 'omnetpp.ini')
         subpkg = Path(output_dir).name
         package_name = f"generated.{subpkg}"
+        scenario_name = self.scenario.get('name', subpkg)
         
         duration = self.time.get('duration_s', 300)
         warmup = self.time.get('warmup_s', 30)
@@ -557,8 +574,10 @@ seed-set = {seed}
 **.radioMedium.pathLoss.environmentType = "suburban"
 **.radioMedium.mediumLimitCache.carrierFrequency = 28GHz
 **.nrRadioMedium.mediumLimitCache.carrierFrequency = 3.5GHz
-*.satellite[*].**.interfaceTableModule = ""
-*.groundStation[*].**.interfaceTableModule = ""
+*.satellite[*].**.interfaceTableModule = "^.interfaceTable"
+*.satellite[*].interfaceTableModule = ".interfaceTable"
+*.groundStation[*].**.interfaceTableModule = "^.interfaceTable"
+*.groundStation[*].interfaceTableModule = ".interfaceTable"
 *.gnb[*].**.interfaceTableModule = ""
 *.ue[*].**.interfaceTableModule = ""
 *.userTerminal[*].**.interfaceTableModule = ""
@@ -576,13 +595,25 @@ output-scalar-file = "${{resultdir}}/${{configname}}-${{runnumber}}.sca"
 
 # TraCI Co-Simulation with SUMO
 *.traci.launcher.typename = "PosixLauncher"
-*.traci.launcher.sumocfg = "stelvio.sumocfg"
+*.traci.launcher.sumocfg = "{scenario_name}.sumocfg"
 *.traci.launcher.sumo = "sumo"
 *.traci.core.version = 21
 *.traci.mapper.vehicleType = "artery.inet.HybridCar"
 *.traci.mapper.personType = "artery.inet.Person"
 *.traci.nodes.personSinkModule = ".mobility"
 *.traci.nodes.vehicleSinkModule = ".mobility"
+
+# =========================================================================
+# MEC Multi-Tier Edge Offloading Configuration
+# =========================================================================
+*.node[*].mecClient.terrestrialEdgeAddress = "groundStation[0]"
+*.node[*].mecClient.satelliteEdgeAddress = "satellite[0]"
+*.node[*].mecClient.localPort = 5001
+*.node[*].mecClient.destPort = 5000
+*.node[*].mecClient.taskGenerationInterval = 1.0s
+*.node[*].mecClient.taskInstructions = 10000000
+*.satellite[*].mecServer.localPort = 5000
+*.groundStation[*].mecServer.localPort = 5000
 
 # =========================================================================
 # INET Canvas Visualizers (Matching squidslab/simu-scs-hybrid)
@@ -653,14 +684,23 @@ def main():
     parser.add_argument('--validate', action='store_true', help='Only validate configuration')
     
     args = parser.parse_args()
-    
+
     if not os.path.exists(args.config):
         print(f"Error: Config file not found: {args.config}")
         sys.exit(1)
-    
+
+    if validate_scenario_file:
+        ok, errors = validate_scenario_file(args.config)
+        if not ok:
+            print(f"[!] Validation warning for {args.config}:")
+            for err in errors:
+                print(f"    • {err}")
+            if args.validate:
+                sys.exit(1)
+
     generator = ScenarioGenerator(args.config)
     generator.build()
-    
+
     if args.validate:
         print("Configuration validation passed!")
         print(f"  Satellites: {len(generator.satellites)}")

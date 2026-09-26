@@ -1,0 +1,15 @@
+<edges xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/edges_file.xsd">
+    <edge id="e_up_1" from="trafoi" to="knott" priority="3" numLanes="1" speed="16.6" shape="0.0,0.0 400.0,120.0 800.0,300.0"/>
+    <edge id="e_up_2" from="knott" to="franzenshohe" priority="3" numLanes="1" speed="13.8" shape="800.0,300.0 1200.0,600.0 1600.0,900.0"/>
+    <edge id="e_up_3" from="franzenshohe" to="tornante18" priority="3" numLanes="1" speed="11.1" shape="1600.0,900.0 1700.0,1100.0 1900.0,1150.0 2000.0,1350.0 2200.0,1400.0"/>
+    <edge id="e_up_4" from="tornante18" to="tornante4" priority="3" numLanes="1" speed="11.1" shape="2200.0,1400.0 2300.0,1650.0 2500.0,1750.0 2600.0,1950.0 2700.0,2100.0"/>
+    <edge id="e_up_5" from="tornante4" to="summit" priority="3" numLanes="1" speed="13.8" shape="2700.0,2100.0 2900.0,2300.0 3200.0,2600.0"/>
+    <edge id="e_up_6" from="summit" to="umbrail" priority="3" numLanes="1" speed="13.8" shape="3200.0,2600.0 3500.0,2700.0 3800.0,2800.0"/>
+
+    <edge id="e_down_6" from="umbrail" to="summit" priority="3" numLanes="1" speed="13.8" shape="3800.0,2800.0 3500.0,2700.0 3200.0,2600.0"/>
+    <edge id="e_down_5" from="summit" to="tornante4" priority="3" numLanes="1" speed="13.8" shape="3200.0,2600.0 2900.0,2300.0 2700.0,2100.0"/>
+    <edge id="e_down_4" from="tornante4" to="tornante18" priority="3" numLanes="1" speed="11.1" shape="2700.0,2100.0 2600.0,1950.0 2500.0,1750.0 2300.0,1650.0 2200.0,1400.0"/>
+    <edge id="e_down_3" from="tornante18" to="franzenshohe" priority="3" numLanes="1" speed="11.1" shape="2200.0,1400.0 2000.0,1350.0 1900.0,1150.0 1700.0,1100.0 1600.0,900.0"/>
+    <edge id="e_down_2" from="franzenshohe" to="knott" priority="3" numLanes="1" speed="13.8" shape="1600.0,900.0 1200.0,600.0 800.0,300.0"/>
+    <edge id="e_down_1" from="knott" to="trafoi" priority="3" numLanes="1" speed="16.6" shape="800.0,300.0 400.0,120.0 0.0,0.0"/>
+</edges>

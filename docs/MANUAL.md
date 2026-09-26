@@ -251,38 +251,54 @@ Definisce le stazioni radio base (gNodeB), le zone d'ombra montuose e il meteo:
 
 ---
 
-## 3. Generazione ed Esecuzione degli Scenari
+## 3. Generazione ed Esecuzione degli Scenari con la CLI Unificata (`nexasim`)
 
-### 1. Compilare lo scenario da YAML a OMNeT++
+NexaSim include la CLI unificata `nexasim` (eseguibile da `./nexasim` o `python tools/nexasim.py`), che coordina l'intera pipeline di validazione, generazione topologica, esecuzione del simulatore e generazione dei report.
+
+### Comandi Rapidi della CLI:
+
 ```bash
-python tools/gen_scenario.py scenarios/library/stelvio_pass_hybrid.yaml -o scenarios/generated/stelvio
-```
-Questo comando genererà:
-- `scenario.ned`: Topologia dei moduli di rete 3D (Satelliti, gNodeB, UE, Ground Stations).
-- `omnetpp.ini`: File di configurazione completo per il simulatore.
-- `constellation.tle`: Effemeridi SGP4 per il calcolo delle orbite.
-- `mobility.tcl`: Curve di movimento 3D dei veicoli.
+# 1. Elencare tutti gli scenari pronti all'uso nella libreria
+./nexasim list
 
-### 2. Eseguire la simulazione
-```bash
-# Modalità headless rapida via Docker
-docker compose run --rm nexasim-run opp_run -l build/libartery_core.so -f scenarios/generated/stelvio/omnetpp.ini -u Cmdenv
+# 2. Validare la sintassi e i vincoli fisici dello scenario (Pydantic & JSON Schema)
+./nexasim validate stelvio
 
-# Modalità grafica interattiva (Qtenv)
-docker compose run --rm -e DISPLAY=$DISPLAY nexasim-run opp_run -l build/libartery_core.so -f scenarios/generated/stelvio/omnetpp.ini -u Qtenv
+# 3. Generare i file OMNeT++ e la rete stradale microscopica SUMO
+./nexasim generate stelvio
+
+# 4. Eseguire la simulazione in modalità headless (rapida, via Docker)
+./nexasim run stelvio
+
+# 5. Eseguire con visualizzazione interattiva (Qtenv + SUMO-GUI via NoVNC)
+./nexasim run stelvio --gui
+# Collegarsi nel browser all'indirizzo: http://localhost:6080/vnc.html
+
+# 6. Analisi KPI e generazione Dashboard HTML Chart.js
+./nexasim analyze stelvio --dashboard
+
+# 7. Aprire direttamente il Dashboard HTML generato nel browser
+./nexasim dashboard stelvio --open
+
+# 8. Esecuzione End-to-End completa (Generate -> Run -> Analyze -> Dashboard)
+./nexasim all nexasphere_highway_platooning
 ```
 
 ---
 
-## 4. Analisi dei Dati e Metriche KPI (`analyze_results.py`)
+## 4. Analisi dei Dati, Metriche KPI e Dashboard Interattivo
 
 Per analizzare le prestazioni della simulazione ed estrarre tutti i parametri di telemetria:
 
 ```bash
-python tools/analyze_results.py scenarios/generated/stelvio
+./nexasim analyze stelvio --dashboard
 ```
 
-### Esempio di Report Generato:
+Questo comando calcola tutti i KPI di rete e genera contemporaneamente nella cartella `results/`:
+1. **`dashboard.html`**: dashboard web moderna e reattiva con KPI cards e grafici Chart.js (Timeline Interfaccia Attiva 5G vs NTN, Handovers cumulativi, Utility QoS, Stato di Carica Batteria, Latenze Task MEC).
+2. **`kpi_summary.json`**: esportazione strutturata dei KPI aggregati per pipeline CI/CD o benchmarking comparativo.
+
+### Esempio di Report Generato a Terminale:
 ```text
 =======================================================
  NexaSim KPI Analysis Report: stelvio
@@ -303,10 +319,9 @@ python tools/analyze_results.py scenarios/generated/stelvio
   • Link Inter-Satellitari Ottici (ISL):   9.85 Gbps (BER: 1.2e-11)
 
 --- [3] COPERTURA 3D IBRIDA LUNGO IL PERCORSO DELLO STELVIO ---
-  • Copertura Terrestre 5G-NR (Vetta/Valle): 34.5%
-  • Copertura Satellitare LEO (Gole/Ombra):  52.0%
-  • Copertura Dual-Connectivity (5G + LEO):  11.2%
-  • Buco di Copertura / Outage (Pareti):     2.3%
+  • Copertura Terrestre 5G-NR (Vetta/Valle): 55.0%
+  • Copertura Satellitare LEO (Gole/Ombra):  45.0%
+  • Tasso di Successo Handover Seamless:     100.0%
 
 --- [4] IMPATTO METEO ALPINO (Pioggia / Neve in Quota) ---
   • Attenuazione Aggiuntiva Ka-Band (28 GHz): 3.4 dB

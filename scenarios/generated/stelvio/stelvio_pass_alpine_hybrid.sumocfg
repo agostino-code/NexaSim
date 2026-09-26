@@ -1,0 +1,15 @@
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+    <input>
+        <net-file value="stelvio_pass_alpine_hybrid.net.xml"/>
+        <route-files value="stelvio_pass_alpine_hybrid.rou.xml"/>
+    </input>
+    <time>
+        <begin value="0"/>
+        <end value="300"/>
+        <step-length value="0.1"/>
+    </time>
+    <gui_only>
+        <start value="true"/>
+        <gui-settings-file value="stelvio_pass_alpine_hybrid.view.xml"/>
+    </gui_only>
+</configuration>

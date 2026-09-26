@@ -1,0 +1,19 @@
+{
+  "scenario": "emergency_corridor",
+  "satellites_count": 32,
+  "gnbs_count": 2,
+  "user_terminals_count": 12,
+  "cell_usage_pct": 44.718142968142914,
+  "sat_usage_pct": 55.281857031857086,
+  "total_vho_switches": 12,
+  "mean_qos_score": 0.95,
+  "final_battery_soc": 98.4,
+  "pdr_pct": 100.0,
+  "packets_sent": 34936,
+  "packets_rcvd": 34936,
+  "packets_dropped": 0,
+  "avg_latency_ms": 2.254417652296792,
+  "avg_jitter_ms": 0.20990468017506334,
+  "one_way_prop_delay_ms": 1.8346025235898362,
+  "direct_rtt_ms": 3.6692050471796724
+}

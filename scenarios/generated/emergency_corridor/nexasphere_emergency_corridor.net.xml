@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 2026-09-26 17:37:04 by Eclipse SUMO netconvert Version 1.21.0
+<netconvertConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <node-files value="nexasphere_emergency_corridor.nod.xml"/>
+        <edge-files value="nexasphere_emergency_corridor.edg.xml"/>
+    </input>
+
+    <output>
+        <output-file value="nexasphere_emergency_corridor.net.xml"/>
+    </output>
+
+    <report>
+        <no-warnings value="true"/>
+    </report>
+
+</netconvertConfiguration>
+-->
+
+<net version="1.20" junctionCornerDetail="5" limitTurnSpeed="5.50" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
+
+    <location netOffset="0.00,0.00" convBoundary="0.00,0.00,6000.00,800.00" origBoundary="0.00,0.00,6000.00,800.00" projParameter="!"/>
+
+    <edge id=":corridor_end_0" function="internal">
+        <lane id=":corridor_end_0_0" index="0" speed="3.65" length="4.67" shape="6000.21,798.41 6001.30,799.37 6001.59,800.21 6001.08,800.95 5999.79,801.59"/>
+    </edge>
+    <edge id=":corridor_mid_0" function="internal">
+        <lane id=":corridor_mid_0_0" index="0" speed="33.30" length="0.10" shape="2999.37,404.76 2999.37,404.76"/>
+        <lane id=":corridor_mid_0_1" index="1" speed="33.30" length="0.10" shape="2999.79,401.59 2999.79,401.59"/>
+    </edge>
+    <edge id=":corridor_mid_2" function="internal">
+        <lane id=":corridor_mid_2_0" index="0" speed="33.30" length="0.10" shape="3000.63,395.24 3000.63,395.24"/>
+        <lane id=":corridor_mid_2_1" index="1" speed="33.30" length="0.10" shape="3000.21,398.41 3000.21,398.41"/>
+    </edge>
+    <edge id=":corridor_start_0" function="internal">
+        <lane id=":corridor_start_0_0" index="0" speed="3.65" length="4.67" shape="-0.21,1.59 -1.30,0.63 -1.59,-0.21 -1.08,-0.95 0.21,-1.59"/>
+    </edge>
+
+    <edge id="e_corr_1" from="corridor_start" to="corridor_mid" priority="3">
+        <lane id="e_corr_1_0" index="0" speed="33.30" length="3026.55" shape="0.63,-4.76 3000.63,395.24"/>
+        <lane id="e_corr_1_1" index="1" speed="33.30" length="3026.55" shape="0.21,-1.59 3000.21,398.41"/>
+    </edge>
+    <edge id="e_corr_2" from="corridor_mid" to="corridor_end" priority="3">
+        <lane id="e_corr_2_0" index="0" speed="33.30" length="3026.55" shape="3000.63,395.24 6000.63,795.24"/>
+        <lane id="e_corr_2_1" index="1" speed="33.30" length="3026.55" shape="3000.21,398.41 6000.21,798.41"/>
+    </edge>
+    <edge id="e_corr_rev_1" from="corridor_mid" to="corridor_start" priority="3">
+        <lane id="e_corr_rev_1_0" index="0" speed="33.30" length="3026.55" shape="2999.37,404.76 -0.63,4.76"/>
+        <lane id="e_corr_rev_1_1" index="1" speed="33.30" length="3026.55" shape="2999.79,401.59 -0.21,1.59"/>
+    </edge>
+    <edge id="e_corr_rev_2" from="corridor_end" to="corridor_mid" priority="3">
+        <lane id="e_corr_rev_2_0" index="0" speed="33.30" length="3026.55" shape="5999.37,804.76 2999.37,404.76"/>
+        <lane id="e_corr_rev_2_1" index="1" speed="33.30" length="3026.55" shape="5999.79,801.59 2999.79,401.59"/>
+    </edge>
+
+    <junction id="corridor_end" type="priority" x="6000.00" y="800.00" incLanes="e_corr_2_0 e_corr_2_1" intLanes=":corridor_end_0_0" shape="6000.00,800.00 6000.85,793.66 6000.00,800.00">
+        <request index="0" response="0" foes="0" cont="0"/>
+    </junction>
+    <junction id="corridor_mid" type="priority" x="3000.00" y="400.00" incLanes="e_corr_rev_2_0 e_corr_rev_2_1 e_corr_1_0 e_corr_1_1" intLanes=":corridor_mid_0_0 :corridor_mid_0_1 :corridor_mid_2_0 :corridor_mid_2_1" shape="2999.15,406.34 3000.85,393.66 2999.15,406.34">
+        <request index="0" response="0000" foes="0000" cont="0"/>
+        <request index="1" response="0000" foes="0000" cont="0"/>
+        <request index="2" response="0000" foes="0000" cont="0"/>
+        <request index="3" response="0000" foes="0000" cont="0"/>
+    </junction>
+    <junction id="corridor_start" type="priority" x="0.00" y="0.00" incLanes="e_corr_rev_1_0 e_corr_rev_1_1" intLanes=":corridor_start_0_0" shape="0.00,0.00 -0.85,6.34 0.00,0.00">
+        <request index="0" response="0" foes="0" cont="0"/>
+    </junction>
+
+    <connection from="e_corr_1" to="e_corr_2" fromLane="0" toLane="0" via=":corridor_mid_2_0" dir="s" state="M"/>
+    <connection from="e_corr_1" to="e_corr_2" fromLane="1" toLane="1" via=":corridor_mid_2_1" dir="s" state="M"/>
+    <connection from="e_corr_2" to="e_corr_rev_2" fromLane="1" toLane="1" via=":corridor_end_0_0" dir="t" state="M"/>
+    <connection from="e_corr_rev_1" to="e_corr_1" fromLane="1" toLane="1" via=":corridor_start_0_0" dir="t" state="M"/>
+    <connection from="e_corr_rev_2" to="e_corr_rev_1" fromLane="0" toLane="0" via=":corridor_mid_0_0" dir="s" state="M"/>
+    <connection from="e_corr_rev_2" to="e_corr_rev_1" fromLane="1" toLane="1" via=":corridor_mid_0_1" dir="s" state="M"/>
+
+    <connection from=":corridor_end_0" to="e_corr_rev_2" fromLane="0" toLane="1" dir="t" state="M"/>
+    <connection from=":corridor_mid_0" to="e_corr_rev_1" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from=":corridor_mid_0" to="e_corr_rev_1" fromLane="1" toLane="1" dir="s" state="M"/>
+    <connection from=":corridor_mid_2" to="e_corr_2" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from=":corridor_mid_2" to="e_corr_2" fromLane="1" toLane="1" dir="s" state="M"/>
+    <connection from=":corridor_start_0" to="e_corr_1" fromLane="0" toLane="1" dir="t" state="M"/>
+
+</net>

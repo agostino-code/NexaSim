@@ -10,6 +10,10 @@ src/artery/messages/*_m.h
 
 # Simulation runtime output directory
 output/
+*.vec
+*.vci
+*.log
+scenarios/**/results/*.csv
 
 # Building website with mkdocs
 www/

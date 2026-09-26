@@ -1,0 +1,5 @@
+<nodes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/nodes_file.xsd">
+    <node id="corridor_start" x="0.0" y="0.0" type="priority"/>
+    <node id="corridor_mid" x="3000.0" y="400.0" type="priority"/>
+    <node id="corridor_end" x="6000.0" y="800.0" type="priority"/>
+</nodes>

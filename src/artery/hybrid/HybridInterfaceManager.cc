@@ -167,11 +167,26 @@ void CoverageBasedStrategy::handleMessage(omnetpp::cMessage* msg)
 
 void CoverageBasedStrategy::evaluate()
 {
-    // Check coverage conditions: if vehicle is in gorge / deep valley, switch to satellite
-    // Simulating terrain blind spot evaluation
     double simSec = omnetpp::simTime().dbl();
-    bool terrestrialBlocked = (simSec >= 45.0 && simSec <= 180.0);
-    
+
+    // Check spatial coordinates if mobility is available
+    bool inBlindSpot = false;
+    omnetpp::cModule* parent = m_manager->getParentModule();
+    if (parent) {
+        omnetpp::cModule* mob = parent->getSubmodule("mobility");
+        if (mob && mob->hasPar("initialX") && mob->hasPar("initialY")) {
+            // Evaluates whether node is in hairpin gorge / shadow zone
+            double x = mob->par("initialX").doubleValue();
+            double y = mob->par("initialY").doubleValue();
+            if (x >= 1500.0 && x <= 2800.0 && y >= 800.0 && y <= 2200.0) {
+                inBlindSpot = true;
+            }
+        }
+    }
+
+    // Dynamic channel and terrain evaluation
+    bool terrestrialBlocked = inBlindSpot || (simSec >= 40.0 && simSec <= 170.0);
+
     if (terrestrialBlocked && !m_manager->isSatelliteActive()) {
         m_manager->performSwitch(true); // Switch to LEO satellite
     } else if (!terrestrialBlocked && m_manager->isSatelliteActive()) {
@@ -230,20 +245,38 @@ double QoSBasedStrategy::computeScore(double pdr, double rtt, double jitter)
     double normPdr = std::max(0.0, std::min(1.0, pdr));
     double normRtt = std::max(0.0, std::min(1.0, 1.0 - (rtt / 0.100)));
     double normJitter = std::max(0.0, std::min(1.0, 1.0 - (jitter / 0.020)));
-    
+
     return (m_weightPDR * normPdr) + (m_weightRTT * normRtt) + (m_weightJitter * normJitter);
 }
 
 void QoSBasedStrategy::evaluateQoS()
 {
-    double pdr = m_manager->isSatelliteActive() ? 0.98 : 0.99;
-    double rtt = m_manager->isSatelliteActive() ? 0.025 : 0.005; // 25ms sat vs 5ms 5G
-    double jitter = 0.002;
-    
+    double simSec = omnetpp::simTime().dbl();
+    bool inShadowZone = (simSec >= 40.0 && simSec <= 170.0);
+
+    double pdr, rtt, jitter;
+    if (m_manager->isSatelliteActive()) {
+        // Satellite NTN Ka-Band link: stable ~24-27ms RTT, PDR 98.5%
+        pdr = 0.985 + omnetpp::uniform(omnetpp::getEnvir()->getRNG(0), -0.005, 0.005);
+        rtt = 0.025 + omnetpp::uniform(omnetpp::getEnvir()->getRNG(0), -0.002, 0.003);
+        jitter = 0.002 + omnetpp::uniform(omnetpp::getEnvir()->getRNG(0), 0.0, 0.001);
+    } else {
+        // Terrestrial 5G-NR: very low latency (4-6ms) normally, but severe drop in shadow zone
+        if (inShadowZone) {
+            pdr = 0.50 + omnetpp::uniform(omnetpp::getEnvir()->getRNG(0), -0.1, 0.1);
+            rtt = 0.095 + omnetpp::uniform(omnetpp::getEnvir()->getRNG(0), -0.01, 0.02);
+            jitter = 0.015 + omnetpp::uniform(omnetpp::getEnvir()->getRNG(0), 0.0, 0.005);
+        } else {
+            pdr = 0.995 + omnetpp::uniform(omnetpp::getEnvir()->getRNG(0), -0.003, 0.003);
+            rtt = 0.005 + omnetpp::uniform(omnetpp::getEnvir()->getRNG(0), -0.001, 0.001);
+            jitter = 0.001 + omnetpp::uniform(omnetpp::getEnvir()->getRNG(0), 0.0, 0.0005);
+        }
+    }
+
     double score = computeScore(pdr, rtt, jitter);
     m_manager->emitQoSScore(score);
-    
-    // If QoS drops below threshold, trigger handover
+
+    // If QoS drops below threshold, trigger handover with hysteresis
     if (score < 0.70) {
         m_consecutiveDegradations++;
         if (m_consecutiveDegradations >= m_degradationThreshold) {
@@ -300,10 +333,10 @@ void EnergyAwareStrategy::evaluateEnergy()
     // Drain battery based on active transmission interface
     double power = m_manager->isSatelliteActive() ? m_txPowerSatelliteW : m_txPowerCellularW;
     m_remainingJoules = std::max(0.0, m_remainingJoules - power * 1.0);
-    
+
     double soc = m_remainingJoules / m_batteryCapacityJoules;
     m_manager->emitBatterySoC(soc);
-    
+
     // If battery is critically low (<20%), conserve power by favoring cellular when available
     if (soc < 0.20 && m_manager->isSatelliteActive()) {
         m_manager->performSwitch(false); // Conserve energy
@@ -312,6 +345,8 @@ void EnergyAwareStrategy::evaluateEnergy()
 
 void EnergyAwareStrategy::finish()
 {
+    m_manager->recordScalar("finalBatterySoC", m_remainingJoules / m_batteryCapacityJoules);
+    m_manager->recordScalar("energyConsumedJoules", m_batteryCapacityJoules - m_remainingJoules);
 }
 
 } // namespace hybrid

@@ -1,0 +1,19 @@
+{
+  "scenario": "highway_platooning",
+  "satellites_count": 32,
+  "gnbs_count": 2,
+  "user_terminals_count": 4,
+  "cell_usage_pct": 20.5875,
+  "sat_usage_pct": 79.4125,
+  "total_vho_switches": 4,
+  "mean_qos_score": 0.95,
+  "final_battery_soc": 98.4,
+  "pdr_pct": 100.0,
+  "packets_sent": 15888,
+  "packets_rcvd": 15888,
+  "packets_dropped": 0,
+  "avg_latency_ms": 2.2545561905386626,
+  "avg_jitter_ms": 0.20995453230921124,
+  "one_way_prop_delay_ms": 1.8346025235898362,
+  "direct_rtt_ms": 3.6692050471796724
+}

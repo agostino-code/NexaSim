@@ -1,0 +1,19 @@
+{
+  "scenario": "stelvio",
+  "satellites_count": 72,
+  "gnbs_count": 3,
+  "user_terminals_count": 24,
+  "cell_usage_pct": 55.10416666666663,
+  "sat_usage_pct": 44.89583333333337,
+  "total_vho_switches": 15,
+  "mean_qos_score": 0.95,
+  "final_battery_soc": 98.4,
+  "pdr_pct": 100.0,
+  "packets_sent": 112451,
+  "packets_rcvd": 112451,
+  "packets_dropped": 0,
+  "avg_latency_ms": 2.2545283912340626,
+  "avg_jitter_ms": 0.20990683982935063,
+  "one_way_prop_delay_ms": 1.8346025235898362,
+  "direct_rtt_ms": 3.6692050471796724
+}

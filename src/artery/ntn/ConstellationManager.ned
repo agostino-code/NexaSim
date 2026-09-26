@@ -68,6 +68,9 @@ module LEO_Satellite
         input islIn[];
         output islOut[];
     submodules:
+        interfaceTable: inet.networklayer.common.InterfaceTable {
+            @display("p=100,20");
+        }
         manager: LEO_SatelliteManager {
             @display("p=100,50");
         }
@@ -80,8 +83,19 @@ module LEO_Satellite
         islNic[numISLPorts]: ISLNic {
             @display("p=100,270");
         }
+        udp: inet.transportlayer.udp.Udp {
+            @display("p=200,270");
+        }
+        mecServer: artery.hybrid.MecEdgeServer {
+            parameters:
+                @display("p=200,200");
+                localPort = 5000;
+                processingSpeedMips = 5000.0; // Satellite Edge is typically constrained
+        }
     connections allowunconnected:
         radioIn --> nic.radioIn;
+        mecServer.socketOut --> udp.appIn;
+        mecServer.socketIn <-- udp.appOut;
         // ISL connections would be established dynamically by ConstellationManager
 }
 
@@ -98,6 +112,9 @@ module GroundStation
         input radioIn;
         input feederIn;
     submodules:
+        interfaceTable: inet.networklayer.common.InterfaceTable {
+            @display("p=100,20");
+        }
         manager: GroundStationManager {
             @display("p=100,50");
         }
@@ -110,9 +127,20 @@ module GroundStation
         mobility: inet.mobility.static.StationaryMobility {
             @display("p=100,270");
         }
+        udp: inet.transportlayer.udp.Udp {
+            @display("p=200,270");
+        }
+        mecServer: artery.hybrid.MecEdgeServer {
+            parameters:
+                @display("p=200,200");
+                localPort = 5000;
+                processingSpeedMips = 20000.0; // Ground Edge has larger capacity
+        }
     connections allowunconnected:
         radioIn --> userNic.radioIn;
         feederIn --> feederNic.radioIn;
+        mecServer.socketOut --> udp.appIn;
+        mecServer.socketIn <-- udp.appOut;
 }
 
 network NTNNetwork

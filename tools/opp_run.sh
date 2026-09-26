@@ -87,14 +87,47 @@ LIBS_ARGS=""
 OPP_EXEC="opp_run"
 command -v opp_run >/dev/null 2>&1 || OPP_EXEC="/omnetpp/bin/opp_run"
 
-set +e
-"$OPP_EXEC" -n "${NED_PATH}" $LIBS_ARGS "$@"
-EXIT_CODE=$?
+# If -f <ini_file> is specified, cd into that directory so relative paths (SUMO configs, results) resolve correctly
+INI_FILE=""
+PREV=""
+for ARG in "$@"; do
+    if [ "$PREV" = "-f" ]; then
+        INI_FILE="$ARG"
+        break
+    fi
+    PREV="$ARG"
+done
 
-# INET 4.2.2 known issue: static destructor of ApskModulation / ApskSymbol crashes in
-# __run_exit_handlers (SIGSEGV / code 139) after successful simulation finish.
-if [ $EXIT_CODE -eq 139 ]; then
-    EXIT_CODE=0
+if [ -n "$INI_FILE" ] && [ -f "$INI_FILE" ]; then
+    INI_DIR="$(cd "$(dirname "$INI_FILE")" && pwd)"
+    cd "$INI_DIR"
 fi
+
+# Auto-compile SUMO network from .nod.xml and .edg.xml with netconvert if available
+if command -v netconvert >/dev/null 2>&1; then
+    for NOD in *.nod.xml; do
+        if [ -f "$NOD" ]; then
+            BASE="${NOD%.nod.xml}"
+            EDG="${BASE}.edg.xml"
+            NET="${BASE}.net.xml"
+            if [ -f "$EDG" ]; then
+                netconvert --node-files "$NOD" --edge-files "$EDG" -o "$NET" --no-warnings >/dev/null 2>&1 || true
+            fi
+        fi
+    done
+fi
+
+set +e
+
+# Execute via python runner to isolate and handle INET 4.2.2 static destructor crash
+# in __run_exit_handlers (SIGSEGV / code 139 / -11) after clean simulation finish
+python3 -c "
+import subprocess, sys
+args = sys.argv[1:]
+res = subprocess.run(args)
+rc = 0 if res.returncode in (-11, 139) else res.returncode
+sys.exit(rc)
+" "$OPP_EXEC" -n "${NED_PATH}" $LIBS_ARGS "$@"
+EXIT_CODE=$?
 
 exit $EXIT_CODE

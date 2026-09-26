@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 2026-09-26 17:35:37 by Eclipse SUMO netconvert Version 1.21.0
+<!-- generated on 2026-09-26 17:35:38 by Eclipse SUMO netconvert Version 1.21.0
 <netconvertConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
 
     <input>
-        <node-files value="stelvio.nod.xml"/>
-        <edge-files value="stelvio.edg.xml"/>
+        <node-files value="stelvio_pass_alpine_hybrid.nod.xml"/>
+        <edge-files value="stelvio_pass_alpine_hybrid.edg.xml"/>
     </input>
 
     <output>
-        <output-file value="stelvio.net.xml"/>
+        <output-file value="stelvio_pass_alpine_hybrid.net.xml"/>
     </output>
 
     <report>

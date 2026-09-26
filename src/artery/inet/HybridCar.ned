@@ -100,6 +100,13 @@ module HybridCar like INetworkNode
                 @display("p=400,100");
         }
 
+        mecClient: artery.hybrid.MecOffloadingClient {
+            parameters:
+                @display("p=250,50");
+                localPort = 5001;
+                destPort = 5000;
+        }
+
     connections allowunconnected:
         for i=0..sizeof(radioIn)-1 {
             radioIn[i] --> { @display("m=s"); } --> wlan[i].radioIn;

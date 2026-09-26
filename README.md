@@ -126,14 +126,13 @@ Pre-configured YAML scenarios are provided in `scenarios/library/`:
 For complete reference on YAML syntax, simulation workflows, data analysis, and 3D visualization, see the **[NexaSim Complete User Manual](docs/MANUAL.md)**.
 
 ```bash
-# 1. Generate OMNeT++ scenario from YAML
-python tools/gen_scenario.py scenarios/library/stelvio_pass_hybrid.yaml -o scenarios/generated/stelvio
-
-# 2. Run simulation with OMNeT++ Graphical Interface (Qtenv)
-docker compose run --rm -e DISPLAY=$DISPLAY nexasim-run opp_run -l build/libartery_core.so -f scenarios/generated/stelvio/omnetpp.ini -u Qtenv
-
-# 3. Analyze Simulation KPIs & Results
-python tools/analyze_results.py scenarios/generated/stelvio
+# Unified CLI Workflow (Recommended):
+./nexasim list                     # List all available scenarios in library
+./nexasim validate stelvio         # Validate scenario specification (Pydantic / Schema)
+./nexasim run stelvio              # Run scenario in headless mode
+./nexasim run stelvio --gui        # Run with Qtenv & SUMO-GUI Virtual Desktop (http://localhost:6080/vnc.html)
+./nexasim analyze stelvio          # Evaluate KPIs and generate interactive Chart.js dashboard
+./nexasim all highway_platooning   # End-to-end (generate -> run -> analyze)
 ```
 
 ---

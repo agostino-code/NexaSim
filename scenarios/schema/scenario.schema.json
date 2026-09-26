@@ -1,0 +1,1104 @@
+{
+  "$defs": {
+    "AreaConfig": {
+      "properties": {
+        "name": {
+          "description": "Geographic area name",
+          "title": "Name",
+          "type": "string"
+        },
+        "center_lat": {
+          "description": "Center latitude in degrees",
+          "maximum": 90.0,
+          "minimum": -90.0,
+          "title": "Center Lat",
+          "type": "number"
+        },
+        "center_lon": {
+          "description": "Center longitude in degrees",
+          "maximum": 180.0,
+          "minimum": -180.0,
+          "title": "Center Lon",
+          "type": "number"
+        },
+        "altitude_m": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0.0,
+          "description": "Mean reference altitude in meters",
+          "title": "Altitude M"
+        },
+        "bbox": {
+          "description": "[min_lon, min_lat, max_lon, max_lat]",
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "title": "Bbox",
+          "type": "array"
+        },
+        "elevation_mask_deg": {
+          "anyOf": [
+            {
+              "maximum": 90.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 15.0,
+          "description": "Orographic terrain elevation mask in degrees",
+          "title": "Elevation Mask Deg"
+        }
+      },
+      "required": [
+        "name",
+        "center_lat",
+        "center_lon",
+        "bbox"
+      ],
+      "title": "AreaConfig",
+      "type": "object"
+    },
+    "BlindSpotConfig": {
+      "properties": {
+        "name": {
+          "description": "Blind spot name",
+          "title": "Name",
+          "type": "string"
+        },
+        "lat_min": {
+          "maximum": 90.0,
+          "minimum": -90.0,
+          "title": "Lat Min",
+          "type": "number"
+        },
+        "lat_max": {
+          "maximum": 90.0,
+          "minimum": -90.0,
+          "title": "Lat Max",
+          "type": "number"
+        },
+        "lon_min": {
+          "maximum": 180.0,
+          "minimum": -180.0,
+          "title": "Lon Min",
+          "type": "number"
+        },
+        "lon_max": {
+          "maximum": 180.0,
+          "minimum": -180.0,
+          "title": "Lon Max",
+          "type": "number"
+        },
+        "attenuation_db": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 40.0,
+          "title": "Attenuation Db"
+        }
+      },
+      "required": [
+        "name",
+        "lat_min",
+        "lat_max",
+        "lon_min",
+        "lon_max"
+      ],
+      "title": "BlindSpotConfig",
+      "type": "object"
+    },
+    "ConstellationConfig": {
+      "properties": {
+        "type": {
+          "default": "starlink_shell",
+          "description": "'starlink_shell', 'walker_delta', or 'custom_tle'",
+          "title": "Type",
+          "type": "string"
+        },
+        "shells": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ShellConfig"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Shells"
+        },
+        "walkerT": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Walkert"
+        },
+        "walkerP": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Walkerp"
+        },
+        "walkerF": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Walkerf"
+        },
+        "walkerAltitudeKm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Walkeraltitudekm"
+        },
+        "walkerInclinationDeg": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Walkerinclinationdeg"
+        },
+        "isl": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ISLConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ground_stations": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/GroundStationConfig"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ground Stations"
+        }
+      },
+      "title": "ConstellationConfig",
+      "type": "object"
+    },
+    "DualConnectivityConfig": {
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "mode": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "mrdc",
+          "title": "Mode"
+        },
+        "primary_rat": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "terrestrial_5g",
+          "title": "Primary Rat"
+        },
+        "fallback_rat": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "satellite_ntn",
+          "title": "Fallback Rat"
+        },
+        "seamless_failover": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": true,
+          "title": "Seamless Failover"
+        }
+      },
+      "title": "DualConnectivityConfig",
+      "type": "object"
+    },
+    "GroundStationConfig": {
+      "properties": {
+        "name": {
+          "description": "Ground Station identifier",
+          "title": "Name",
+          "type": "string"
+        },
+        "lat": {
+          "maximum": 90.0,
+          "minimum": -90.0,
+          "title": "Lat",
+          "type": "number"
+        },
+        "lon": {
+          "maximum": 180.0,
+          "minimum": -180.0,
+          "title": "Lon",
+          "type": "number"
+        },
+        "altitude_m": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 50.0,
+          "title": "Altitude M"
+        },
+        "feeder_link": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Feeder Link"
+        },
+        "user_link": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "User Link"
+        },
+        "elevation_mask_deg": {
+          "anyOf": [
+            {
+              "maximum": 90.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 10.0,
+          "title": "Elevation Mask Deg"
+        }
+      },
+      "required": [
+        "name",
+        "lat",
+        "lon"
+      ],
+      "title": "GroundStationConfig",
+      "type": "object"
+    },
+    "ISLConfig": {
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Enable Inter-Satellite Links (ISL)",
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "laser",
+          "description": "'laser' (1550nm) or 'rf_v_band' (60GHz)",
+          "title": "Type"
+        },
+        "wavelength_nm": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 1550.0,
+          "description": "Laser wavelength in nm",
+          "title": "Wavelength Nm"
+        },
+        "max_range_km": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 5000.0,
+          "description": "Maximum link range in km",
+          "title": "Max Range Km"
+        },
+        "num_ports_per_sat": {
+          "anyOf": [
+            {
+              "maximum": 8,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 4,
+          "description": "Number of laser transceivers per satellite",
+          "title": "Num Ports Per Sat"
+        },
+        "tx_power_dbm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 20.0,
+          "description": "Optical transmission power in dBm",
+          "title": "Tx Power Dbm"
+        },
+        "rx_sensitivity_dbm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": -40.0,
+          "description": "Receiver sensitivity threshold in dBm",
+          "title": "Rx Sensitivity Dbm"
+        },
+        "pointing_accuracy_deg": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0.01,
+          "description": "Pointing accuracy PAT in degrees",
+          "title": "Pointing Accuracy Deg"
+        },
+        "acquisition_time_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 80.0,
+          "description": "Beam acquisition time in ms",
+          "title": "Acquisition Time Ms"
+        }
+      },
+      "title": "ISLConfig",
+      "type": "object"
+    },
+    "IncidentConfig": {
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "trigger_time_s": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 45.0,
+          "title": "Trigger Time S"
+        },
+        "location": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Location"
+        },
+        "vehicle_id": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 1,
+          "title": "Vehicle Id"
+        },
+        "event_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "collision",
+          "title": "Event Type"
+        },
+        "message_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "ETSI_DENM",
+          "title": "Message Type"
+        },
+        "data_payload_bytes": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 1200,
+          "title": "Data Payload Bytes"
+        },
+        "alert_interval_ms": {
+          "anyOf": [
+            {
+              "minimum": 10,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 100,
+          "title": "Alert Interval Ms"
+        }
+      },
+      "title": "IncidentConfig",
+      "type": "object"
+    },
+    "OutputConfig": {
+      "properties": {
+        "directory": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "output/scenario",
+          "title": "Directory"
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Metrics"
+        },
+        "format": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "csv",
+          "title": "Format"
+        },
+        "write_interval_s": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0.5,
+          "title": "Write Interval S"
+        }
+      },
+      "title": "OutputConfig",
+      "type": "object"
+    },
+    "PhasedArrayConfig": {
+      "properties": {
+        "elements": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 64,
+          "title": "Elements"
+        },
+        "gain_dbi": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 32.0,
+          "title": "Gain Dbi"
+        },
+        "scan_angle_max_deg": {
+          "anyOf": [
+            {
+              "maximum": 90,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 60.0,
+          "title": "Scan Angle Max Deg"
+        },
+        "beamwidth_deg": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 8.5,
+          "title": "Beamwidth Deg"
+        },
+        "tracking_rate_deg_per_sec": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 45.0,
+          "title": "Tracking Rate Deg Per Sec"
+        }
+      },
+      "title": "PhasedArrayConfig",
+      "type": "object"
+    },
+    "ScenarioSpec": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "1.0",
+          "title": "Version"
+        },
+        "area": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AreaConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "time": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TimeConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "constellation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ConstellationConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "terrestrial": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TerrestrialConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "incident": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/IncidentConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OutputConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "ScenarioSpec",
+      "type": "object"
+    },
+    "ShellConfig": {
+      "properties": {
+        "name": {
+          "description": "Orbital shell identifier",
+          "title": "Name",
+          "type": "string"
+        },
+        "altitude_km": {
+          "description": "LEO orbital altitude in km",
+          "maximum": 2000.0,
+          "minimum": 150.0,
+          "title": "Altitude Km",
+          "type": "number"
+        },
+        "inclination_deg": {
+          "description": "Orbital inclination in degrees",
+          "maximum": 180.0,
+          "minimum": 0.0,
+          "title": "Inclination Deg",
+          "type": "number"
+        },
+        "num_planes": {
+          "description": "Number of orbital planes",
+          "exclusiveMinimum": 0,
+          "title": "Num Planes",
+          "type": "integer"
+        },
+        "sats_per_plane": {
+          "description": "Number of satellites per plane",
+          "exclusiveMinimum": 0,
+          "title": "Sats Per Plane",
+          "type": "integer"
+        },
+        "phase_offset": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0.0,
+          "description": "Walker phase offset parameter F",
+          "title": "Phase Offset"
+        }
+      },
+      "required": [
+        "name",
+        "altitude_km",
+        "inclination_deg",
+        "num_planes",
+        "sats_per_plane"
+      ],
+      "title": "ShellConfig",
+      "type": "object"
+    },
+    "TerrestrialConfig": {
+      "properties": {
+        "gnb": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Gnb"
+        },
+        "blind_spots": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/BlindSpotConfig"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Blind Spots"
+        },
+        "channel_model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "RMa",
+          "title": "Channel Model"
+        },
+        "ue": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UEConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "integration": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Integration"
+        },
+        "alpine_weather": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Alpine Weather"
+        }
+      },
+      "title": "TerrestrialConfig",
+      "type": "object"
+    },
+    "TimeConfig": {
+      "properties": {
+        "start": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "2026-08-26T10:00:00Z",
+          "description": "ISO 8601 start timestamp",
+          "title": "Start"
+        },
+        "duration_s": {
+          "description": "Total simulation time limit in seconds",
+          "exclusiveMinimum": 0,
+          "title": "Duration S",
+          "type": "number"
+        },
+        "warmup_s": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 10.0,
+          "description": "Initial warm-up period in seconds",
+          "title": "Warmup S"
+        },
+        "timezone": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "Europe/Rome",
+          "description": "Timezone name",
+          "title": "Timezone"
+        }
+      },
+      "required": [
+        "duration_s"
+      ],
+      "title": "TimeConfig",
+      "type": "object"
+    },
+    "UEConfig": {
+      "properties": {
+        "count": {
+          "description": "Number of simulated vehicles / user terminals",
+          "minimum": 1,
+          "title": "Count",
+          "type": "integer"
+        },
+        "mobility_model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "highway_platooning_linear",
+          "title": "Mobility Model"
+        },
+        "speed_kmh": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 50.0,
+          "title": "Speed Kmh"
+        },
+        "altitude_m": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 1.5,
+          "title": "Altitude M"
+        },
+        "dual_connectivity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DualConnectivityConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "phased_array": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PhasedArrayConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "count"
+      ],
+      "title": "UEConfig",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "scenario": {
+      "$ref": "#/$defs/ScenarioSpec"
+    }
+  },
+  "required": [
+    "scenario"
+  ],
+  "title": "ScenarioDocument",
+  "type": "object"
+}

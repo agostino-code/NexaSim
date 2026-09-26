@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# NexaSim Root CLI Launcher
+PYTHON_BIN="python3"
+command -v python3 >/dev/null 2>&1 || PYTHON_BIN="python"
+exec "$PYTHON_BIN" "$(dirname "$0")/tools/nexasim.py" "$@"

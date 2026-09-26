@@ -1,0 +1,15 @@
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+    <input>
+        <net-file value="nexasphere_highway_platooning.net.xml"/>
+        <route-files value="nexasphere_highway_platooning.rou.xml"/>
+    </input>
+    <time>
+        <begin value="0"/>
+        <end value="200"/>
+        <step-length value="0.1"/>
+    </time>
+    <gui_only>
+        <start value="true"/>
+        <gui-settings-file value="nexasphere_highway_platooning.view.xml"/>
+    </gui_only>
+</configuration>

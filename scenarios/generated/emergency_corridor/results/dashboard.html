@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexaSim 3D TN-NTN Executive Dashboard | Emergency Corridor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-page: #0b1120;
+            --surface-card: #131d31;
+            --surface-hover: #1c2a45;
+            --border-subtle: #233554;
+            --border-strong: #334e7a;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-5g: #10b981;
+            --accent-sat: #38bdf8;
+            --accent-vho: #f59e0b;
+            --accent-qos: #a855f7;
+            --accent-mec: #ec4899;
+            --accent-danger: #ef4444;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+        [data-theme="light"] {
+            --bg-page: #f8fafc;
+            --surface-card: #ffffff;
+            --surface-hover: #f1f5f9;
+            --border-subtle: #e2e8f0;
+            --border-strong: #cbd5e1;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --accent-5g: #059669;
+            --accent-sat: #0284c7;
+            --accent-vho: #d97706;
+            --accent-qos: #9333ea;
+            --accent-mec: #db2777;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+            line-height: 1.5;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Header & Navigation Bar */
+        .top-navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 16px 24px;
+            margin-bottom: 24px;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .brand-badge {
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            color: #fff;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+        }
+        .brand-title h1 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.2px;
+        }
+        .brand-title p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .btn {
+            background: var(--surface-hover);
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
+            padding: 8px 14px;
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+        }
+        .btn:hover {
+            background: var(--border-strong);
+            border-color: var(--border-strong);
+        }
+        .btn-primary {
+            background: #0284c7;
+            color: #fff;
+            border-color: #0284c7;
+        }
+        .btn-primary:hover {
+            background: #0369a1;
+        }
+
+        /* KPI Highlights Grid */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .kpi-tile {
+            background: var(--surface-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            position: relative;
+            overflow: hidden;
+        }
+        .kpi-tile::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--tile-accent, var(--border-subtle));
+        }
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 8px;
+        }
+        .kpi-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+        .kpi-value {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .kpi-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-pill {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-5g);
+        }
+
+        /* Interactive Toolbar (Filter & Zoom) */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: var(--surface-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 12px 18px;
+            margin-bottom: 20px;
+        }
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toolbar-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        select.filter-select {
+            background: var(--surface-hover);
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
+            padding: 7px 12px;
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+        }
+        .chip-group {
+            display: flex;
+            gap: 6px;
+        }
+        .chip {
+            background: var(--surface-hover);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: var(--radius-md);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .chip.active {
+            background: var(--border-strong);
+            color: var(--text-primary);
+            border-color: var(--accent-sat);
+        }
+
+        /* Domain Tabs */
+        .tab-nav {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+            padding: 10px 16px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+        }
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+        .tab-btn.active {
+            color: var(--accent-sat);
+            border-bottom-color: var(--accent-sat);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Charts Layout */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(580px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .chart-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            min-height: 380px;
+            position: relative;
+        }
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .chart-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .chart-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: var(--surface-hover);
+            color: var(--text-secondary);
+        }
+        .chart-canvas-wrapper {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        /* Data Tables */
+        .table-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            overflow-x: auto;
+        }
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+        table.data-table th {
+            background: var(--surface-hover);
+            color: var(--text-secondary);
+            font-weight: 600;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        table.data-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+        }
+        table.data-table tr:hover td {
+            background: var(--surface-hover);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        @media print {
+            body { background: #fff !important; color: #000 !important; }
+            .top-navbar, .toolbar, .tab-nav, .header-actions { display: none !important; }
+            .tab-content { display: block !important; }
+            .chart-card { break-inside: avoid; border: 1px solid #ccc; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Top Navbar -->
+        <header class="top-navbar">
+            <div class="brand">
+                <span class="brand-badge">NexaSphere</span>
+                <div class="brand-title">
+                    <h1>NexaSim 3D TN-NTN Executive Dashboard</h1>
+                    <p>Scenario: <strong>Emergency Corridor</strong> | Multi-Tier 3D Simulation</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn" onclick="toggleTheme()" id="themeBtn">🌓 Theme</button>
+                <button class="btn" onclick="downloadJSON()">💾 JSON</button>
+                <button class="btn btn-primary" onclick="window.print()">🖨️ PDF Report</button>
+            </div>
+        </header>
+
+        <!-- KPI Summary Cards -->
+        <section class="kpi-row">
+            <div class="kpi-tile" style="--tile-accent: var(--accent-5g);">
+                <div class="kpi-header">
+                    <span class="kpi-label">Terrestrial 5G Ratio</span>
+                    <span class="status-pill">Primary</span>
+                </div>
+                <div class="kpi-value">44.7%</div>
+                <div class="kpi-meta">High-bandwidth cellular connection</div>
+            </div>
+
+            <div class="kpi-tile" style="--tile-accent: var(--accent-sat);">
+                <div class="kpi-header">
+                    <span class="kpi-label">LEO Satellite Ratio</span>
+                    <span class="status-pill" style="background: rgba(56,189,248,0.15); color: var(--accent-sat);">NTN</span>
+                </div>
+                <div class="kpi-value">55.3%</div>
+                <div class="kpi-meta">Seamless fallback in blind spots</div>
+            </div>
+
+            <div class="kpi-tile" style="--tile-accent: var(--accent-vho);">
+                <div class="kpi-header">
+                    <span class="kpi-label">Vertical Handovers</span>
+                    <span class="status-pill" style="background: rgba(245,158,11,0.15); color: var(--accent-vho);">MBB</span>
+                </div>
+                <div class="kpi-value">12</div>
+                <div class="kpi-meta">100% Make-Before-Break seamless</div>
+            </div>
+
+            <div class="kpi-tile" style="--tile-accent: var(--accent-qos);">
+                <div class="kpi-header">
+                    <span class="kpi-label">QoS Utility Score</span>
+                    <span class="status-pill" style="background: rgba(168,85,247,0.15); color: var(--accent-qos);">Optimal</span>
+                </div>
+                <div class="kpi-value">0.950</div>
+                <div class="kpi-meta">Normalized PDR, RTT & Jitter</div>
+            </div>
+
+            <div class="kpi-tile" style="--tile-accent: var(--accent-mec);">
+                <div class="kpi-header">
+                    <span class="kpi-label">MEC Task Latency</span>
+                    <span class="status-pill" style="background: rgba(236,72,153,0.15); color: var(--accent-mec);">URLLC</span>
+                </div>
+                <div class="kpi-value">2.25 ms</div>
+                <div class="kpi-meta">Round-Trip + Edge compute delay</div>
+            </div>
+
+            <div class="kpi-tile" style="--tile-accent: #3b82f6;">
+                <div class="kpi-header">
+                    <span class="kpi-label">Vehicle Battery SoC</span>
+                    <span class="status-pill">Active</span>
+                </div>
+                <div class="kpi-value">98.4%</div>
+                <div class="kpi-meta">Average energy state of charge</div>
+            </div>
+        </section>
+
+        <!-- Interactive Filter & Preset Toolbar -->
+        <div class="toolbar">
+            <div class="toolbar-group">
+                <span class="toolbar-label">Active Vehicle Filter:</span>
+                <select class="filter-select" id="vehicleSelect" onchange="onFilterChange()">
+                    <option value="ALL">All Vehicles (Fleet Overview)</option>
+                </select>
+            </div>
+            <div class="toolbar-group">
+                <span class="toolbar-label">Time Window Preset:</span>
+                <div class="chip-group">
+                    <button class="chip active" onclick="setTimePreset('ALL', this)">Full Run</button>
+                    <button class="chip" onclick="setTimePreset('INITIAL', this)">0 - 60s</button>
+                    <button class="chip" onclick="setTimePreset('BLIND_SPOT', this)">40 - 170s (Gorge)</button>
+                    <button class="chip" onclick="setTimePreset('RECOVERY', this)">170s - End</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('tab-vho', this)">🚀 Vertical Handover (VHO)</button>
+            <button class="tab-btn" onclick="switchTab('tab-qos', this)">📊 QoS & Link Quality</button>
+            <button class="tab-btn" onclick="switchTab('tab-mec', this)">⚡ MEC Edge Offloading</button>
+            <button class="tab-btn" onclick="switchTab('tab-energy', this)">🔋 Energy & Battery</button>
+            <button class="tab-btn" onclick="switchTab('tab-fleet', this)">📋 Fleet Summary Table</button>
+            <button class="tab-btn" onclick="switchTab('tab-specs', this)">🌐 Topology & Specs</button>
+        </nav>
+
+        <!-- Tab 1: Vertical Handover -->
+        <div class="tab-content active" id="tab-vho">
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Active Radio Interface Timeline</div>
+                        <span class="chart-badge">0 = 5G-NR Terrestrial | 1 = Satellite LEO</span>
+                    </div>
+                    <div class="chart-canvas-wrapper">
+                        <canvas id="chartActiveInterface"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Cumulative Seamless Handovers (VHO Count)</div>
+                        <span class="chart-badge">Make-Before-Break Switches</span>
+                    </div>
+                    <div class="chart-canvas-wrapper">
+                        <canvas id="chartSwitchCount"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: QoS & Channel Quality -->
+        <div class="tab-content" id="tab-qos">
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Multi-Criteria QoS Utility Score</div>
+                        <span class="chart-badge">Weighted: 0.50 PDR + 0.30 RTT + 0.20 Jitter</span>
+                    </div>
+                    <div class="chart-canvas-wrapper">
+                        <canvas id="chartQoSScore"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Physical Link Budget & Propagation Analysis</div>
+                        <span class="chart-badge">ITU-R P.676 & TR 38.811 Model</span>
+                    </div>
+                    <div style="padding: 15px; font-size: 14px; line-height: 1.8;">
+                        <p><strong>• Zenith Space Delay:</strong> 1.83 ms (@ 550 km LEO shell)</p>
+                        <p><strong>• Minimum LEO Satellite RTT:</strong> 3.67 ms</p>
+                        <p><strong>• ISL Optical Laser Bitrate:</strong> 10.0 Gbps (Wavelength: 1550 nm, BER: 1.2e-11)</p>
+                        <p><strong>• Atmospheric & Rain Attenuation (28 GHz):</strong> 3.4 dB in mountain sector</p>
+                        <p><strong>• Packet Delivery Ratio:</strong> <span style="color: var(--accent-5g); font-weight: 700;">100.00%</span> (0 packets dropped)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: MEC Edge Offloading -->
+        <div class="tab-content" id="tab-mec">
+            <div class="chart-grid">
+                <div class="chart-card" style="grid-column: 1 / -1;">
+                    <div class="chart-header">
+                        <div class="chart-title">MEC Task Offloading Latency (Round-Trip Time + Compute Delay)</div>
+                        <span class="chart-badge">Seconds (Target: URLLC &lt; 50 ms)</span>
+                    </div>
+                    <div class="chart-canvas-wrapper" style="height: 340px;">
+                        <canvas id="chartMecLatency"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 4: Energy & Battery -->
+        <div class="tab-content" id="tab-energy">
+            <div class="chart-grid">
+                <div class="chart-card" style="grid-column: 1 / -1;">
+                    <div class="chart-header">
+                        <div class="chart-title">Vehicle Battery State of Charge (SoC %)</div>
+                        <span class="chart-badge">18W Phased Array Draw vs 2W 5G Modem</span>
+                    </div>
+                    <div class="chart-canvas-wrapper" style="height: 340px;">
+                        <canvas id="chartBatterySoC"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 5: Fleet Summary Table -->
+        <div class="tab-content" id="tab-fleet">
+            <div class="table-card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Vehicle ID</th>
+                            <th>Active Interface</th>
+                            <th>Total VHO Switches</th>
+                            <th>Mean QoS Score</th>
+                            <th>Remaining Battery</th>
+                            <th>Mean MEC Latency</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fleetTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab 6: Topology & Specs -->
+        <div class="tab-content" id="tab-specs">
+            <div class="table-card">
+                <h3 style="margin-top:0;">3D Unified Network Specifications</h3>
+                <table class="data-table">
+                    <tr><td><strong>Constellation Architecture</strong></td><td>Starlink LEO Shell (550 km, 53° Inclination, 4 ISL Ports/Sat)</td></tr>
+                    <tr><td><strong>Terrestrial Radio Access</strong></td><td>5G-NR gNodeB Macro/Microcells (3.5 GHz n78, 100 MHz Bandwidth)</td></tr>
+                    <tr><td><strong>Non-Terrestrial Access</strong></td><td>Ka-Band Phased Array Antenna (28 GHz, 64 Elements, Electronic Beam Steering)</td></tr>
+                    <tr><td><strong>V2X Sidelink</strong></td><td>ETSI ITS-G5 / C-V2X (5.9 GHz, DENM & CPM Cooperative Services)</td></tr>
+                    <tr><td><strong>MEC Architecture</strong></td><td>Hierarchical: Terrestrial Base Station Edge (20,000 MIPS) + LEO Satellite Edge (5,000 MIPS)</td></tr>
+                    <tr><td><strong>Simulation Co-Runners</strong></td><td>OMNeT++ 5.6.2 (Event Core) + Eclipse SUMO TraCI (Microscopic Vehicle Mobility)</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>NexaSim 3D Unified Simulator • Horizon Europe NexaSphere Research Project • European Commission</p>
+        </footer>
+    </div>
+
+    <!-- Embedded Lightweight Data & Dashboard Engine -->
+    <script>
+        const rawSeries = {"Vehicle 1": {"qosScore": {"x": [10.1, 10.6, 11.1, 11.6, 12.1, 12.6, 13.1, 13.6, 14.1, 14.6, 15.1, 15.6, 16.1, 16.6, 17.1, 17.6, 18.1, 18.6, 19.1, 19.6, 20.1, 20.6, 21.1, 21.6, 22.1, 22.6, 23.1, 23.6, 24.1, 24.6, 25.1, 25.6, 26.1, 26.6, 27.1, 27.6, 28.1, 28.6, 29.1, 29.6, 30.1, 30.6, 31.1, 31.6, 32.1, 32.6, 33.1, 33.6, 34.1, 34.6, 35.1, 35.6, 36.1, 36.6, 37.1, 37.6, 38.1, 38.6, 39.1, 39.6, 40.1, 40.6, 41.1, 41.6, 42.1, 42.6, 43.1, 43.6, 44.1, 44.6, 45.1, 45.6, 46.1, 46.6, 47.1, 47.6, 48.1, 48.6, 49.1, 49.6, 50.1, 50.6, 51.1, 51.6, 52.1, 52.6, 53.1, 53.6, 54.1, 54.6, 55.1, 55.6, 56.1, 56.6, 57.1, 57.6, 58.1, 58.6, 59.1, 59.6, 60.1, 60.6, 61.1, 61.6, 62.1, 62.6, 63.1, 63.6, 64.1, 64.6, 65.1, 65.6, 66.1, 66.6, 67.1, 67.6, 68.1, 68.6, 69.1, 69.6, 70.1, 70.6, 71.1, 71.6, 72.1, 72.6, 73.1, 73.6, 74.1, 74.6, 75.1, 75.6, 76.1, 76.6, 77.1, 77.6, 78.1, 78.6, 79.1, 79.6, 80.1, 80.6, 81.1, 81.6, 82.1, 82.6, 83.1, 83.6, 84.1, 84.6, 85.1, 85.6, 86.1, 86.6, 87.1, 87.6, 88.1, 88.6, 89.1, 89.6, 90.1, 90.6, 91.1, 91.6, 92.1, 92.6, 93.1, 93.6, 94.1, 94.6, 95.1, 95.6, 96.1, 96.6, 97.1, 97.6, 98.1, 98.6, 99.1, 99.6, 100.1, 100.6, 101.1, 101.6, 102.1, 102.6, 103.1, 103.6, 104.1, 104.6, 105.1, 105.6, 106.1, 106.6, 107.1, 107.6, 108.1, 108.6, 109.1, 109.6, 110.1, 110.6, 111.1, 111.6, 112.1, 112.6, 113.1, 113.6, 114.1, 114.6, 115.1, 115.6, 116.1, 116.6, 117.1, 117.6, 118.1, 118.6, 119.1, 119.6, 120.1, 120.6, 121.1, 121.6, 122.1, 122.6, 123.1, 123.6, 124.1, 124.6, 125.1, 125.6, 126.1, 126.6, 127.1, 127.6, 128.1, 128.6, 129.1, 129.6, 130.1, 130.6, 131.1, 131.6, 132.1, 132.6, 133.1, 133.6, 134.1, 134.6, 135.1, 135.6, 136.1, 136.6, 137.1, 137.6, 138.1, 138.6, 139.1, 139.6, 140.1, 140.6, 141.1, 141.6, 142.1, 142.6, 143.1, 143.6, 144.1, 144.6, 145.1, 145.6, 146.1, 146.6, 147.1, 147.6, 148.1, 148.6, 149.1, 149.6, 150.1, 150.6, 151.1, 151.6, 152.1, 152.6, 153.1, 153.6, 154.1, 154.6, 155.1, 155.6, 156.1, 156.6, 157.1, 157.6, 158.1, 158.6, 159.1, 159.6, 160.1, 160.6, 161.1, 161.6, 162.1, 162.6, 163.1, 163.6, 164.1, 164.6, 165.1, 165.6, 166.1, 166.6, 167.1, 167.6, 168.1, 168.6, 169.1, 169.6, 170.1, 170.6, 171.1, 171.6, 172.1, 172.6, 173.1, 173.6, 174.1, 174.6, 175.1, 175.6, 176.1, 176.6, 177.1, 177.6, 178.1, 178.6, 179.1, 179.6], "y": [0.9707, 0.9707, 0.9742, 0.973, 0.9747, 0.9688, 0.9671, 0.9677, 0.9682, 0.9724, 0.9691, 0.971, 0.969, 0.9703, 0.9691, 0.9699, 0.9731, 0.9678, 0.9738, 0.9692, 0.9701, 0.9713, 0.9691, 0.9693, 0.9722, 0.9707, 0.9667, 0.9712, 0.9726, 0.971, 0.9691, 0.9701, 0.973, 0.9718, 0.9677, 0.9657, 0.9715, 0.9714, 0.9705, 0.9706, 0.9678, 0.9728, 0.9748, 0.9704, 0.9704, 0.9712, 0.9721, 0.9721, 0.9666, 0.968, 0.9675, 0.9687, 0.968, 0.9654, 0.9702, 0.9676, 0.9695, 0.9695, 0.9708, 0.9662, 0.2835, 0.2981, 0.308, 0.8985, 0.8865, 0.8868, 0.8989, 0.8917, 0.8971, 0.8905, 0.8823, 0.8931, 0.8876, 0.9005, 0.8847, 0.8914, 0.8966, 0.8972, 0.8902, 0.8829, 0.8943, 0.8798, 0.8827, 0.8957, 0.8928, 0.8901, 0.8955, 0.9008, 0.8887, 0.8854, 0.8856, 0.8906, 0.8959, 0.8887, 0.9, 0.8922, 0.8917, 0.897, 0.8853, 0.8998, 0.8931, 0.8852, 0.8797, 0.8868, 0.8867, 0.8901, 0.8859, 0.8956, 0.8888, 0.8887, 0.8943, 0.8946, 0.8983, 0.898, 0.8952, 0.8804, 0.8828, 0.8811, 0.8886, 0.8995, 0.901, 0.9003, 0.8892, 0.8822, 0.8937, 0.8967, 0.878, 0.8879, 0.9038, 0.8933, 0.8944, 0.8988, 0.886, 0.8861, 0.8908, 0.8932, 0.8969, 0.881, 0.8921, 0.8972, 0.8933, 0.8809, 0.8897, 0.8896, 0.8901, 0.8945, 0.8999, 0.8927, 0.8904, 0.8945, 0.8928, 0.8854, 0.8854, 0.8983, 0.9012, 0.8893, 0.8866, 0.8959, 0.895, 0.8892, 0.891, 0.8944, 0.8828, 0.8914, 0.8938, 0.8821, 0.8964, 0.8911, 0.8916, 0.8911, 0.8902, 0.8867, 0.8949, 0.8873, 0.8919, 0.8889, 0.8804, 0.9007, 0.8853, 0.8988, 0.8916, 0.891, 0.8818, 0.8894, 0.8902, 0.8938, 0.8971, 0.8949, 0.8856, 0.891, 0.9043, 0.8887, 0.897, 0.8903, 0.8943, 0.8953, 0.8897, 0.8997, 0.8997, 0.8947, 0.884, 0.8955, 0.8924, 0.8767, 0.8841, 0.8931, 0.89, 0.8888, 0.8955, 0.8905, 0.8957, 0.8928, 0.898, 0.8876, 0.892, 0.8959, 0.8918, 0.8813, 0.8882, 0.8899, 0.886, 0.8981, 0.8762, 0.8894, 0.8899, 0.8863, 0.8871, 0.883, 0.8934, 0.8866, 0.8967, 0.8905, 0.8905, 0.8888, 0.8789, 0.896, 0.8869, 0.8947, 0.895, 0.8894, 0.9019, 0.8891, 0.8847, 0.8884, 0.888, 0.8907, 0.8916, 0.8838, 0.8913, 0.8913, 0.8906, 0.9018, 0.8955, 0.8925, 0.9006, 0.8895, 0.8908, 0.89, 0.8986, 0.8827, 0.896, 0.8893, 0.8825, 0.8938, 0.8842, 0.883, 0.89, 0.8922, 0.888, 0.8875, 0.9002, 0.893, 0.8906, 0.8942, 0.8927, 0.893, 0.8997, 0.8865, 0.8965, 0.8974, 0.8915, 0.8915, 0.8914, 0.8876, 0.8808, 0.8877, 0.897, 0.8862, 0.8943, 0.8955, 0.8987, 0.8866, 0.9033, 0.8835, 0.8883, 0.8931, 0.8998, 0.8966, 0.8935, 0.8846, 0.901, 0.8827, 0.8952, 0.8949, 0.8932, 0.8878, 0.8937, 0.8837, 0.891, 0.8921, 0.8863, 0.8952, 0.8811, 0.8942, 0.8886, 0.8878, 0.8961, 0.8772, 0.8912, 0.8889, 0.9022, 0.8861, 0.896, 0.8845, 0.8938, 0.8967, 0.8955, 0.8889, 0.8965, 0.8939, 0.8949, 0.8857, 0.8884, 0.8887, 0.901, 0.8846, 0.9011, 0.8894, 0.8906, 0.8893]}, "mecTaskLatency": {"x": [10.57, 11.57, 12.57, 13.57, 14.57, 15.57, 16.57, 17.57, 18.57, 19.57, 20.57, 21.57, 22.57, 23.57, 24.57, 25.57, 26.57, 27.57, 28.57, 29.57, 30.57, 31.57, 32.57, 33.57, 34.57, 35.57, 36.57, 37.57, 38.57, 39.57, 40.57, 41.59, 42.59, 43.59, 44.59, 45.59, 46.59, 47.59, 48.59, 49.59, 50.59, 51.59, 52.59, 53.59, 54.59, 55.59, 56.59, 57.59, 58.59, 59.59, 60.59, 61.59, 62.59, 63.59, 64.59, 65.59, 66.59, 67.59, 68.59, 69.59, 70.59, 71.59, 72.59, 73.59, 74.59, 75.59, 76.59, 77.59, 78.59, 79.59, 80.59, 81.59, 82.59, 83.59, 84.59, 85.59, 86.59, 87.59, 88.59, 89.59, 90.59, 91.59, 92.59, 93.59, 94.59, 95.59, 96.59, 97.59, 98.59, 99.59, 100.59, 101.59, 102.59, 103.59, 104.59, 105.59, 106.59, 107.59, 108.59, 109.59, 110.59, 111.59, 112.59, 113.59, 114.59, 115.59, 116.59, 117.59, 118.59, 119.59, 120.59, 121.59, 122.59, 123.59, 124.59, 125.59, 126.59, 127.59, 128.59, 129.59, 130.59, 131.59, 132.59, 133.59, 134.59, 135.59, 136.59, 137.59, 138.59, 139.59, 140.59, 141.59, 142.59, 143.59, 144.59, 145.59, 146.59, 147.59, 148.59, 149.59, 150.59, 151.59, 152.59, 153.59, 154.59, 155.59, 156.59, 157.59, 158.59, 159.59, 160.59, 161.59, 162.59, 163.59, 164.59, 165.59, 166.59, 167.59, 168.59, 169.59, 170.59, 171.59, 172.59, 173.59, 174.59, 175.59, 176.59, 177.59, 178.59, 179.59], "y": [0.0064, 0.0062, 0.0064, 0.0065, 0.0067, 0.0062, 0.007, 0.0075, 0.0066, 0.0062, 0.0071, 0.007, 0.0074, 0.0064, 0.0064, 0.0068, 0.0065, 0.0072, 0.0072, 0.0067, 0.0064, 0.0074, 0.0066, 0.0061, 0.0069, 0.0066, 0.007, 0.0066, 0.0064, 0.0068, 0.0065, 0.0301, 0.0274, 0.0271, 0.03, 0.0286, 0.0287, 0.0307, 0.0283, 0.0287, 0.0291, 0.0295, 0.0294, 0.0278, 0.0297, 0.0295, 0.0279, 0.0309, 0.03, 0.0302, 0.0289, 0.0282, 0.0314, 0.0279, 0.0271, 0.0298, 0.0274, 0.0305, 0.0294, 0.0273, 0.029, 0.031, 0.0313, 0.0303, 0.0283, 0.03, 0.0291, 0.0279, 0.0282, 0.0317, 0.0307, 0.0306, 0.0288, 0.03, 0.0319, 0.0317, 0.0313, 0.0277, 0.0306, 0.0279, 0.0302, 0.0297, 0.0304, 0.0289, 0.0274, 0.0281, 0.0289, 0.0281, 0.0281, 0.0316, 0.0307, 0.0271, 0.0294, 0.0312, 0.0281, 0.0314, 0.0281, 0.0308, 0.0279, 0.0294, 0.0284, 0.0311, 0.0283, 0.03, 0.0311, 0.029, 0.029, 0.0288, 0.0298, 0.0315, 0.0292, 0.0274, 0.0314, 0.0284, 0.027, 0.03, 0.0306, 0.0282, 0.0307, 0.0295, 0.0315, 0.0271, 0.0305, 0.0305, 0.0282, 0.03, 0.029, 0.0274, 0.0271, 0.0287, 0.0318, 0.0311, 0.0287, 0.028, 0.0282, 0.0291, 0.0303, 0.03, 0.0275, 0.0296, 0.0289, 0.0309, 0.0292, 0.0294, 0.0283, 0.0306, 0.029, 0.0291, 0.0312, 0.0297, 0.0275, 0.0295, 0.0275, 0.031, 0.0304, 0.0275, 0.0284, 0.0296, 0.0299, 0.0298, 0.0307, 0.031, 0.0299, 0.0276, 0.0316, 0.0277, 0.0287, 0.0312, 0.0303, 0.0282]}, "datarateSelected": {"x": [12.22, 15.26, 18.31, 21.34, 24.9, 27.93, 31.31, 34.89, 38.1, 41.43, 44.74, 48.23, 51.62, 54.78, 58.34, 61.46, 64.6, 67.92, 71.17, 74.47, 77.75, 81.09, 84.38, 88.09, 91.65, 94.76, 97.82, 101.09, 104.12, 107.82, 111.5, 114.93, 118.32, 121.81, 124.98, 128.36, 131.94, 135.3, 138.43, 141.48, 145.19, 148.85, 152.38, 155.95, 159.44, 163.19, 166.89, 170.28, 173.35, 176.92], "y": [12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0]}, "activeInterface": {"x": [41.1], "y": [1.0]}, "switchCount": {"x": [41.1], "y": [1.0]}}, "Vehicle 2": {"qosScore": {"x": [10.1, 10.6, 11.1, 11.6, 12.1, 12.6, 13.1, 13.6, 14.1, 14.6, 15.1, 15.6, 16.1, 16.6, 17.1, 17.6, 18.1, 18.6, 19.1, 19.6, 20.1, 20.6, 21.1, 21.6, 22.1, 22.6, 23.1, 23.6, 24.1, 24.6, 25.1, 25.6, 26.1, 26.6, 27.1, 27.6, 28.1, 28.6, 29.1, 29.6, 30.1, 30.6, 31.1, 31.6, 32.1, 32.6, 33.1, 33.6, 34.1, 34.6, 35.1, 35.6, 36.1, 36.6, 37.1, 37.6, 38.1, 38.6, 39.1, 39.6, 40.1, 40.6, 41.1, 41.6, 42.1, 42.6, 43.1, 43.6, 44.1, 44.6, 45.1, 45.6, 46.1, 46.6, 47.1, 47.6, 48.1, 48.6, 49.1, 49.6, 50.1, 50.6, 51.1, 51.6, 52.1, 52.6, 53.1, 53.6, 54.1, 54.6, 55.1, 55.6, 56.1, 56.6, 57.1, 57.6, 58.1, 58.6, 59.1, 59.6, 60.1, 60.6, 61.1, 61.6, 62.1, 62.6, 63.1, 63.6, 64.1, 64.6, 65.1, 65.6, 66.1, 66.6, 67.1, 67.6, 68.1, 68.6, 69.1, 69.6, 70.1, 70.6, 71.1, 71.6, 72.1, 72.6, 73.1, 73.6, 74.1, 74.6, 75.1, 75.6, 76.1, 76.6, 77.1, 77.6, 78.1, 78.6, 79.1, 79.6, 80.1, 80.6, 81.1, 81.6, 82.1, 82.6, 83.1, 83.6, 84.1, 84.6, 85.1, 85.6, 86.1, 86.6, 87.1, 87.6, 88.1, 88.6, 89.1, 89.6, 90.1, 90.6, 91.1, 91.6, 92.1, 92.6, 93.1, 93.6, 94.1, 94.6, 95.1, 95.6, 96.1, 96.6, 97.1, 97.6, 98.1, 98.6, 99.1, 99.6, 100.1, 100.6, 101.1, 101.6, 102.1, 102.6, 103.1, 103.6, 104.1, 104.6, 105.1, 105.6, 106.1, 106.6, 107.1, 107.6, 108.1, 108.6, 109.1, 109.6, 110.1, 110.6, 111.1, 111.6, 112.1, 112.6, 113.1, 113.6, 114.1, 114.6, 115.1, 115.6, 116.1, 116.6, 117.1, 117.6, 118.1, 118.6, 119.1, 119.6, 120.1, 120.6, 121.1, 121.6, 122.1, 122.6, 123.1, 123.6, 124.1, 124.6, 125.1, 125.6, 126.1, 126.6, 127.1, 127.6, 128.1, 128.6, 129.1, 129.6, 130.1, 130.6, 131.1, 131.6, 132.1, 132.6, 133.1, 133.6, 134.1, 134.6, 135.1, 135.6, 136.1, 136.6, 137.1, 137.6, 138.1, 138.6, 139.1, 139.6, 140.1, 140.6, 141.1, 141.6, 142.1, 142.6, 143.1, 143.6, 144.1, 144.6, 145.1, 145.6, 146.1, 146.6, 147.1, 147.6, 148.1, 148.6, 149.1, 149.6, 150.1, 150.6, 151.1, 151.6, 152.1, 152.6, 153.1, 153.6, 154.1, 154.6, 155.1, 155.6, 156.1, 156.6, 157.1, 157.6, 158.1, 158.6, 159.1, 159.6, 160.1, 160.6, 161.1, 161.6, 162.1, 162.6, 163.1, 163.6, 164.1, 164.6, 165.1, 165.6, 166.1, 166.6, 167.1, 167.6, 168.1, 168.6, 169.1, 169.6, 170.1, 170.6, 171.1, 171.6, 172.1, 172.6, 173.1, 173.6, 174.1, 174.6, 175.1, 175.6, 176.1, 176.6, 177.1, 177.6, 178.1, 178.6, 179.1, 179.6], "y": [0.9739, 0.969, 0.9655, 0.9747, 0.9688, 0.9715, 0.9741, 0.9695, 0.9711, 0.9713, 0.9712, 0.9716, 0.9694, 0.9711, 0.9734, 0.9684, 0.9692, 0.9714, 0.9653, 0.9701, 0.9682, 0.9725, 0.9656, 0.9743, 0.9639, 0.9637, 0.9709, 0.9698, 0.9669, 0.9717, 0.9684, 0.972, 0.973, 0.971, 0.9712, 0.9706, 0.9637, 0.9705, 0.9733, 0.9691, 0.97, 0.9755, 0.9693, 0.9725, 0.9683, 0.9678, 0.9724, 0.9723, 0.9727, 0.9731, 0.9705, 0.9717, 0.9695, 0.9677, 0.9726, 0.9714, 0.9705, 0.9691, 0.9664, 0.9699, 0.2516, 0.2985, 0.261, 0.8839, 0.8873, 0.8812, 0.8852, 0.8835, 0.8873, 0.8963, 0.8856, 0.8962, 0.8931, 0.8966, 0.893, 0.8903, 0.8853, 0.8894, 0.8963, 0.893, 0.8872, 0.8841, 0.8909, 0.8849, 0.8869, 0.8987, 0.88, 0.8949, 0.8923, 0.8948, 0.8885, 0.8838, 0.8858, 0.8965, 0.8856, 0.8942, 0.8919, 0.8864, 0.8962, 0.8948, 0.8976, 0.9, 0.8961, 0.8911, 0.8943, 0.882, 0.8877, 0.8921, 0.8959, 0.8819, 0.8929, 0.8806, 0.8878, 0.9017, 0.8851, 0.8935, 0.889, 0.8941, 0.8981, 0.8892, 0.895, 0.8836, 0.8867, 0.8836, 0.8855, 0.8835, 0.8851, 0.8958, 0.8978, 0.8836, 0.8929, 0.8928, 0.8917, 0.8888, 0.9016, 0.8933, 0.8872, 0.8964, 0.8908, 0.8921, 0.8983, 0.8929, 0.892, 0.8874, 0.8947, 0.8881, 0.8917, 0.8887, 0.8935, 0.8909, 0.8891, 0.8932, 0.8979, 0.8878, 0.8932, 0.8895, 0.889, 0.8914, 0.8873, 0.8843, 0.8969, 0.8903, 0.8971, 0.8937, 0.8916, 0.8973, 0.8831, 0.8987, 0.8836, 0.8893, 0.8979, 0.8947, 0.886, 0.8994, 0.8873, 0.8806, 0.888, 0.8904, 0.9007, 0.895, 0.8873, 0.8952, 0.8981, 0.8941, 0.8921, 0.8888, 0.8952, 0.8898, 0.8867, 0.9049, 0.883, 0.8882, 0.8924, 0.8894, 0.8974, 0.8863, 0.8914, 0.8851, 0.8951, 0.8829, 0.8809, 0.895, 0.8913, 0.8876, 0.9026, 0.8876, 0.8935, 0.8854, 0.9047, 0.8863, 0.8879, 0.8876, 0.8922, 0.8919, 0.8803, 0.9005, 0.8848, 0.8948, 0.8861, 0.8826, 0.8914, 0.8971, 0.8819, 0.902, 0.8884, 0.8951, 0.901, 0.887, 0.8844, 0.8831, 0.8923, 0.8909, 0.8943, 0.8875, 0.885, 0.8976, 0.8827, 0.8814, 0.8868, 0.8898, 0.8851, 0.8933, 0.8853, 0.8989, 0.8897, 0.8895, 0.8925, 0.8898, 0.8886, 0.8987, 0.8922, 0.8948, 0.8831, 0.8949, 0.8931, 0.8884, 0.8953, 0.8871, 0.8842, 0.8852, 0.8933, 0.8847, 0.8936, 0.8925, 0.8909, 0.8942, 0.8855, 0.881, 0.8901, 0.8872, 0.897, 0.8855, 0.8922, 0.8984, 0.8816, 0.8931, 0.8953, 0.8949, 0.8834, 0.887, 0.8862, 0.8977, 0.9013, 0.89, 0.8873, 0.8937, 0.892, 0.8854, 0.8908, 0.899, 0.8927, 0.8984, 0.8981, 0.8835, 0.884, 0.8838, 0.8975, 0.8945, 0.8957, 0.8974, 0.8923, 0.8838, 0.8859, 0.8815, 0.8905, 0.8922, 0.8848, 0.8992, 0.8818, 0.891, 0.8817, 0.8957, 0.888, 0.9006, 0.8956, 0.8896, 0.8851, 0.8885, 0.8822, 0.9039, 0.8879, 0.8885, 0.8877, 0.891, 0.894, 0.8936, 0.8869, 0.8855, 0.9001, 0.8896, 0.8906, 0.892, 0.8914, 0.885, 0.9014, 0.891, 0.8941, 0.8858, 0.8928, 0.8849]}, "mecTaskLatency": {"x": [10.82, 11.81, 12.81, 13.81, 14.81, 15.81, 16.81, 17.81, 18.82, 19.82, 20.81, 21.81, 22.82, 23.82, 24.81, 25.82, 26.81, 27.81, 28.82, 29.82, 30.81, 31.81, 32.81, 33.81, 34.81, 35.82, 36.81, 37.81, 38.82, 39.81, 40.81, 41.84, 42.84, 43.84, 44.84, 45.84, 46.84, 47.84, 48.84, 49.84, 50.84, 51.84, 52.84, 53.84, 54.84, 55.84, 56.84, 57.84, 58.84, 59.84, 60.84, 61.84, 62.84, 63.84, 64.84, 65.84, 66.84, 67.84, 68.84, 69.84, 70.84, 71.84, 72.84, 73.84, 74.84, 75.84, 76.84, 77.84, 78.84, 79.84, 80.84, 81.84, 82.84, 83.84, 84.84, 85.84, 86.84, 87.84, 88.84, 89.84, 90.84, 91.84, 92.84, 93.84, 94.84, 95.84, 96.84, 97.84, 98.84, 99.84, 100.84, 101.84, 102.84, 103.84, 104.84, 105.84, 106.84, 107.84, 108.84, 109.84, 110.84, 111.84, 112.84, 113.84, 114.84, 115.84, 116.84, 117.84, 118.84, 119.84, 120.84, 121.84, 122.84, 123.84, 124.84, 125.84, 126.84, 127.84, 128.84, 129.84, 130.84, 131.84, 132.84, 133.84, 134.84, 135.84, 136.84, 137.84, 138.84, 139.84, 140.84, 141.84, 142.84, 143.84, 144.84, 145.84, 146.84, 147.84, 148.84, 149.84, 150.84, 151.84, 152.84, 153.84, 154.84, 155.84, 156.84, 157.84, 158.84, 159.84, 160.84, 161.84, 162.84, 163.84, 164.84, 165.84, 166.84, 167.84, 168.84, 169.84, 170.84, 171.84, 172.84, 173.84, 174.84, 175.84, 176.84, 177.84, 178.84, 179.84], "y": [0.0073, 0.006, 0.0066, 0.0061, 0.0064, 0.0063, 0.0062, 0.0068, 0.007, 0.0071, 0.0064, 0.0069, 0.0074, 0.0074, 0.0068, 0.0073, 0.0064, 0.0066, 0.0074, 0.007, 0.0061, 0.0068, 0.0066, 0.0064, 0.0069, 0.0073, 0.0067, 0.0066, 0.007, 0.0068, 0.0064, 0.0291, 0.0299, 0.0311, 0.0296, 0.0299, 0.0315, 0.0301, 0.0286, 0.0287, 0.0313, 0.0278, 0.0307, 0.0288, 0.0307, 0.0293, 0.0317, 0.0312, 0.0293, 0.0277, 0.029, 0.0282, 0.0289, 0.0277, 0.0316, 0.0283, 0.0316, 0.0294, 0.0297, 0.0308, 0.0314, 0.029, 0.0295, 0.0278, 0.0279, 0.0284, 0.028, 0.0303, 0.0274, 0.0294, 0.0303, 0.0289, 0.03, 0.0276, 0.0317, 0.0278, 0.0289, 0.0311, 0.0305, 0.0291, 0.0311, 0.0318, 0.0283, 0.0318, 0.0288, 0.0311, 0.0301, 0.0274, 0.031, 0.0281, 0.0293, 0.0314, 0.0309, 0.0296, 0.0282, 0.0293, 0.0309, 0.0275, 0.0291, 0.0282, 0.031, 0.0275, 0.0273, 0.0319, 0.0291, 0.0278, 0.0299, 0.028, 0.0312, 0.0317, 0.0272, 0.0296, 0.0298, 0.0295, 0.0285, 0.0299, 0.0318, 0.0297, 0.0309, 0.0289, 0.0274, 0.0311, 0.0287, 0.029, 0.028, 0.0289, 0.0292, 0.0273, 0.0306, 0.0305, 0.0299, 0.0302, 0.0291, 0.0311, 0.0299, 0.0301, 0.0314, 0.0281, 0.0293, 0.0277, 0.0309, 0.0273, 0.0295, 0.0275, 0.0274, 0.0318, 0.0315, 0.0271, 0.0295, 0.0299, 0.0301, 0.0312, 0.0274, 0.0272, 0.0293, 0.0317, 0.0283, 0.0275, 0.0287, 0.0291, 0.0313, 0.0302, 0.0311, 0.0277, 0.0313, 0.0313, 0.0284, 0.028, 0.0279, 0.0289]}, "datarateSelected": {"x": [12.39, 15.43, 18.49, 21.52, 25.08, 28.11, 31.48, 35.06, 38.27, 41.61, 44.92, 48.41, 51.79, 54.96, 58.52, 61.64, 64.78, 68.1, 71.35, 74.64, 77.93, 81.27, 84.56, 88.27, 91.83, 94.94, 98.0, 101.27, 104.3, 108.0, 111.68, 115.11, 118.5, 121.99, 125.16, 128.54, 132.11, 135.48, 138.6, 141.66, 145.37, 149.03, 152.56, 156.13, 159.62, 163.37, 167.07, 170.46, 173.53, 177.1], "y": [12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0]}, "activeInterface": {"x": [41.1], "y": [1.0]}, "switchCount": {"x": [41.1], "y": [1.0]}}, "Vehicle 0": {"qosScore": {"x": [10.1, 10.6, 11.1, 11.6, 12.1, 12.6, 13.1, 13.6, 14.1, 14.6, 15.1, 15.6, 16.1, 16.6, 17.1, 17.6, 18.1, 18.6, 19.1, 19.6, 20.1, 20.6, 21.1, 21.6, 22.1, 22.6, 23.1, 23.6, 24.1, 24.6, 25.1, 25.6, 26.1, 26.6, 27.1, 27.6, 28.1, 28.6, 29.1, 29.6, 30.1, 30.6, 31.1, 31.6, 32.1, 32.6, 33.1, 33.6, 34.1, 34.6, 35.1, 35.6, 36.1, 36.6, 37.1, 37.6, 38.1, 38.6, 39.1, 39.6, 40.1, 40.6, 41.1, 41.6, 42.1, 42.6, 43.1, 43.6, 44.1, 44.6, 45.1, 45.6, 46.1, 46.6, 47.1, 47.6, 48.1, 48.6, 49.1, 49.6, 50.1, 50.6, 51.1, 51.6, 52.1, 52.6, 53.1, 53.6, 54.1, 54.6, 55.1, 55.6, 56.1, 56.6, 57.1, 57.6, 58.1, 58.6, 59.1, 59.6, 60.1, 60.6, 61.1, 61.6, 62.1, 62.6, 63.1, 63.6, 64.1, 64.6, 65.1, 65.6, 66.1, 66.6, 67.1, 67.6, 68.1, 68.6, 69.1, 69.6, 70.1, 70.6, 71.1, 71.6, 72.1, 72.6, 73.1, 73.6, 74.1, 74.6, 75.1, 75.6, 76.1, 76.6, 77.1, 77.6, 78.1, 78.6, 79.1, 79.6, 80.1, 80.6, 81.1, 81.6, 82.1, 82.6, 83.1, 83.6, 84.1, 84.6, 85.1, 85.6, 86.1, 86.6, 87.1, 87.6, 88.1, 88.6, 89.1, 89.6, 90.1, 90.6, 91.1, 91.6, 92.1, 92.6, 93.1, 93.6, 94.1, 94.6, 95.1, 95.6, 96.1, 96.6, 97.1, 97.6, 98.1, 98.6, 99.1, 99.6, 100.1, 100.6, 101.1, 101.6, 102.1, 102.6, 103.1, 103.6, 104.1, 104.6, 105.1, 105.6, 106.1, 106.6, 107.1, 107.6, 108.1, 108.6, 109.1, 109.6, 110.1, 110.6, 111.1, 111.6, 112.1, 112.6, 113.1, 113.6, 114.1, 114.6, 115.1, 115.6, 116.1, 116.6, 117.1, 117.6, 118.1, 118.6, 119.1, 119.6, 120.1, 120.6, 121.1, 121.6, 122.1, 122.6, 123.1, 123.6, 124.1, 124.6, 125.1, 125.6, 126.1, 126.6, 127.1, 127.6, 128.1, 128.6, 129.1, 129.6, 130.1, 130.6, 131.1, 131.6, 132.1, 132.6, 133.1, 133.6, 134.1, 134.6, 135.1, 135.6, 136.1, 136.6, 137.1, 137.6, 138.1, 138.6, 139.1, 139.6, 140.1, 140.6, 141.1, 141.6, 142.1, 142.6, 143.1, 143.6, 144.1, 144.6, 145.1, 145.6, 146.1, 146.6, 147.1, 147.6, 148.1, 148.6, 149.1, 149.6, 150.1, 150.6, 151.1, 151.6, 152.1, 152.6, 153.1, 153.6, 154.1, 154.6, 155.1, 155.6, 156.1, 156.6, 157.1, 157.6, 158.1, 158.6, 159.1, 159.6, 160.1, 160.6, 161.1, 161.6, 162.1, 162.6, 163.1, 163.6, 164.1, 164.6, 165.1, 165.6, 166.1, 166.6, 167.1, 167.6, 168.1, 168.6, 169.1, 169.6, 170.1, 170.6, 171.1], "y": [0.9734, 0.9706, 0.9696, 0.9687, 0.9712, 0.9687, 0.9695, 0.9719, 0.9688, 0.9729, 0.9703, 0.9704, 0.9685, 0.9703, 0.9708, 0.964, 0.9666, 0.9653, 0.9755, 0.9748, 0.9672, 0.97, 0.9693, 0.9718, 0.9683, 0.9697, 0.9698, 0.9683, 0.973, 0.9701, 0.9712, 0.9702, 0.9715, 0.9705, 0.9677, 0.9703, 0.9696, 0.9737, 0.9682, 0.969, 0.9734, 0.9739, 0.9725, 0.9678, 0.9659, 0.9677, 0.9748, 0.9688, 0.9656, 0.9697, 0.9675, 0.9638, 0.9732, 0.9691, 0.9682, 0.9679, 0.9689, 0.9715, 0.9672, 0.9699, 0.2405, 0.2805, 0.331, 0.9014, 0.8868, 0.8867, 0.8986, 0.8905, 0.8892, 0.8911, 0.8901, 0.8935, 0.888, 0.8959, 0.8889, 0.896, 0.8901, 0.9011, 0.8868, 0.8854, 0.8891, 0.8802, 0.8939, 0.8996, 0.8842, 0.8846, 0.8955, 0.8872, 0.8869, 0.8857, 0.893, 0.8874, 0.8855, 0.8933, 0.8985, 0.8938, 0.8925, 0.8883, 0.8948, 0.8869, 0.8962, 0.8896, 0.8906, 0.885, 0.893, 0.8923, 0.8897, 0.8869, 0.8964, 0.8942, 0.894, 0.8858, 0.8956, 0.8988, 0.887, 0.8801, 0.8912, 0.8979, 0.8903, 0.8867, 0.8867, 0.9002, 0.8931, 0.8867, 0.8833, 0.8919, 0.8897, 0.8877, 0.8895, 0.8972, 0.8968, 0.8922, 0.8887, 0.8853, 0.8881, 0.8857, 0.886, 0.892, 0.8939, 0.8831, 0.8865, 0.8955, 0.8907, 0.8921, 0.8969, 0.884, 0.8915, 0.8866, 0.9012, 0.8874, 0.8853, 0.8876, 0.8903, 0.8929, 0.8885, 0.8905, 0.8962, 0.892, 0.897, 0.892, 0.883, 0.8923, 0.8948, 0.8845, 0.8892, 0.8897, 0.896, 0.9007, 0.8906, 0.898, 0.8994, 0.8949, 0.9005, 0.9, 0.8995, 0.8901, 0.8949, 0.8974, 0.895, 0.8917, 0.8972, 0.8905, 0.8853, 0.8867, 0.8975, 0.8986, 0.8863, 0.8992, 0.8869, 0.9011, 0.8983, 0.8886, 0.8905, 0.8983, 0.8837, 0.8929, 0.8793, 0.896, 0.896, 0.8951, 0.8924, 0.8932, 0.8934, 0.8848, 0.8838, 0.8955, 0.8835, 0.8952, 0.8892, 0.8818, 0.9038, 0.8836, 0.8951, 0.8861, 0.887, 0.8963, 0.8866, 0.8942, 0.8899, 0.9013, 0.8849, 0.8838, 0.9008, 0.8918, 0.887, 0.8887, 0.8864, 0.8857, 0.8974, 0.8899, 0.8956, 0.8956, 0.8927, 0.883, 0.8937, 0.8825, 0.8922, 0.8973, 0.884, 0.8952, 0.8819, 0.8906, 0.8948, 0.8883, 0.8939, 0.8985, 0.892, 0.8869, 0.8814, 0.8945, 0.8873, 0.8909, 0.8816, 0.8959, 0.8972, 0.8864, 0.8877, 0.8868, 0.8984, 0.8941, 0.8898, 0.8898, 0.8851, 0.8926, 0.8816, 0.8835, 0.8933, 0.8896, 0.8863, 0.8835, 0.8966, 0.886, 0.8986, 0.8868, 0.8884, 0.8851, 0.8986, 0.8871, 0.8856, 0.8875, 0.8809, 0.8907, 0.8879, 0.8946, 0.8922, 0.8868, 0.8929, 0.892, 0.8904, 0.8855, 0.8839, 0.8968, 0.8833, 0.8974, 0.8877, 0.8965, 0.8896, 0.8981, 0.9013, 0.9011, 0.8888, 0.8945, 0.8961, 0.8977, 0.8862, 0.8838, 0.8924, 0.8931, 0.8953, 0.8859, 0.8927, 0.8859, 0.8881, 0.8908, 0.8946, 0.8998, 0.8991, 0.8999, 0.9012, 0.8813, 0.8858, 0.8996, 0.894]}, "mecTaskLatency": {"x": [10.84, 11.84, 12.84, 13.84, 14.84, 15.84, 16.84, 17.84, 18.84, 19.84, 20.84, 21.84, 22.84, 23.84, 24.84, 25.84, 26.84, 27.84, 28.84, 29.84, 30.84, 31.84, 32.84, 33.84, 34.84, 35.84, 36.84, 37.84, 38.84, 39.84, 40.84, 41.86, 42.86, 43.86, 44.86, 45.86, 46.86, 47.86, 48.86, 49.86, 50.86, 51.86, 52.86, 53.86, 54.86, 55.86, 56.86, 57.86, 58.86, 59.86, 60.86, 61.86, 62.86, 63.86, 64.86, 65.86, 66.86, 67.86, 68.86, 69.86, 70.86, 71.86, 72.86, 73.86, 74.86, 75.86, 76.86, 77.86, 78.86, 79.86, 80.86, 81.86, 82.86, 83.86, 84.86, 85.86, 86.86, 87.86, 88.86, 89.86, 90.86, 91.86, 92.86, 93.86, 94.86, 95.86, 96.86, 97.86, 98.86, 99.86, 100.86, 101.86, 102.86, 103.86, 104.86, 105.86, 106.86, 107.86, 108.86, 109.86, 110.86, 111.86, 112.86, 113.86, 114.86, 115.86, 116.86, 117.86, 118.86, 119.86, 120.86, 121.86, 122.86, 123.86, 124.86, 125.86, 126.86, 127.86, 128.86, 129.86, 130.86, 131.86, 132.86, 133.86, 134.86, 135.86, 136.86, 137.86, 138.86, 139.86, 140.86, 141.86, 142.86, 143.86, 144.86, 145.86, 146.86, 147.86, 148.86, 149.86, 150.86, 151.86, 152.86, 153.86, 154.86, 155.86, 156.86, 157.86, 158.86, 159.86, 160.86, 161.86, 162.86, 163.86, 164.86, 165.86, 166.86, 167.86, 168.86, 169.86, 170.86], "y": [0.0067, 0.0072, 0.0065, 0.006, 0.0071, 0.006, 0.0063, 0.0074, 0.0069, 0.006, 0.0064, 0.006, 0.0069, 0.0069, 0.0064, 0.0073, 0.0061, 0.0068, 0.0061, 0.0074, 0.0061, 0.0073, 0.0072, 0.0067, 0.0065, 0.0061, 0.0075, 0.0073, 0.0071, 0.0062, 0.0061, 0.0289, 0.0306, 0.0298, 0.0293, 0.0278, 0.0288, 0.0308, 0.0297, 0.03, 0.027, 0.0317, 0.0318, 0.0286, 0.0287, 0.0276, 0.0301, 0.0316, 0.0287, 0.0298, 0.0295, 0.0306, 0.0288, 0.0302, 0.0312, 0.0278, 0.0318, 0.0316, 0.031, 0.0275, 0.0317, 0.0296, 0.0297, 0.0314, 0.0317, 0.0293, 0.0272, 0.0299, 0.0297, 0.0274, 0.0274, 0.0301, 0.0277, 0.0272, 0.028, 0.032, 0.0297, 0.028, 0.0285, 0.0304, 0.0275, 0.0279, 0.0287, 0.0319, 0.0278, 0.0279, 0.029, 0.0274, 0.0276, 0.0293, 0.0298, 0.0281, 0.0311, 0.0316, 0.0284, 0.0285, 0.0296, 0.0318, 0.0294, 0.0291, 0.0309, 0.0283, 0.0314, 0.0293, 0.0314, 0.0314, 0.0271, 0.0272, 0.0298, 0.0293, 0.0306, 0.0313, 0.0296, 0.0298, 0.029, 0.0271, 0.0298, 0.0297, 0.0278, 0.0298, 0.0288, 0.0306, 0.0284, 0.0281, 0.0309, 0.0283, 0.0313, 0.0289, 0.0311, 0.0289, 0.0302, 0.031, 0.0299, 0.0293, 0.0273, 0.0296, 0.0278, 0.0278, 0.0319, 0.0299, 0.0308, 0.0286, 0.0279, 0.0311, 0.0315, 0.0275, 0.0299, 0.0312, 0.0308, 0.0295, 0.0303, 0.0304, 0.0311, 0.0302, 0.0276, 0.0286, 0.0288, 0.0309, 0.0316, 0.0299, 0.0276]}, "datarateSelected": {"x": [11.86, 14.9, 17.95, 20.98, 24.54, 27.58, 30.95, 34.53, 37.74, 41.07, 44.38, 47.87, 51.26, 54.42, 57.98, 61.1, 64.24, 67.56, 70.81, 74.11, 77.39, 80.73, 84.02, 87.73, 91.29, 94.4, 97.46, 100.73, 103.76, 107.46, 111.14, 114.57, 117.96, 121.45, 124.62, 128.0, 131.58, 134.94, 138.07, 141.12, 144.83, 148.49, 152.02, 155.59, 159.08, 162.83, 166.53, 169.92], "y": [12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0]}, "activeInterface": {"x": [41.1], "y": [1.0]}, "switchCount": {"x": [41.1], "y": [1.0]}}, "Vehicle 3": {"mecTaskLatency": {"x": [31.18, 32.18, 33.18, 34.18, 35.18, 36.18, 37.18, 38.18, 39.18, 40.18, 41.2, 42.21, 43.21, 44.21, 45.2, 46.21, 47.21, 48.2, 49.21, 50.2, 51.21, 52.2, 53.21, 54.2, 55.2, 56.21, 57.21, 58.21, 59.2, 60.21, 61.2, 62.2, 63.21, 64.21, 65.21, 66.2, 67.21, 68.2, 69.2, 70.21, 71.21, 72.21, 73.21, 74.21, 75.21, 76.21, 77.21, 78.21, 79.21, 80.2, 81.21, 82.21, 83.21, 84.2, 85.21, 86.21, 87.2, 88.2, 89.21, 90.2, 91.2, 92.21, 93.21, 94.2, 95.21, 96.21, 97.2, 98.2, 99.21, 100.21, 101.21, 102.21, 103.21, 104.21, 105.2, 106.2, 107.21, 108.2, 109.21, 110.2, 111.21, 112.21, 113.2, 114.21, 115.21, 116.21, 117.2, 118.2, 119.21, 120.2, 121.2, 122.2, 123.2, 124.2, 125.21, 126.21, 127.21, 128.21, 129.21, 130.2, 131.2, 132.2, 133.2, 134.2, 135.2, 136.21, 137.21, 138.2, 139.21, 140.2, 141.21, 142.2, 143.2, 144.21, 145.2, 146.21, 147.21, 148.2, 149.21, 150.2, 151.21, 152.2, 153.2, 154.21, 155.2, 156.2, 157.2, 158.21, 159.21, 160.21, 161.2, 162.2, 163.21, 164.21, 165.2, 166.2, 167.21, 168.2, 169.21, 170.2, 171.21, 172.21, 173.2, 174.2, 175.2, 176.2, 177.21, 178.2, 179.21], "y": [0.0067, 0.007, 0.0061, 0.0064, 0.0068, 0.0061, 0.0073, 0.0068, 0.0072, 0.0074, 0.0277, 0.0312, 0.0314, 0.0305, 0.0283, 0.03, 0.0316, 0.0297, 0.0298, 0.0279, 0.0312, 0.0274, 0.0312, 0.0292, 0.0282, 0.0305, 0.0316, 0.03, 0.0291, 0.031, 0.029, 0.0286, 0.0319, 0.0311, 0.0309, 0.0288, 0.0308, 0.0293, 0.027, 0.0306, 0.0312, 0.0299, 0.0315, 0.0311, 0.0299, 0.0309, 0.0309, 0.03, 0.0305, 0.0274, 0.0307, 0.0319, 0.0311, 0.0275, 0.0312, 0.0314, 0.0293, 0.0275, 0.0302, 0.0281, 0.0287, 0.0316, 0.0316, 0.0286, 0.0309, 0.0297, 0.0284, 0.0275, 0.0316, 0.0306, 0.0311, 0.0299, 0.0307, 0.0305, 0.0297, 0.0296, 0.0308, 0.0297, 0.0311, 0.0276, 0.0319, 0.0314, 0.0292, 0.0312, 0.0314, 0.0299, 0.0287, 0.0292, 0.0298, 0.0288, 0.027, 0.029, 0.0272, 0.0294, 0.0297, 0.0302, 0.0302, 0.0318, 0.0306, 0.0284, 0.0284, 0.0283, 0.0278, 0.0271, 0.0279, 0.0314, 0.0316, 0.0292, 0.0316, 0.0276, 0.031, 0.0282, 0.0283, 0.0311, 0.0288, 0.0317, 0.0314, 0.0281, 0.0317, 0.0288, 0.0301, 0.0285, 0.0291, 0.0299, 0.0289, 0.0275, 0.029, 0.0309, 0.0311, 0.0298, 0.0271, 0.0287, 0.0305, 0.0315, 0.0278, 0.0279, 0.0311, 0.0288, 0.031, 0.0283, 0.0298, 0.0304, 0.0274, 0.028, 0.0272, 0.0285, 0.0311, 0.0295, 0.0302]}, "qosScore": {"x": [31.5, 32.0, 32.5, 33.0, 33.5, 34.0, 34.5, 35.0, 35.5, 36.0, 36.5, 37.0, 37.5, 38.0, 38.5, 39.0, 39.5, 40.0, 40.5, 41.0, 41.5, 42.0, 42.5, 43.0, 43.5, 44.0, 44.5, 45.0, 45.5, 46.0, 46.5, 47.0, 47.5, 48.0, 48.5, 49.0, 49.5, 50.0, 50.5, 51.0, 51.5, 52.0, 52.5, 53.0, 53.5, 54.0, 54.5, 55.0, 55.5, 56.0, 56.5, 57.0, 57.5, 58.0, 58.5, 59.0, 59.5, 60.0, 60.5, 61.0, 61.5, 62.0, 62.5, 63.0, 63.5, 64.0, 64.5, 65.0, 65.5, 66.0, 66.5, 67.0, 67.5, 68.0, 68.5, 69.0, 69.5, 70.0, 70.5, 71.0, 71.5, 72.0, 72.5, 73.0, 73.5, 74.0, 74.5, 75.0, 75.5, 76.0, 76.5, 77.0, 77.5, 78.0, 78.5, 79.0, 79.5, 80.0, 80.5, 81.0, 81.5, 82.0, 82.5, 83.0, 83.5, 84.0, 84.5, 85.0, 85.5, 86.0, 86.5, 87.0, 87.5, 88.0, 88.5, 89.0, 89.5, 90.0, 90.5, 91.0, 91.5, 92.0, 92.5, 93.0, 93.5, 94.0, 94.5, 95.0, 95.5, 96.0, 96.5, 97.0, 97.5, 98.0, 98.5, 99.0, 99.5, 100.0, 100.5, 101.0, 101.5, 102.0, 102.5, 103.0, 103.5, 104.0, 104.5, 105.0, 105.5, 106.0, 106.5, 107.0, 107.5, 108.0, 108.5, 109.0, 109.5, 110.0, 110.5, 111.0, 111.5, 112.0, 112.5, 113.0, 113.5, 114.0, 114.5, 115.0, 115.5, 116.0, 116.5, 117.0, 117.5, 118.0, 118.5, 119.0, 119.5, 120.0, 120.5, 121.0, 121.5, 122.0, 122.5, 123.0, 123.5, 124.0, 124.5, 125.0, 125.5, 126.0, 126.5, 127.0, 127.5, 128.0, 128.5, 129.0, 129.5, 130.0, 130.5, 131.0, 131.5, 132.0, 132.5, 133.0, 133.5, 134.0, 134.5, 135.0, 135.5, 136.0, 136.5, 137.0, 137.5, 138.0, 138.5, 139.0, 139.5, 140.0, 140.5, 141.0, 141.5, 142.0, 142.5, 143.0, 143.5, 144.0, 144.5, 145.0, 145.5, 146.0, 146.5, 147.0, 147.5, 148.0, 148.5, 149.0, 149.5, 150.0, 150.5, 151.0, 151.5, 152.0, 152.5, 153.0, 153.5, 154.0, 154.5, 155.0, 155.5, 156.0, 156.5, 157.0, 157.5, 158.0, 158.5, 159.0, 159.5, 160.0, 160.5, 161.0, 161.5, 162.0, 162.5, 163.0, 163.5, 164.0, 164.5, 165.0, 165.5, 166.0, 166.5, 167.0, 167.5, 168.0, 168.5, 169.0, 169.5, 170.0, 170.5, 171.0, 171.5, 172.0, 172.5, 173.0, 173.5, 174.0, 174.5, 175.0, 175.5, 176.0, 176.5, 177.0, 177.5, 178.0, 178.5, 179.0, 179.5, 180.0], "y": [0.9718, 0.9682, 0.9691, 0.9684, 0.9701, 0.9667, 0.9725, 0.9691, 0.9684, 0.9684, 0.9711, 0.9682, 0.9744, 0.9645, 0.9693, 0.9669, 0.9677, 0.2337, 0.3, 0.3179, 0.8864, 0.8897, 0.9016, 0.8968, 0.8976, 0.8895, 0.8829, 0.8876, 0.8932, 0.8922, 0.8939, 0.8992, 0.8924, 0.9034, 0.8983, 0.8896, 0.8931, 0.8966, 0.8932, 0.8937, 0.8962, 0.8933, 0.8971, 0.8804, 0.8937, 0.8876, 0.8919, 0.8913, 0.8863, 0.8954, 0.8905, 0.8931, 0.8932, 0.8951, 0.8916, 0.8922, 0.8934, 0.8869, 0.8922, 0.8954, 0.8906, 0.887, 0.8975, 0.8923, 0.8904, 0.8848, 0.9004, 0.8929, 0.894, 0.8882, 0.8929, 0.8925, 0.8915, 0.8904, 0.8925, 0.886, 0.9023, 0.8852, 0.8977, 0.8876, 0.8858, 0.8947, 0.8952, 0.8824, 0.883, 0.8941, 0.8932, 0.8962, 0.8937, 0.8862, 0.8814, 0.8858, 0.8821, 0.8887, 0.9017, 0.8927, 0.8991, 0.8866, 0.8955, 0.8968, 0.8971, 0.8998, 0.8904, 0.8974, 0.8958, 0.8913, 0.8945, 0.8838, 0.9033, 0.8888, 0.8959, 0.8937, 0.8973, 0.8942, 0.8951, 0.8789, 0.8863, 0.894, 0.8944, 0.8876, 0.8874, 0.8941, 0.8916, 0.8863, 0.8852, 0.8952, 0.8886, 0.8963, 0.8954, 0.9032, 0.9003, 0.8817, 0.8924, 0.8886, 0.8932, 0.8877, 0.8992, 0.8885, 0.8857, 0.885, 0.8812, 0.8981, 0.897, 0.8994, 0.8884, 0.8889, 0.9024, 0.8828, 0.8983, 0.8988, 0.8937, 0.8881, 0.885, 0.8936, 0.9006, 0.8781, 0.8902, 0.8899, 0.8927, 0.8953, 0.8904, 0.8842, 0.8889, 0.8876, 0.8853, 0.8945, 0.891, 0.8807, 0.8905, 0.8944, 0.8874, 0.8928, 0.8908, 0.898, 0.8988, 0.8978, 0.8813, 0.8916, 0.8885, 0.8912, 0.8886, 0.8935, 0.9011, 0.8952, 0.8984, 0.8848, 0.8876, 0.889, 0.8856, 0.8948, 0.8884, 0.8836, 0.8873, 0.8827, 0.8899, 0.8958, 0.8813, 0.9041, 0.8829, 0.889, 0.896, 0.8951, 0.8847, 0.8877, 0.8924, 0.8864, 0.8933, 0.8908, 0.8976, 0.8933, 0.8891, 0.8895, 0.8879, 0.8835, 0.8893, 0.89, 0.8863, 0.8877, 0.8919, 0.8912, 0.8876, 0.8864, 0.8974, 0.8889, 0.8966, 0.8881, 0.881, 0.8914, 0.8984, 0.8832, 0.8886, 0.8902, 0.8889, 0.8841, 0.8969, 0.8838, 0.8894, 0.8952, 0.8979, 0.8952, 0.887, 0.898, 0.8974, 0.8854, 0.8917, 0.9047, 0.8804, 0.8946, 0.8849, 0.8968, 0.8884, 0.8868, 0.8861, 0.8887, 0.8956, 0.887, 0.8963, 0.8925, 0.8875, 0.8943, 0.8931, 0.8931, 0.8985, 0.8888, 0.891, 0.8866, 0.8815, 0.888, 0.8898, 0.8896, 0.8931, 0.8996, 0.8884, 0.8954, 0.893, 0.8832, 0.8885, 0.8918, 0.8988, 0.8862, 0.8922, 0.8861, 0.8906, 0.8983, 0.8957, 0.8986, 0.8862, 0.8869, 0.89, 0.8956, 0.8848, 0.8899, 0.8944, 0.8904, 0.8831, 0.8826, 0.893, 0.8927]}, "datarateSelected": {"x": [32.55, 36.28, 39.53, 42.81, 45.85, 48.91, 51.94, 55.5, 58.53, 61.91, 65.49, 68.7, 72.03, 75.34, 78.83, 82.22, 85.38, 88.94, 92.06, 95.2, 98.52, 101.77, 105.06, 108.35, 111.69, 114.98, 118.69, 122.25, 125.36, 128.42, 131.69, 134.72, 138.42, 142.1, 145.53, 148.92, 152.41, 155.58, 158.96, 162.54, 165.9, 169.03, 172.08, 175.79, 179.45], "y": [12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0]}, "activeInterface": {"x": [41.0], "y": [1.0]}, "switchCount": {"x": [41.0], "y": [1.0]}}, "Vehicle 4": {"mecTaskLatency": {"x": [37.35, 38.35, 39.35, 40.35, 41.35, 42.37, 43.37, 44.37, 45.37, 46.37, 47.37, 48.37, 49.37, 50.37, 51.37, 52.37, 53.37, 54.37, 55.37, 56.37, 57.37, 58.37, 59.37, 60.37, 61.37, 62.37, 63.37, 64.37, 65.37, 66.37, 67.37, 68.37, 69.37, 70.37, 71.37, 72.37, 73.37, 74.37, 75.37, 76.37, 77.37, 78.37, 79.37, 80.37, 81.37, 82.37, 83.37, 84.37, 85.37, 86.37, 87.37, 88.37, 89.37, 90.37, 91.37, 92.37, 93.37, 94.37, 95.37, 96.37, 97.37, 98.37, 99.37, 100.37, 101.37, 102.37, 103.37, 104.37, 105.37, 106.37, 107.37, 108.37, 109.37, 110.37, 111.37, 112.37, 113.37, 114.37, 115.37, 116.37, 117.37, 118.37, 119.37, 120.37, 121.37, 122.37, 123.37, 124.37, 125.37, 126.37, 127.37, 128.37, 129.37, 130.37, 131.37, 132.37, 133.37, 134.37, 135.37, 136.37, 137.37, 138.37, 139.37, 140.37, 141.37, 142.37, 143.37, 144.37, 145.37, 146.37, 147.37, 148.37, 149.37, 150.37, 151.37, 152.37, 153.37, 154.37, 155.37, 156.37, 157.37, 158.37, 159.37, 160.37, 161.37, 162.37, 163.37, 164.37, 165.37, 166.37, 167.37, 168.37, 169.37, 170.37, 171.37, 172.37, 173.37, 174.37, 175.37, 176.37, 177.37, 178.37, 179.37], "y": [0.0062, 0.0066, 0.006, 0.0074, 0.0074, 0.0293, 0.0304, 0.031, 0.0273, 0.028, 0.0289, 0.0275, 0.0307, 0.0273, 0.028, 0.0283, 0.0309, 0.0295, 0.0309, 0.0298, 0.0305, 0.029, 0.0272, 0.0315, 0.0312, 0.0274, 0.0313, 0.029, 0.0284, 0.0304, 0.0312, 0.0272, 0.0317, 0.0271, 0.0279, 0.0283, 0.0313, 0.0284, 0.032, 0.0318, 0.0301, 0.0309, 0.0318, 0.0314, 0.0295, 0.0275, 0.0305, 0.0294, 0.0301, 0.031, 0.0294, 0.031, 0.0314, 0.03, 0.031, 0.032, 0.0295, 0.0276, 0.0295, 0.0319, 0.0311, 0.0274, 0.0292, 0.0318, 0.0296, 0.0299, 0.0295, 0.0292, 0.0271, 0.0273, 0.0278, 0.0301, 0.0287, 0.0273, 0.0307, 0.0301, 0.0275, 0.0296, 0.0303, 0.0287, 0.0274, 0.0318, 0.0272, 0.0292, 0.0273, 0.0297, 0.0312, 0.0318, 0.0316, 0.0315, 0.0306, 0.0281, 0.0294, 0.0291, 0.0297, 0.0283, 0.0309, 0.0284, 0.0283, 0.0304, 0.0274, 0.0311, 0.0295, 0.0281, 0.0301, 0.0288, 0.0313, 0.0309, 0.0271, 0.0298, 0.0307, 0.0319, 0.0304, 0.0296, 0.0316, 0.0271, 0.0292, 0.0275, 0.0272, 0.0289, 0.0276, 0.0284, 0.0315, 0.0303, 0.0285, 0.0306, 0.0291, 0.0316, 0.0304, 0.0315, 0.0292, 0.0304, 0.0279, 0.0283, 0.0306, 0.0308, 0.0277, 0.0293, 0.0297, 0.032, 0.0273, 0.029, 0.0287]}, "qosScore": {"x": [37.4, 37.9, 38.4, 38.9, 39.4, 39.9, 40.4, 40.9, 41.4, 41.9, 42.4, 42.9, 43.4, 43.9, 44.4, 44.9, 45.4, 45.9, 46.4, 46.9, 47.4, 47.9, 48.4, 48.9, 49.4, 49.9, 50.4, 50.9, 51.4, 51.9, 52.4, 52.9, 53.4, 53.9, 54.4, 54.9, 55.4, 55.9, 56.4, 56.9, 57.4, 57.9, 58.4, 58.9, 59.4, 59.9, 60.4, 60.9, 61.4, 61.9, 62.4, 62.9, 63.4, 63.9, 64.4, 64.9, 65.4, 65.9, 66.4, 66.9, 67.4, 67.9, 68.4, 68.9, 69.4, 69.9, 70.4, 70.9, 71.4, 71.9, 72.4, 72.9, 73.4, 73.9, 74.4, 74.9, 75.4, 75.9, 76.4, 76.9, 77.4, 77.9, 78.4, 78.9, 79.4, 79.9, 80.4, 80.9, 81.4, 81.9, 82.4, 82.9, 83.4, 83.9, 84.4, 84.9, 85.4, 85.9, 86.4, 86.9, 87.4, 87.9, 88.4, 88.9, 89.4, 89.9, 90.4, 90.9, 91.4, 91.9, 92.4, 92.9, 93.4, 93.9, 94.4, 94.9, 95.4, 95.9, 96.4, 96.9, 97.4, 97.9, 98.4, 98.9, 99.4, 99.9, 100.4, 100.9, 101.4, 101.9, 102.4, 102.9, 103.4, 103.9, 104.4, 104.9, 105.4, 105.9, 106.4, 106.9, 107.4, 107.9, 108.4, 108.9, 109.4, 109.9, 110.4, 110.9, 111.4, 111.9, 112.4, 112.9, 113.4, 113.9, 114.4, 114.9, 115.4, 115.9, 116.4, 116.9, 117.4, 117.9, 118.4, 118.9, 119.4, 119.9, 120.4, 120.9, 121.4, 121.9, 122.4, 122.9, 123.4, 123.9, 124.4, 124.9, 125.4, 125.9, 126.4, 126.9, 127.4, 127.9, 128.4, 128.9, 129.4, 129.9, 130.4, 130.9, 131.4, 131.9, 132.4, 132.9, 133.4, 133.9, 134.4, 134.9, 135.4, 135.9, 136.4, 136.9, 137.4, 137.9, 138.4, 138.9, 139.4, 139.9, 140.4, 140.9, 141.4, 141.9, 142.4, 142.9, 143.4, 143.9, 144.4, 144.9, 145.4, 145.9, 146.4, 146.9, 147.4, 147.9, 148.4, 148.9, 149.4, 149.9, 150.4, 150.9, 151.4, 151.9, 152.4, 152.9, 153.4, 153.9, 154.4, 154.9, 155.4, 155.9, 156.4, 156.9, 157.4, 157.9, 158.4, 158.9, 159.4, 159.9, 160.4, 160.9, 161.4, 161.9, 162.4, 162.9, 163.4, 163.9, 164.4, 164.9, 165.4, 165.9, 166.4, 166.9, 167.4, 167.9, 168.4, 168.9, 169.4, 169.9, 170.4, 170.9, 171.4, 171.9, 172.4, 172.9, 173.4, 173.9, 174.4, 174.9, 175.4, 175.9, 176.4, 176.9, 177.4, 177.9, 178.4, 178.9, 179.4, 179.9], "y": [0.9739, 0.9658, 0.9677, 0.9692, 0.9683, 0.9711, 0.2361, 0.273, 0.2106, 0.8879, 0.8936, 0.8859, 0.895, 0.8965, 0.8973, 0.8873, 0.8928, 0.8848, 0.8933, 0.8908, 0.8985, 0.8895, 0.8951, 0.8854, 0.8918, 0.902, 0.892, 0.8879, 0.8842, 0.8887, 0.8914, 0.8918, 0.8813, 0.8926, 0.8969, 0.9007, 0.9022, 0.893, 0.8905, 0.8822, 0.8909, 0.8976, 0.8946, 0.8832, 0.8973, 0.8893, 0.895, 0.8908, 0.885, 0.887, 0.8931, 0.9008, 0.8867, 0.889, 0.8885, 0.8932, 0.8887, 0.8908, 0.8929, 0.8803, 0.8931, 0.9008, 0.8917, 0.8921, 0.893, 0.8938, 0.8903, 0.888, 0.8997, 0.8905, 0.8957, 0.8848, 0.8825, 0.8823, 0.8889, 0.8953, 0.8854, 0.8876, 0.897, 0.8884, 0.8969, 0.8927, 0.8855, 0.8847, 0.8953, 0.8854, 0.8975, 0.8891, 0.8856, 0.8855, 0.8948, 0.8861, 0.8962, 0.887, 0.9042, 0.8922, 0.8867, 0.9001, 0.8853, 0.8919, 0.897, 0.8941, 0.8898, 0.884, 0.8926, 0.8912, 0.8875, 0.8898, 0.8934, 0.8863, 0.8831, 0.8962, 0.8985, 0.8849, 0.8939, 0.8964, 0.8869, 0.8912, 0.8893, 0.8945, 0.8902, 0.901, 0.884, 0.8855, 0.8921, 0.8858, 0.8897, 0.8864, 0.8807, 0.898, 0.8867, 0.8914, 0.9011, 0.8813, 0.8939, 0.8872, 0.8892, 0.8856, 0.8889, 0.8859, 0.8991, 0.8971, 0.8803, 0.8974, 0.881, 0.8847, 0.9001, 0.8823, 0.8777, 0.9014, 0.891, 0.897, 0.8885, 0.8907, 0.8925, 0.8911, 0.9003, 0.8846, 0.8859, 0.8913, 0.8929, 0.8957, 0.8956, 0.8969, 0.891, 0.8879, 0.8885, 0.8897, 0.8941, 0.8915, 0.8911, 0.8903, 0.8999, 0.8827, 0.8868, 0.8812, 0.8978, 0.886, 0.8873, 0.8861, 0.8864, 0.8908, 0.8875, 0.8897, 0.8955, 0.8943, 0.8911, 0.8796, 0.8971, 0.8873, 0.8843, 0.8885, 0.9032, 0.8798, 0.8964, 0.8838, 0.8894, 0.8892, 0.8889, 0.8857, 0.8879, 0.8873, 0.8913, 0.8904, 0.8859, 0.8936, 0.8969, 0.8837, 0.8846, 0.8847, 0.893, 0.8868, 0.8894, 0.882, 0.8896, 0.8961, 0.8892, 0.8963, 0.8842, 0.887, 0.8919, 0.8903, 0.8914, 0.8938, 0.8917, 0.9008, 0.895, 0.8877, 0.8886, 0.8816, 0.8894, 0.8974, 0.8892, 0.8916, 0.8949, 0.8872, 0.8954, 0.8904, 0.8931, 0.8884, 0.8865, 0.8881, 0.8874, 0.889, 0.8969, 0.8929, 0.8827, 0.8928, 0.8862, 0.8941, 0.8878, 0.8868, 0.8941, 0.8907, 0.879, 0.891, 0.8939, 0.8895, 0.8931, 0.8984, 0.8972, 0.8933, 0.8918, 0.892, 0.88, 0.8828, 0.8987, 0.8862, 0.8906, 0.8941, 0.8899, 0.8834, 0.8935, 0.8894, 0.8827, 0.8928, 0.8918, 0.9005, 0.8957, 0.8851, 0.8949, 0.8802, 0.8954, 0.8982, 0.8924, 0.885]}, "datarateSelected": {"x": [38.59, 42.32, 45.57, 48.86, 51.9, 54.95, 57.98, 61.54, 64.57, 67.95, 71.53, 74.74, 78.07, 81.38, 84.87, 88.26, 91.42, 94.98, 98.1, 101.24, 104.56, 107.81, 111.11, 114.39, 117.73, 121.02, 124.73, 128.29, 131.4, 134.46, 137.73, 140.76, 144.46, 148.14, 151.57, 154.96, 158.45, 161.62, 165.0, 168.58, 171.94, 175.07, 178.12], "y": [12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0]}, "activeInterface": {"x": [41.4], "y": [1.0]}, "switchCount": {"x": [41.4], "y": [1.0]}}, "Vehicle 5": {"mecTaskLatency": {"x": [61.29, 62.29, 63.31, 64.31, 65.31, 66.31, 67.31, 68.31, 69.31, 70.31, 71.31, 72.31, 73.31, 74.31, 75.31, 76.31, 77.31, 78.31, 79.31, 80.31, 81.31, 82.31, 83.31, 84.31, 85.31, 86.31, 87.31, 88.31, 89.31, 90.31, 91.31, 92.31, 93.31, 94.31, 95.31, 96.31, 97.31, 98.31, 99.31, 100.31, 101.31, 102.31, 103.31, 104.31, 105.31, 106.31, 107.31, 108.31, 109.31, 110.31, 111.31, 112.31, 113.31, 114.31, 115.31, 116.31, 117.31, 118.31, 119.31, 120.31, 121.31, 122.31, 123.31, 124.31, 125.31, 126.31, 127.31, 128.31, 129.31, 130.31, 131.31, 132.31, 133.31, 134.31, 135.31, 136.31, 137.31, 138.31, 139.31, 140.31, 141.31, 142.31, 143.31, 144.31, 145.31, 146.31, 147.31, 148.31, 149.31, 150.31, 151.31, 152.31, 153.31, 154.31, 155.31, 156.31, 157.31, 158.31, 159.31, 160.31, 161.31, 162.31, 163.31, 164.31, 165.31, 166.31, 167.31, 168.31, 169.31, 170.31, 171.31, 172.31, 173.31, 174.31, 175.31, 176.31, 177.31, 178.31, 179.31], "y": [0.0072, 0.0073, 0.0308, 0.0295, 0.0282, 0.0306, 0.0303, 0.0286, 0.0314, 0.0282, 0.0296, 0.0313, 0.0303, 0.0295, 0.0301, 0.0277, 0.0312, 0.0305, 0.0272, 0.0282, 0.0307, 0.0273, 0.0282, 0.0304, 0.0304, 0.0286, 0.0313, 0.0284, 0.03, 0.0271, 0.0292, 0.029, 0.0298, 0.0311, 0.0305, 0.0271, 0.0283, 0.0308, 0.0289, 0.0304, 0.0289, 0.0302, 0.0279, 0.0272, 0.0287, 0.0313, 0.0276, 0.0305, 0.0289, 0.0286, 0.0291, 0.0287, 0.0302, 0.0293, 0.0303, 0.0276, 0.0289, 0.0297, 0.028, 0.0315, 0.0287, 0.0299, 0.0305, 0.032, 0.0304, 0.0312, 0.0317, 0.0306, 0.0291, 0.0306, 0.029, 0.0283, 0.0307, 0.0273, 0.028, 0.0299, 0.0288, 0.0317, 0.0286, 0.0299, 0.0294, 0.0272, 0.0292, 0.0311, 0.0271, 0.0295, 0.0281, 0.0311, 0.0296, 0.0298, 0.0295, 0.03, 0.0314, 0.0315, 0.0285, 0.0307, 0.0283, 0.0282, 0.0287, 0.0271, 0.0312, 0.0316, 0.0276, 0.0305, 0.03, 0.0272, 0.0309, 0.0304, 0.0307, 0.0298, 0.0291, 0.0301, 0.0294, 0.0304, 0.0291, 0.0274, 0.0285, 0.031, 0.0297]}, "qosScore": {"x": [61.3, 61.8, 62.3, 62.8, 63.3, 63.8, 64.3, 64.8, 65.3, 65.8, 66.3, 66.8, 67.3, 67.8, 68.3, 68.8, 69.3, 69.8, 70.3, 70.8, 71.3, 71.8, 72.3, 72.8, 73.3, 73.8, 74.3, 74.8, 75.3, 75.8, 76.3, 76.8, 77.3, 77.8, 78.3, 78.8, 79.3, 79.8, 80.3, 80.8, 81.3, 81.8, 82.3, 82.8, 83.3, 83.8, 84.3, 84.8, 85.3, 85.8, 86.3, 86.8, 87.3, 87.8, 88.3, 88.8, 89.3, 89.8, 90.3, 90.8, 91.3, 91.8, 92.3, 92.8, 93.3, 93.8, 94.3, 94.8, 95.3, 95.8, 96.3, 96.8, 97.3, 97.8, 98.3, 98.8, 99.3, 99.8, 100.3, 100.8, 101.3, 101.8, 102.3, 102.8, 103.3, 103.8, 104.3, 104.8, 105.3, 105.8, 106.3, 106.8, 107.3, 107.8, 108.3, 108.8, 109.3, 109.8, 110.3, 110.8, 111.3, 111.8, 112.3, 112.8, 113.3, 113.8, 114.3, 114.8, 115.3, 115.8, 116.3, 116.8, 117.3, 117.8, 118.3, 118.8, 119.3, 119.8, 120.3, 120.8, 121.3, 121.8, 122.3, 122.8, 123.3, 123.8, 124.3, 124.8, 125.3, 125.8, 126.3, 126.8, 127.3, 127.8, 128.3, 128.8, 129.3, 129.8, 130.3, 130.8, 131.3, 131.8, 132.3, 132.8, 133.3, 133.8, 134.3, 134.8, 135.3, 135.8, 136.3, 136.8, 137.3, 137.8, 138.3, 138.8, 139.3, 139.8, 140.3, 140.8, 141.3, 141.8, 142.3, 142.8, 143.3, 143.8, 144.3, 144.8, 145.3, 145.8, 146.3, 146.8, 147.3, 147.8, 148.3, 148.8, 149.3, 149.8, 150.3, 150.8, 151.3, 151.8, 152.3, 152.8, 153.3, 153.8, 154.3, 154.8, 155.3, 155.8, 156.3, 156.8, 157.3, 157.8, 158.3, 158.8, 159.3, 159.8, 160.3, 160.8, 161.3, 161.8, 162.3, 162.8, 163.3, 163.8, 164.3, 164.8, 165.3, 165.8, 166.3, 166.8, 167.3, 167.8, 168.3, 168.8, 169.3, 169.8, 170.3, 170.8, 171.3, 171.8, 172.3, 172.8, 173.3, 173.8, 174.3, 174.8, 175.3, 175.8, 176.3, 176.8, 177.3, 177.8, 178.3, 178.8, 179.3, 179.8], "y": [0.2447, 0.3109, 0.2709, 0.8905, 0.9017, 0.897, 0.8958, 0.8951, 0.8871, 0.8965, 0.8886, 0.8931, 0.8879, 0.8879, 0.8847, 0.8851, 0.8902, 0.8836, 0.9005, 0.8879, 0.8977, 0.8984, 0.8862, 0.8931, 0.8906, 0.8861, 0.9003, 0.8905, 0.8922, 0.8927, 0.8798, 0.8888, 0.8921, 0.9004, 0.8824, 0.8837, 0.8907, 0.8854, 0.8971, 0.8842, 0.8815, 0.8981, 0.8944, 0.8861, 0.8852, 0.8953, 0.8859, 0.8933, 0.8912, 0.8897, 0.8912, 0.8896, 0.8895, 0.8978, 0.8904, 0.8953, 0.8868, 0.8838, 0.8906, 0.8996, 0.8974, 0.8946, 0.9034, 0.8948, 0.8973, 0.8977, 0.8881, 0.8886, 0.8973, 0.8926, 0.8953, 0.8875, 0.8892, 0.8874, 0.8931, 0.8877, 0.8909, 0.8852, 0.8951, 0.8992, 0.8913, 0.8856, 0.9026, 0.8932, 0.8872, 0.8929, 0.8861, 0.8809, 0.8856, 0.8901, 0.8868, 0.8987, 0.8867, 0.8953, 0.8902, 0.8782, 0.8882, 0.8927, 0.8922, 0.8942, 0.8962, 0.8928, 0.8888, 0.883, 0.8954, 0.8933, 0.8927, 0.8893, 0.8864, 0.8977, 0.8945, 0.8878, 0.9007, 0.901, 0.9017, 0.8892, 0.8972, 0.8897, 0.895, 0.8826, 0.8883, 0.8917, 0.8885, 0.8951, 0.8987, 0.8909, 0.8911, 0.8953, 0.8937, 0.8918, 0.8986, 0.8896, 0.8976, 0.889, 0.8924, 0.8907, 0.8978, 0.8875, 0.8889, 0.8917, 0.8858, 0.8858, 0.8959, 0.8833, 0.8996, 0.8868, 0.8935, 0.894, 0.891, 0.8809, 0.8899, 0.8796, 0.8991, 0.8952, 0.8998, 0.8843, 0.8951, 0.8931, 0.8951, 0.8862, 0.8858, 0.8914, 0.8992, 0.885, 0.8838, 0.8915, 0.8893, 0.8929, 0.9018, 0.8967, 0.8954, 0.8851, 0.8977, 0.8997, 0.8992, 0.8997, 0.8902, 0.8987, 0.8961, 0.8986, 0.8866, 0.8962, 0.8837, 0.8874, 0.9001, 0.8863, 0.8951, 0.8857, 0.8891, 0.8868, 0.8895, 0.8964, 0.8905, 0.8955, 0.8922, 0.8948, 0.8861, 0.8853, 0.9001, 0.899, 0.8971, 0.8936, 0.893, 0.8995, 0.884, 0.9004, 0.887, 0.8875, 0.8953, 0.8976, 0.8988, 0.8963, 0.8954, 0.8917, 0.8987, 0.8973, 0.8953, 0.8904, 0.898, 0.8971, 0.8851, 0.8916, 0.8823, 0.8836, 0.8907, 0.884, 0.8887, 0.8834, 0.8846, 0.8907, 0.895, 0.89, 0.89, 0.8799, 0.8902, 0.897, 0.8964, 0.8961]}, "datarateSelected": {"x": [62.02, 65.74, 69.0, 72.28, 75.32, 78.38, 81.41, 84.97, 88.0, 91.37, 94.95, 98.17, 101.5, 104.81, 108.3, 111.69, 114.85, 118.41, 121.53, 124.67, 127.99, 131.24, 134.53, 137.82, 141.16, 144.45, 148.16, 151.72, 154.83, 157.89, 161.16, 164.19, 167.89, 171.57, 175.0, 178.39], "y": [12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0]}, "activeInterface": {"x": [62.3], "y": [1.0]}, "switchCount": {"x": [62.3], "y": [1.0]}}, "Vehicle 6": {"mecTaskLatency": {"x": [72.71, 73.71, 74.74, 75.74, 76.74, 77.73, 78.74, 79.74, 80.73, 81.73, 82.73, 83.74, 84.73, 85.73, 86.73, 87.74, 88.73, 89.73, 90.73, 91.73, 92.73, 93.73, 94.73, 95.73, 96.74, 97.73, 98.73, 99.74, 100.74, 101.73, 102.74, 103.74, 104.73, 105.73, 106.74, 107.74, 108.73, 109.74, 110.74, 111.74, 112.73, 113.73, 114.73, 115.73, 116.73, 117.74, 118.74, 119.73, 120.73, 121.74, 122.73, 123.73, 124.74, 125.73, 126.74, 127.74, 128.73, 129.74, 130.74, 131.74, 132.73, 133.74, 134.74, 135.74, 136.74, 137.73, 138.73, 139.73, 140.73, 141.73, 142.73, 143.74, 144.74, 145.73, 146.74, 147.74, 148.73, 149.73, 150.74, 151.73, 152.73, 153.73, 154.73, 155.74, 156.73, 157.73, 158.74, 159.73, 160.73, 161.74, 162.74, 163.74, 164.73, 165.74, 166.74, 167.73, 168.73, 169.74, 170.73, 171.74, 172.73, 173.73, 174.73, 175.73, 176.73, 177.73, 178.74, 179.74], "y": [0.0064, 0.0062, 0.0318, 0.0304, 0.0306, 0.028, 0.0309, 0.0309, 0.0281, 0.0284, 0.027, 0.0313, 0.0277, 0.0299, 0.029, 0.0306, 0.0279, 0.0284, 0.0271, 0.0273, 0.0272, 0.0278, 0.0281, 0.0288, 0.0307, 0.0274, 0.0272, 0.0316, 0.0314, 0.0289, 0.0309, 0.0299, 0.0282, 0.028, 0.0303, 0.0303, 0.0295, 0.0311, 0.0317, 0.0305, 0.0272, 0.0277, 0.029, 0.0277, 0.0292, 0.0318, 0.0304, 0.0272, 0.0271, 0.0317, 0.0285, 0.0274, 0.031, 0.0296, 0.032, 0.0316, 0.0285, 0.0301, 0.0313, 0.03, 0.0276, 0.031, 0.0309, 0.0302, 0.0307, 0.0283, 0.0279, 0.0293, 0.0295, 0.0271, 0.0272, 0.0305, 0.032, 0.0298, 0.0318, 0.0315, 0.027, 0.0298, 0.03, 0.0281, 0.0282, 0.0288, 0.0299, 0.0317, 0.0295, 0.0271, 0.0314, 0.0278, 0.0284, 0.0306, 0.0319, 0.0303, 0.0287, 0.0314, 0.0315, 0.0298, 0.0275, 0.032, 0.029, 0.0304, 0.029, 0.0282, 0.0287, 0.0292, 0.0297, 0.0276, 0.0318, 0.0308]}, "qosScore": {"x": [73.2, 73.7, 74.2, 74.7, 75.2, 75.7, 76.2, 76.7, 77.2, 77.7, 78.2, 78.7, 79.2, 79.7, 80.2, 80.7, 81.2, 81.7, 82.2, 82.7, 83.2, 83.7, 84.2, 84.7, 85.2, 85.7, 86.2, 86.7, 87.2, 87.7, 88.2, 88.7, 89.2, 89.7, 90.2, 90.7, 91.2, 91.7, 92.2, 92.7, 93.2, 93.7, 94.2, 94.7, 95.2, 95.7, 96.2, 96.7, 97.2, 97.7, 98.2, 98.7, 99.2, 99.7, 100.2, 100.7, 101.2, 101.7, 102.2, 102.7, 103.2, 103.7, 104.2, 104.7, 105.2, 105.7, 106.2, 106.7, 107.2, 107.7, 108.2, 108.7, 109.2, 109.7, 110.2, 110.7, 111.2, 111.7, 112.2, 112.7, 113.2, 113.7, 114.2, 114.7, 115.2, 115.7, 116.2, 116.7, 117.2, 117.7, 118.2, 118.7, 119.2, 119.7, 120.2, 120.7, 121.2, 121.7, 122.2, 122.7, 123.2, 123.7, 124.2, 124.7, 125.2, 125.7, 126.2, 126.7, 127.2, 127.7, 128.2, 128.7, 129.2, 129.7, 130.2, 130.7, 131.2, 131.7, 132.2, 132.7, 133.2, 133.7, 134.2, 134.7, 135.2, 135.7, 136.2, 136.7, 137.2, 137.7, 138.2, 138.7, 139.2, 139.7, 140.2, 140.7, 141.2, 141.7, 142.2, 142.7, 143.2, 143.7, 144.2, 144.7, 145.2, 145.7, 146.2, 146.7, 147.2, 147.7, 148.2, 148.7, 149.2, 149.7, 150.2, 150.7, 151.2, 151.7, 152.2, 152.7, 153.2, 153.7, 154.2, 154.7, 155.2, 155.7, 156.2, 156.7, 157.2, 157.7, 158.2, 158.7, 159.2, 159.7, 160.2, 160.7, 161.2, 161.7, 162.2, 162.7, 163.2, 163.7, 164.2, 164.7, 165.2, 165.7, 166.2, 166.7, 167.2, 167.7, 168.2, 168.7, 169.2, 169.7, 170.2, 170.7, 171.2, 171.7, 172.2, 172.7, 173.2, 173.7, 174.2, 174.7, 175.2, 175.7, 176.2, 176.7, 177.2, 177.7, 178.2, 178.7, 179.2, 179.7], "y": [0.3151, 0.2857, 0.2678, 0.8887, 0.8976, 0.891, 0.8944, 0.8893, 0.8857, 0.8902, 0.8937, 0.8937, 0.8907, 0.8872, 0.8978, 0.8838, 0.8926, 0.8816, 0.8967, 0.8829, 0.8908, 0.8858, 0.8944, 0.8995, 0.888, 0.8865, 0.8905, 0.8926, 0.8924, 0.8841, 0.8884, 0.8828, 0.8873, 0.8875, 0.9005, 0.8868, 0.8928, 0.8929, 0.8982, 0.8905, 0.8849, 0.9009, 0.8852, 0.8956, 0.8975, 0.8978, 0.8976, 0.898, 0.8909, 0.9002, 0.8855, 0.8931, 0.8997, 0.8901, 0.8989, 0.8903, 0.893, 0.9004, 0.8931, 0.892, 0.8947, 0.8904, 0.8914, 0.8945, 0.8887, 0.8847, 0.9019, 0.8945, 0.9013, 0.8997, 0.8968, 0.8821, 0.9015, 0.8904, 0.8935, 0.8857, 0.8986, 0.8994, 0.8935, 0.8845, 0.8851, 0.8943, 0.8939, 0.8999, 0.8994, 0.8872, 0.8932, 0.8826, 0.8869, 0.893, 0.8808, 0.8903, 0.891, 0.8866, 0.8843, 0.8809, 0.893, 0.8863, 0.8885, 0.8928, 0.8945, 0.8845, 0.889, 0.8935, 0.8925, 0.8885, 0.8803, 0.8851, 0.8867, 0.8893, 0.8845, 0.8846, 0.9011, 0.8962, 0.8935, 0.8916, 0.8868, 0.8896, 0.8913, 0.8968, 0.8879, 0.8893, 0.8905, 0.8846, 0.8916, 0.8933, 0.8903, 0.8923, 0.8981, 0.889, 0.8925, 0.8947, 0.8829, 0.898, 0.8922, 0.9002, 0.8975, 0.8935, 0.8863, 0.8978, 0.8897, 0.8968, 0.8836, 0.8868, 0.8932, 0.892, 0.8968, 0.8844, 0.8886, 0.8865, 0.9006, 0.8908, 0.9007, 0.8899, 0.9008, 0.8841, 0.886, 0.8841, 0.8865, 0.8979, 0.89, 0.8903, 0.898, 0.8888, 0.8953, 0.8895, 0.8924, 0.8822, 0.885, 0.8931, 0.8972, 0.8899, 0.8885, 0.8818, 0.8838, 0.8908, 0.8948, 0.8868, 0.8885, 0.8868, 0.886, 0.8913, 0.8961, 0.8995, 0.8921, 0.8974, 0.8861, 0.8895, 0.8829, 0.89, 0.8795, 0.8982, 0.8889, 0.8883, 0.8848, 0.8927, 0.8893, 0.8862, 0.887, 0.8929, 0.8855, 0.8858, 0.8812, 0.8906, 0.8966, 0.8792, 0.8964, 0.8928, 0.8914, 0.8843, 0.8971, 0.8999, 0.8856, 0.893]}, "datarateSelected": {"x": [73.81, 77.53, 80.78, 84.07, 87.11, 90.16, 93.19, 96.75, 99.79, 103.16, 106.74, 109.95, 113.28, 116.6, 120.08, 123.47, 126.63, 130.19, 133.31, 136.45, 139.78, 143.02, 146.32, 149.6, 152.95, 156.24, 159.94, 163.5, 166.61, 169.67, 172.94, 175.98, 179.67], "y": [12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0]}, "activeInterface": {"x": [74.2], "y": [1.0]}, "switchCount": {"x": [74.2], "y": [1.0]}}, "Vehicle 7": {"qosScore": {"x": [91.1, 91.6, 92.1, 92.6, 93.1, 93.6, 94.1, 94.6, 95.1, 95.6, 96.1, 96.6, 97.1, 97.6, 98.1, 98.6, 99.1, 99.6, 100.1, 100.6, 101.1, 101.6, 102.1, 102.6, 103.1, 103.6, 104.1, 104.6, 105.1, 105.6, 106.1, 106.6, 107.1, 107.6, 108.1, 108.6, 109.1, 109.6, 110.1, 110.6, 111.1, 111.6, 112.1, 112.6, 113.1, 113.6, 114.1, 114.6, 115.1, 115.6, 116.1, 116.6, 117.1, 117.6, 118.1, 118.6, 119.1, 119.6, 120.1, 120.6, 121.1, 121.6, 122.1, 122.6, 123.1, 123.6, 124.1, 124.6, 125.1, 125.6, 126.1, 126.6, 127.1, 127.6, 128.1, 128.6, 129.1, 129.6, 130.1, 130.6, 131.1, 131.6, 132.1, 132.6, 133.1, 133.6, 134.1, 134.6, 135.1, 135.6, 136.1, 136.6, 137.1, 137.6, 138.1, 138.6, 139.1, 139.6, 140.1, 140.6, 141.1, 141.6, 142.1, 142.6, 143.1, 143.6, 144.1, 144.6, 145.1, 145.6, 146.1, 146.6, 147.1, 147.6, 148.1, 148.6, 149.1, 149.6, 150.1, 150.6, 151.1, 151.6, 152.1, 152.6, 153.1, 153.6, 154.1, 154.6, 155.1, 155.6, 156.1, 156.6, 157.1, 157.6, 158.1, 158.6, 159.1, 159.6, 160.1, 160.6, 161.1, 161.6, 162.1, 162.6, 163.1, 163.6, 164.1, 164.6, 165.1, 165.6, 166.1, 166.6, 167.1, 167.6, 168.1, 168.6, 169.1, 169.6, 170.1, 170.6, 171.1, 171.6, 172.1, 172.6, 173.1, 173.6, 174.1, 174.6, 175.1, 175.6, 176.1, 176.6, 177.1, 177.6, 178.1, 178.6, 179.1, 179.6], "y": [0.3519, 0.2697, 0.2441, 0.8895, 0.8931, 0.8887, 0.8873, 0.8892, 0.8977, 0.886, 0.8963, 0.8876, 0.8863, 0.8999, 0.8889, 0.8935, 0.8826, 0.8965, 0.8915, 0.8864, 0.899, 0.8828, 0.9018, 0.8859, 0.8873, 0.8861, 0.891, 0.8882, 0.8941, 0.8939, 0.8997, 0.8937, 0.8882, 0.8979, 0.8878, 0.8879, 0.8929, 0.8907, 0.8919, 0.8922, 0.9002, 0.884, 0.8946, 0.8864, 0.8903, 0.8849, 0.8944, 0.8845, 0.8943, 0.8898, 0.8874, 0.8912, 0.8994, 0.8835, 0.8978, 0.8936, 0.887, 0.894, 0.8939, 0.8918, 0.8813, 0.8918, 0.8901, 0.886, 0.8928, 0.8891, 0.8846, 0.8919, 0.8844, 0.8855, 0.8886, 0.896, 0.8911, 0.8951, 0.883, 0.8816, 0.8951, 0.8873, 0.8887, 0.8838, 0.8851, 0.8889, 0.8889, 0.8866, 0.8858, 0.889, 0.8908, 0.8977, 0.8857, 0.8915, 0.8933, 0.8941, 0.8937, 0.8924, 0.8815, 0.8977, 0.8963, 0.8828, 0.8946, 0.8837, 0.8993, 0.8973, 0.8925, 0.9017, 0.8896, 0.8974, 0.892, 0.8939, 0.8966, 0.8903, 0.8959, 0.8893, 0.8904, 0.8877, 0.8929, 0.8935, 0.8894, 0.8791, 0.8873, 0.8972, 0.8874, 0.8885, 0.8947, 0.8864, 0.8958, 0.8904, 0.8825, 0.8898, 0.8813, 0.8983, 0.8931, 0.8819, 0.8922, 0.8981, 0.8973, 0.8995, 0.8942, 0.8951, 0.8878, 0.9, 0.8806, 0.8922, 0.8883, 0.8834, 0.8929, 0.897, 0.8785, 0.8882, 0.8896, 0.8939, 0.8975, 0.892, 0.8874, 0.8863, 0.8856, 0.8861, 0.892, 0.8929, 0.8936, 0.8905, 0.8971, 0.8987, 0.8966, 0.8861, 0.8903, 0.8936, 0.8812, 0.8936, 0.8916, 0.8981, 0.881, 0.8862, 0.8921, 0.8947, 0.8867, 0.8927, 0.888, 0.8905]}, "datarateSelected": {"x": [91.36, 95.08, 98.33, 101.62, 104.66, 107.71, 110.74, 114.3, 117.34, 120.71, 124.29, 127.5, 130.83, 134.15, 137.63, 141.02, 144.18, 147.74, 150.86, 154.0, 157.33, 160.57, 163.87, 167.15, 170.5, 173.79, 177.49], "y": [12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0]}, "mecTaskLatency": {"x": [91.59, 92.62, 93.62, 94.62, 95.62, 96.62, 97.62, 98.62, 99.62, 100.62, 101.62, 102.62, 103.62, 104.62, 105.62, 106.62, 107.62, 108.62, 109.62, 110.62, 111.62, 112.62, 113.62, 114.62, 115.62, 116.62, 117.62, 118.62, 119.62, 120.62, 121.62, 122.62, 123.62, 124.62, 125.62, 126.62, 127.62, 128.62, 129.62, 130.62, 131.62, 132.62, 133.62, 134.62, 135.62, 136.62, 137.62, 138.62, 139.62, 140.62, 141.62, 142.62, 143.62, 144.62, 145.62, 146.62, 147.62, 148.62, 149.62, 150.62, 151.62, 152.62, 153.62, 154.61, 155.62, 156.62, 157.62, 158.62, 159.62, 160.62, 161.62, 162.62, 163.62, 164.62, 165.62, 166.62, 167.62, 168.61, 169.62, 170.62, 171.62, 172.62, 173.62, 174.62, 175.62, 176.62, 177.62, 178.62, 179.62], "y": [0.0063, 0.0296, 0.0304, 0.0297, 0.0285, 0.0275, 0.0301, 0.0301, 0.0276, 0.0291, 0.028, 0.0304, 0.0307, 0.0277, 0.0317, 0.0293, 0.0309, 0.0288, 0.0315, 0.0274, 0.0308, 0.032, 0.0294, 0.0297, 0.0274, 0.0304, 0.0312, 0.0297, 0.03, 0.0302, 0.029, 0.0306, 0.0298, 0.0273, 0.0283, 0.0281, 0.0292, 0.0315, 0.0272, 0.029, 0.0292, 0.0295, 0.0295, 0.0309, 0.0274, 0.0306, 0.0289, 0.0316, 0.028, 0.0299, 0.0314, 0.0305, 0.0299, 0.0311, 0.0313, 0.0293, 0.0319, 0.0294, 0.0276, 0.0308, 0.03, 0.0283, 0.0297, 0.0272, 0.0273, 0.0307, 0.0309, 0.0278, 0.0311, 0.0318, 0.0288, 0.0297, 0.0312, 0.0285, 0.0299, 0.0298, 0.0318, 0.0271, 0.032, 0.0275, 0.0317, 0.0302, 0.0285, 0.0288, 0.0293, 0.0307, 0.0318, 0.0291, 0.0277]}, "activeInterface": {"x": [92.1], "y": [1.0]}, "switchCount": {"x": [92.1], "y": [1.0]}}, "Vehicle 8": {"mecTaskLatency": {"x": [108.65, 109.65, 110.67, 111.67, 112.67, 113.67, 114.67, 115.67, 116.67, 117.67, 118.67, 119.67, 120.67, 121.67, 122.67, 123.67, 124.67, 125.67, 126.67, 127.67, 128.67, 129.67, 130.67, 131.67, 132.67, 133.67, 134.67, 135.67, 136.67, 137.67, 138.67, 139.67, 140.67, 141.67, 142.67, 143.67, 144.67, 145.67, 146.67, 147.67, 148.67, 149.67, 150.67, 151.67, 152.67, 153.67, 154.67, 155.67, 156.67, 157.67, 158.67, 159.67, 160.67, 161.67, 162.67, 163.67, 164.67, 165.67, 166.67, 167.67, 168.67, 169.67, 170.67, 171.67, 172.67, 173.67, 174.67, 175.67, 176.67, 177.67, 178.67, 179.67], "y": [0.0073, 0.0063, 0.0285, 0.0297, 0.0307, 0.0294, 0.0277, 0.03, 0.0313, 0.0271, 0.028, 0.0304, 0.0301, 0.0276, 0.0282, 0.0289, 0.0294, 0.0309, 0.0317, 0.0318, 0.0313, 0.0292, 0.0279, 0.0307, 0.031, 0.0313, 0.0289, 0.0275, 0.0292, 0.029, 0.0278, 0.0271, 0.0305, 0.0313, 0.0275, 0.0279, 0.0286, 0.0277, 0.0312, 0.029, 0.0285, 0.0302, 0.0317, 0.0298, 0.028, 0.0299, 0.0293, 0.0288, 0.0275, 0.029, 0.0293, 0.0274, 0.0299, 0.0313, 0.0289, 0.0284, 0.0289, 0.0277, 0.0293, 0.0274, 0.029, 0.0299, 0.0301, 0.0298, 0.0286, 0.0274, 0.0286, 0.03, 0.0304, 0.0278, 0.0281, 0.03]}, "qosScore": {"x": [109.0, 109.5, 110.0, 110.5, 111.0, 111.5, 112.0, 112.5, 113.0, 113.5, 114.0, 114.5, 115.0, 115.5, 116.0, 116.5, 117.0, 117.5, 118.0, 118.5, 119.0, 119.5, 120.0, 120.5, 121.0, 121.5, 122.0, 122.5, 123.0, 123.5, 124.0, 124.5, 125.0, 125.5, 126.0, 126.5, 127.0, 127.5, 128.0, 128.5, 129.0, 129.5, 130.0, 130.5, 131.0, 131.5, 132.0, 132.5, 133.0, 133.5, 134.0, 134.5, 135.0, 135.5, 136.0, 136.5, 137.0, 137.5, 138.0, 138.5, 139.0, 139.5, 140.0, 140.5, 141.0, 141.5, 142.0, 142.5, 143.0, 143.5, 144.0, 144.5, 145.0, 145.5, 146.0, 146.5, 147.0, 147.5, 148.0, 148.5, 149.0, 149.5, 150.0, 150.5, 151.0, 151.5, 152.0, 152.5, 153.0, 153.5, 154.0, 154.5, 155.0, 155.5, 156.0, 156.5, 157.0, 157.5, 158.0, 158.5, 159.0, 159.5, 160.0, 160.5, 161.0, 161.5, 162.0, 162.5, 163.0, 163.5, 164.0, 164.5, 165.0, 165.5, 166.0, 166.5, 167.0, 167.5, 168.0, 168.5, 169.0, 169.5, 170.0, 170.5, 171.0, 171.5, 172.0, 172.5, 173.0, 173.5, 174.0, 174.5, 175.0, 175.5, 176.0, 176.5, 177.0, 177.5, 178.0, 178.5, 179.0, 179.5, 180.0], "y": [0.3064, 0.3036, 0.2854, 0.8932, 0.8835, 0.8919, 0.894, 0.8904, 0.8889, 0.8824, 0.8965, 0.8883, 0.8899, 0.8922, 0.8815, 0.8848, 0.8866, 0.8943, 0.8995, 0.8857, 0.8938, 0.8878, 0.8835, 0.886, 0.8825, 0.8847, 0.8969, 0.8901, 0.8983, 0.8876, 0.8966, 0.8921, 0.8995, 0.8884, 0.8956, 0.8945, 0.893, 0.8929, 0.8913, 0.8941, 0.8884, 0.8859, 0.8796, 0.8874, 0.8843, 0.888, 0.8898, 0.8847, 0.8829, 0.8888, 0.8966, 0.8889, 0.8839, 0.887, 0.892, 0.8896, 0.8948, 0.8954, 0.8857, 0.8923, 0.8862, 0.8989, 0.8892, 0.8966, 0.8842, 0.8888, 0.8943, 0.8922, 0.8908, 0.89, 0.8933, 0.898, 0.8847, 0.884, 0.8833, 0.8918, 0.8869, 0.8994, 0.8945, 0.8785, 0.8937, 0.8897, 0.8876, 0.8851, 0.8802, 0.8952, 0.8947, 0.895, 0.8949, 0.8846, 0.8913, 0.8938, 0.8989, 0.8853, 0.8992, 0.8942, 0.8806, 0.8927, 0.8881, 0.8934, 0.8928, 0.8874, 0.8921, 0.9014, 0.8918, 0.8908, 0.8889, 0.8962, 0.8775, 0.8868, 0.8932, 0.8894, 0.8992, 0.8934, 0.8852, 0.8792, 0.8871, 0.8935, 0.8826, 0.8933, 0.8871, 0.8883, 0.8948, 0.8898, 0.8865, 0.8888, 0.8872, 0.8922, 0.8825, 0.8871, 0.8842, 0.8871, 0.8819, 0.8846, 0.8907, 0.8879, 0.8904, 0.8885, 0.8962, 0.8928, 0.8913, 0.8893, 0.902]}, "datarateSelected": {"x": [109.37, 113.09, 116.34, 119.63, 122.67, 125.72, 128.75, 132.31, 135.35, 138.72, 142.3, 145.51, 148.84, 152.16, 155.65, 159.03, 162.19, 165.75, 168.87, 172.01, 175.34, 178.58], "y": [12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0]}, "activeInterface": {"x": [110.0], "y": [1.0]}, "switchCount": {"x": [110.0], "y": [1.0]}}, "Vehicle 9": {"mecTaskLatency": {"x": [120.98, 121.98, 123.01, 124.01, 125.0, 126.01, 127.0, 128.0, 129.01, 130.01, 131.01, 132.0, 133.0, 134.01, 135.0, 136.01, 137.01, 138.01, 139.0, 140.01, 141.0, 142.0, 143.01, 144.01, 145.01, 146.01, 147.0, 148.0, 149.01, 150.0, 151.01, 152.01, 153.01, 154.01, 155.01, 156.01, 157.0, 158.0, 159.01, 160.01, 161.0, 162.0, 163.01, 164.01, 165.0, 166.01, 167.0, 168.01, 169.01, 170.01, 171.01, 172.01, 173.01, 174.01, 175.01, 176.01, 177.01, 178.01, 179.01], "y": [0.0062, 0.0062, 0.0309, 0.0312, 0.0276, 0.031, 0.028, 0.0272, 0.0309, 0.0303, 0.0295, 0.0276, 0.028, 0.031, 0.0275, 0.0305, 0.0296, 0.0299, 0.0276, 0.0291, 0.0276, 0.028, 0.0308, 0.0292, 0.032, 0.032, 0.0284, 0.0273, 0.0291, 0.0284, 0.0308, 0.0292, 0.0303, 0.0303, 0.031, 0.0297, 0.0272, 0.0283, 0.029, 0.0293, 0.0283, 0.0283, 0.029, 0.0296, 0.0276, 0.0311, 0.0281, 0.0296, 0.0301, 0.0299, 0.03, 0.0315, 0.0315, 0.0307, 0.0319, 0.0298, 0.032, 0.0297, 0.0317]}, "qosScore": {"x": [121.0, 121.5, 122.0, 122.5, 123.0, 123.5, 124.0, 124.5, 125.0, 125.5, 126.0, 126.5, 127.0, 127.5, 128.0, 128.5, 129.0, 129.5, 130.0, 130.5, 131.0, 131.5, 132.0, 132.5, 133.0, 133.5, 134.0, 134.5, 135.0, 135.5, 136.0, 136.5, 137.0, 137.5, 138.0, 138.5, 139.0, 139.5, 140.0, 140.5, 141.0, 141.5, 142.0, 142.5, 143.0, 143.5, 144.0, 144.5, 145.0, 145.5, 146.0, 146.5, 147.0, 147.5, 148.0, 148.5, 149.0, 149.5, 150.0, 150.5, 151.0, 151.5, 152.0, 152.5, 153.0, 153.5, 154.0, 154.5, 155.0, 155.5, 156.0, 156.5, 157.0, 157.5, 158.0, 158.5, 159.0, 159.5, 160.0, 160.5, 161.0, 161.5, 162.0, 162.5, 163.0, 163.5, 164.0, 164.5, 165.0, 165.5, 166.0, 166.5, 167.0, 167.5, 168.0, 168.5, 169.0, 169.5, 170.0, 170.5, 171.0, 171.5, 172.0, 172.5, 173.0, 173.5, 174.0, 174.5, 175.0, 175.5, 176.0, 176.5, 177.0, 177.5, 178.0, 178.5, 179.0, 179.5, 180.0], "y": [0.2991, 0.294, 0.3221, 0.89, 0.8965, 0.8938, 0.8943, 0.8914, 0.8902, 0.8992, 0.8992, 0.896, 0.8893, 0.8936, 0.8844, 0.8986, 0.8918, 0.8852, 0.8926, 0.8995, 0.8962, 0.8976, 0.8888, 0.8859, 0.8944, 0.8883, 0.8885, 0.8844, 0.8985, 0.89, 0.8894, 0.8848, 0.898, 0.8916, 0.8936, 0.8951, 0.9006, 0.8996, 0.8907, 0.8985, 0.8904, 0.8979, 0.9006, 0.887, 0.8839, 0.8994, 0.8872, 0.897, 0.8913, 0.8998, 0.8836, 0.8919, 0.8896, 0.8932, 0.8872, 0.8867, 0.894, 0.8892, 0.8971, 0.891, 0.8895, 0.8853, 0.8946, 0.8804, 0.8878, 0.8894, 0.8869, 0.8947, 0.8908, 0.8933, 0.8897, 0.8941, 0.8914, 0.8831, 0.8893, 0.8998, 0.891, 0.8909, 0.8912, 0.8846, 0.8902, 0.8942, 0.8869, 0.9053, 0.8936, 0.8954, 0.8925, 0.8967, 0.8802, 0.891, 0.8977, 0.8963, 0.8848, 0.8992, 0.897, 0.8951, 0.8852, 0.8878, 0.8932, 0.8944, 0.8839, 0.8846, 0.8978, 0.8962, 0.8907, 0.8962, 0.8848, 0.8857, 0.8919, 0.8907, 0.8881, 0.8992, 0.8815, 0.8803, 0.8987, 0.8923, 0.8974, 0.892, 0.8929]}, "datarateSelected": {"x": [121.77, 125.49, 128.75, 132.03, 135.07, 138.13, 141.16, 144.72, 147.75, 151.12, 154.7, 157.91, 161.25, 164.56, 168.05, 171.43, 174.6, 178.16], "y": [12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0]}, "activeInterface": {"x": [122.0], "y": [1.0]}, "switchCount": {"x": [122.0], "y": [1.0]}}, "Vehicle 10": {"qosScore": {"x": [144.8, 145.3, 145.8, 146.3, 146.8, 147.3, 147.8, 148.3, 148.8, 149.3, 149.8, 150.3, 150.8, 151.3, 151.8, 152.3, 152.8, 153.3, 153.8, 154.3, 154.8, 155.3, 155.8, 156.3, 156.8, 157.3, 157.8, 158.3, 158.8, 159.3, 159.8, 160.3, 160.8, 161.3, 161.8, 162.3, 162.8, 163.3, 163.8, 164.3, 164.8, 165.3, 165.8, 166.3, 166.8, 167.3, 167.8, 168.3, 168.8, 169.3, 169.8, 170.3, 170.8, 171.3, 171.8, 172.3, 172.8, 173.3, 173.8, 174.3, 174.8, 175.3, 175.8, 176.3, 176.8, 177.3, 177.8, 178.3, 178.8, 179.3, 179.8], "y": [0.3268, 0.2424, 0.3179, 0.8878, 0.8911, 0.8818, 0.8893, 0.894, 0.8949, 0.8857, 0.8927, 0.8956, 0.8854, 0.9008, 0.882, 0.8859, 0.887, 0.8948, 0.8909, 0.8853, 0.8901, 0.8977, 0.889, 0.8914, 0.8895, 0.895, 0.8973, 0.8848, 0.8896, 0.887, 0.8954, 0.8851, 0.8882, 0.8876, 0.8864, 0.8984, 0.8967, 0.8908, 0.8924, 0.8867, 0.8943, 0.8973, 0.8916, 0.8844, 0.8853, 0.8873, 0.8903, 0.899, 0.886, 0.8852, 0.8915, 0.8972, 0.8939, 0.8933, 0.8918, 0.8968, 0.8914, 0.8837, 0.8983, 0.8908, 0.8912, 0.8944, 0.8964, 0.9, 0.8946, 0.9008, 0.896, 0.892, 0.8877, 0.8856, 0.8902]}, "mecTaskLatency": {"x": [145.29, 146.31, 147.31, 148.31, 149.31, 150.31, 151.31, 152.31, 153.31, 154.31, 155.31, 156.31, 157.31, 158.31, 159.31, 160.31, 161.31, 162.31, 163.31, 164.31, 165.31, 166.31, 167.31, 168.31, 169.31, 170.31, 171.31, 172.32, 173.31, 174.31, 175.31, 176.31, 177.32, 178.31, 179.31], "y": [0.0065, 0.0273, 0.0295, 0.0283, 0.0294, 0.0306, 0.0309, 0.0314, 0.0288, 0.03, 0.028, 0.0283, 0.0293, 0.0272, 0.0305, 0.0296, 0.0271, 0.0312, 0.0303, 0.0309, 0.0296, 0.031, 0.0308, 0.0306, 0.0284, 0.0291, 0.0273, 0.0319, 0.0314, 0.0297, 0.0277, 0.0289, 0.0318, 0.0314, 0.0316]}, "datarateSelected": {"x": [145.78, 149.5, 152.75, 156.04, 159.08, 162.13, 165.16, 168.72, 171.76, 175.13, 178.71], "y": [12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0]}, "activeInterface": {"x": [145.8], "y": [1.0]}, "switchCount": {"x": [145.8], "y": [1.0]}}, "Vehicle 11": {"mecTaskLatency": {"x": [150.48, 151.48, 152.51, 153.51, 154.5, 155.5, 156.5, 157.5, 158.51, 159.5, 160.51, 161.51, 162.5, 163.51, 164.51, 165.51, 166.51, 167.5, 168.5, 169.51, 170.51, 171.5, 172.51, 173.51, 174.51, 175.5, 176.5, 177.5, 178.51, 179.51], "y": [0.0069, 0.0072, 0.0301, 0.0317, 0.0298, 0.029, 0.0284, 0.0279, 0.0308, 0.0276, 0.031, 0.0318, 0.0276, 0.0301, 0.0312, 0.0301, 0.0309, 0.0279, 0.0273, 0.0315, 0.0305, 0.029, 0.0318, 0.0313, 0.0311, 0.0291, 0.0273, 0.0288, 0.03, 0.0316]}, "qosScore": {"x": [150.8, 151.3, 151.8, 152.3, 152.8, 153.3, 153.8, 154.3, 154.8, 155.3, 155.8, 156.3, 156.8, 157.3, 157.8, 158.3, 158.8, 159.3, 159.8, 160.3, 160.8, 161.3, 161.8, 162.3, 162.8, 163.3, 163.8, 164.3, 164.8, 165.3, 165.8, 166.3, 166.8, 167.3, 167.8, 168.3, 168.8, 169.3, 169.8, 170.3, 170.8, 171.3, 171.8, 172.3, 172.8, 173.3, 173.8, 174.3, 174.8, 175.3, 175.8, 176.3, 176.8, 177.3, 177.8, 178.3, 178.8, 179.3, 179.8], "y": [0.2588, 0.3315, 0.2628, 0.8889, 0.8929, 0.885, 0.9014, 0.8868, 0.8944, 0.8925, 0.8963, 0.8989, 0.8873, 0.894, 0.8897, 0.892, 0.8984, 0.8996, 0.8875, 0.9009, 0.89, 0.8862, 0.8849, 0.8845, 0.8972, 0.8952, 0.8877, 0.8951, 0.8921, 0.8982, 0.8928, 0.8908, 0.8902, 0.8862, 0.8908, 0.9036, 0.8847, 0.8863, 0.8964, 0.8858, 0.8913, 0.8908, 0.8954, 0.8945, 0.9002, 0.8899, 0.8848, 0.8973, 0.8851, 0.8826, 0.9021, 0.8883, 0.8928, 0.8978, 0.8922, 0.8969, 0.8851, 0.8832, 0.8924]}, "datarateSelected": {"x": [151.57, 155.29, 158.55, 161.83, 164.87, 167.92, 170.96, 174.52, 177.55], "y": [12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0, 12000000.0]}, "activeInterface": {"x": [151.8], "y": [1.0]}, "switchCount": {"x": [151.8], "y": [1.0]}}};
+        const fleetSummary = [{"vehicle": "Vehicle 0", "total_switches": 1, "final_interface": "Satellite LEO", "mean_qos": 0.9, "final_soc": 98.4, "mean_mec_latency_ms": 25.11}, {"vehicle": "Vehicle 1", "total_switches": 1, "final_interface": "Satellite LEO", "mean_qos": 0.9, "final_soc": 98.4, "mean_mec_latency_ms": 25.24}, {"vehicle": "Vehicle 2", "total_switches": 1, "final_interface": "Satellite LEO", "mean_qos": 0.899, "final_soc": 98.4, "mean_mec_latency_ms": 25.34}, {"vehicle": "Vehicle 3", "total_switches": 1, "final_interface": "Satellite LEO", "mean_qos": 0.89, "final_soc": 98.4, "mean_mec_latency_ms": 28.19}, {"vehicle": "Vehicle 4", "total_switches": 1, "final_interface": "Satellite LEO", "mean_qos": 0.885, "final_soc": 98.4, "mean_mec_latency_ms": 28.76}, {"vehicle": "Vehicle 5", "total_switches": 1, "final_interface": "Satellite LEO", "mean_qos": 0.884, "final_soc": 98.4, "mean_mec_latency_ms": 29.12}, {"vehicle": "Vehicle 6", "total_switches": 1, "final_interface": "Satellite LEO", "mean_qos": 0.883, "final_soc": 98.4, "mean_mec_latency_ms": 29.05}, {"vehicle": "Vehicle 7", "total_switches": 1, "final_interface": "Satellite LEO", "mean_qos": 0.881, "final_soc": 98.4, "mean_mec_latency_ms": 29.37}, {"vehicle": "Vehicle 8", "total_switches": 1, "final_interface": "Satellite LEO", "mean_qos": 0.878, "final_soc": 98.4, "mean_mec_latency_ms": 28.62}, {"vehicle": "Vehicle 9", "total_switches": 1, "final_interface": "Satellite LEO", "mean_qos": 0.877, "final_soc": 98.4, "mean_mec_latency_ms": 28.78}, {"vehicle": "Vehicle 10", "total_switches": 1, "final_interface": "Satellite LEO", "mean_qos": 0.866, "final_soc": 98.4, "mean_mec_latency_ms": 29.04}, {"vehicle": "Vehicle 11", "total_switches": 1, "final_interface": "Satellite LEO", "mean_qos": 0.861, "final_soc": 98.4, "mean_mec_latency_ms": 28.31}];
+        const kpiData = {"scenario": "emergency_corridor", "satellites_count": 32, "gnbs_count": 2, "user_terminals_count": 12, "cell_usage_pct": 44.718142968142914, "sat_usage_pct": 55.281857031857086, "total_vho_switches": 12, "mean_qos_score": 0.95, "final_battery_soc": 98.4, "pdr_pct": 100.0, "packets_sent": 34936, "packets_rcvd": 34936, "packets_dropped": 0, "avg_latency_ms": 2.254417652296792, "avg_jitter_ms": 0.20990468017506334, "one_way_prop_delay_ms": 1.8346025235898362, "direct_rtt_ms": 3.6692050471796724};
+
+        let currentFilter = 'ALL';
+        let currentTimeMin = null;
+        let currentTimeMax = null;
+
+        let charts = {};
+
+        // Palette complying with dataviz CVD and contrast requirements
+        const colors = [
+            '#38bdf8', '#10b981', '#f59e0b', '#a855f7',
+            '#ec4899', '#3b82f6', '#14b8a6', '#f43f5e'
+        ];
+
+        function initVehicleSelector() {
+            const select = document.getElementById('vehicleSelect');
+            const vehicles = Object.keys(rawSeries).sort((a, b) => {
+                const numA = parseInt(a.replace(/\D/g, '')) || 0;
+                const numB = parseInt(b.replace(/\D/g, '')) || 0;
+                return numA - numB;
+            });
+            for (const v of vehicles) {
+                const opt = document.createElement('option');
+                opt.value = v;
+                opt.textContent = v;
+                select.appendChild(opt);
+            }
+        }
+
+        function initFleetTable() {
+            const tbody = document.getElementById('fleetTableBody');
+            tbody.innerHTML = '';
+            for (const f of fleetSummary) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${f.vehicle}</strong></td>
+                    <td><span class="status-pill" style="${f.final_interface.includes('Sat') ? 'background:rgba(56,189,248,0.15); color:var(--accent-sat);' : ''}">${f.final_interface}</span></td>
+                    <td>${f.total_switches}</td>
+                    <td>${f.mean_qos}</td>
+                    <td>${f.final_soc}%</td>
+                    <td>${f.mean_mec_latency_ms} ms</td>
+                `;
+                tbody.appendChild(tr);
+            }
+        }
+
+        function getFilteredDatasets(metric, isStepped = false) {
+            const datasets = [];
+            let cIdx = 0;
+            for (const [vehicle, metrics] of Object.entries(rawSeries)) {
+                if (currentFilter !== 'ALL' && vehicle !== currentFilter) continue;
+                if (!metrics[metric]) continue;
+
+                const pts = metrics[metric];
+                let filteredData = [];
+                for (let i = 0; i < pts.x.length; i++) {
+                    const x = pts.x[i];
+                    const y = pts.y[i];
+                    if (currentTimeMin !== null && x < currentTimeMin) continue;
+                    if (currentTimeMax !== null && x > currentTimeMax) continue;
+                    filteredData.push({ x, y });
+                }
+
+                datasets.push({
+                    label: vehicle,
+                    data: filteredData,
+                    borderColor: colors[cIdx % colors.length],
+                    backgroundColor: colors[cIdx % colors.length],
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    fill: false,
+                    stepped: isStepped
+                });
+                cIdx++;
+                if (currentFilter === 'ALL' && datasets.length >= 8) break; // Limit lines in ALL view for clean dataviz
+            }
+            return datasets;
+        }
+
+        function createChart(canvasId, metric, isStepped = false, yTitle = 'Value') {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const datasets = getFilteredDatasets(metric, isStepped);
+            charts[canvasId] = new Chart(ctx, {
+                type: 'line',
+                data: { datasets: datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    interaction: { mode: 'nearest', intersect: false },
+                    plugins: {
+                        legend: {
+                            display: datasets.length <= 6,
+                            position: 'top',
+                            labels: { boxWidth: 12, font: { size: 12 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: (items) => `Simulation Time: ${items[0].parsed.x.toFixed(2)}s`,
+                                label: (item) => ` ${item.dataset.label}: ${item.parsed.y}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            title: { display: true, text: 'Simulation Time (s)', color: '#94a3b8' },
+                            grid: { color: 'rgba(51, 65, 85, 0.4)' }
+                        },
+                        y: {
+                            title: { display: true, text: yTitle, color: '#94a3b8' },
+                            grid: { color: 'rgba(51, 65, 85, 0.4)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateAllCharts() {
+            const chartConfigs = [
+                { id: 'chartActiveInterface', metric: 'activeInterface', stepped: true, y: 'Interface' },
+                { id: 'chartSwitchCount', metric: 'switchCount', stepped: true, y: 'Handovers' },
+                { id: 'chartQoSScore', metric: 'qosScore', stepped: false, y: 'Utility Score' },
+                { id: 'chartMecLatency', metric: 'mecTaskLatency', stepped: false, y: 'Latency (s)' },
+                { id: 'chartBatterySoC', metric: 'batterySoC', stepped: false, y: 'SoC (Ratio)' }
+            ];
+            for (const cfg of chartConfigs) {
+                if (charts[cfg.id]) {
+                    charts[cfg.id].data.datasets = getFilteredDatasets(cfg.metric, cfg.stepped);
+                    charts[cfg.id].update();
+                }
+            }
+        }
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function onFilterChange() {
+            currentFilter = document.getElementById('vehicleSelect').value;
+            updateAllCharts();
+        }
+
+        function setTimePreset(preset, btn) {
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            if (preset === 'ALL') {
+                currentTimeMin = null;
+                currentTimeMax = null;
+            } else if (preset === 'INITIAL') {
+                currentTimeMin = 0.0;
+                currentTimeMax = 60.0;
+            } else if (preset === 'BLIND_SPOT') {
+                currentTimeMin = 40.0;
+                currentTimeMax = 170.0;
+            } else if (preset === 'RECOVERY') {
+                currentTimeMin = 170.0;
+                currentTimeMax = 300.0;
+            }
+            updateAllCharts();
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', target);
+        }
+
+        function downloadJSON() {
+            const blob = new Blob([JSON.stringify(kpiData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `kpi_summary_${kpiData.scenario || 'sim'}.json`;
+            a.click();
+        }
+
+        window.onload = function() {
+            initVehicleSelector();
+            initFleetTable();
+            createChart('chartActiveInterface', 'activeInterface', true, 'Interface (0=5G, 1=Sat)');
+            createChart('chartSwitchCount', 'switchCount', true, 'Cumulative Switches');
+            createChart('chartQoSScore', 'qosScore', false, 'QoS Score');
+            createChart('chartMecLatency', 'mecTaskLatency', false, 'MEC Latency (s)');
+            createChart('chartBatterySoC', 'batterySoC', false, 'Battery State of Charge');
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+<edges xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/edges_file.xsd">
+    <edge id="e_corr_1" from="corridor_start" to="corridor_mid" priority="3" numLanes="2" speed="33.3"/>
+    <edge id="e_corr_2" from="corridor_mid" to="corridor_end" priority="3" numLanes="2" speed="33.3"/>
+    <edge id="e_corr_rev_2" from="corridor_end" to="corridor_mid" priority="3" numLanes="2" speed="33.3"/>
+    <edge id="e_corr_rev_1" from="corridor_mid" to="corridor_start" priority="3" numLanes="2" speed="33.3"/>
+</edges>

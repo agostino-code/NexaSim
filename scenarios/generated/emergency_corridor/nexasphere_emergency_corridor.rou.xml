@@ -1,0 +1,14 @@
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <vType id="ambulance" accel="3.5" decel="5.0" sigma="0.1" length="5.5" minGap="2.0" maxSpeed="43.3" color="255,0,0"/>
+    <vType id="car" accel="2.4" decel="4.5" sigma="0.5" length="4.5" minGap="2.5" maxSpeed="33.3" color="0,150,220"/>
+
+    <route id="r_corr_fwd" edges="e_corr_1 e_corr_2"/>
+    <route id="r_corr_rev" edges="e_corr_rev_2 e_corr_rev_1"/>
+
+    <!-- Priority Ambulance -->
+    <vehicle id="veh_1" type="ambulance" route="r_corr_fwd" depart="0.0" departLane="1" departSpeed="33.3"/>
+
+    <!-- Surrounding traffic -->
+    <flow id="veh_fwd" type="car" route="r_corr_fwd" begin="1.0" end="180" number="6" departLane="0" departSpeed="30.0"/>
+    <flow id="veh_rev" type="car" route="r_corr_rev" begin="1.0" end="180" number="5" departLane="best" departSpeed="33.3"/>
+</routes>
