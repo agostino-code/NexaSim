@@ -297,13 +297,35 @@ def cmd_dashboard(args):
         if args.open:
             import webbrowser
             webbrowser.open(str(html_file.resolve().as_uri()))
-        html_file = target_dir / 'dashboard.html'
 
-    if html_file.exists():
-        print(f"\n{GREEN}Dashboard ready: {html_file}{RESET}")
-        if args.open:
-            import webbrowser
-            webbrowser.open(str(html_file.resolve().as_uri()))
+def cmd_sweep(args):
+    """Run parameter sweep and sensitivity benchmark."""
+    try:
+        from tools.sweep import run_parameter_sweep
+    except ImportError:
+        from sweep import run_parameter_sweep
+
+    out_dir = Path(args.output).resolve() if args.output else None
+    seeds = [int(s.strip()) for s in args.seeds.split(',')] if args.seeds else None
+    run_parameter_sweep(args.scenario, args.param, reps=args.reps, seeds=seeds, output_dir=out_dir)
+
+def cmd_view3d(args):
+    """Generate and view 3D Space-Ground Digital Twin on Cesium globe."""
+    try:
+        from tools.czml_generator import create_scenario_digital_twin
+    except ImportError:
+        from czml_generator import create_scenario_digital_twin
+
+    create_scenario_digital_twin(args.scenario, open_browser=args.open)
+
+def cmd_studio(args):
+    """Launch NexaSim Studio local web control center."""
+    try:
+        from tools.studio import start_studio_server
+    except ImportError:
+        from studio import start_studio_server
+
+    start_studio_server(port=args.port, open_browser=args.open)
 
 def cmd_all(args):
     """All-in-one end-to-end command."""
@@ -339,10 +361,11 @@ def main():
 Examples:
   nexasim list
   nexasim validate
-  nexasim generate stelvio_pass_hybrid
   nexasim run stelvio --gui
   nexasim analyze stelvio --dashboard
-  nexasim all nexasphere_highway_platooning
+  nexasim sweep emergency_corridor --param switchingMode=coverage-based,qos-based
+  nexasim view-3d stelvio
+  nexasim studio
         """
     )
     subparsers = parser.add_subparsers(dest='command', help='Sub-commands')
@@ -387,6 +410,27 @@ Examples:
     p_all.add_argument('--gui', action='store_true', help='Run with GUI')
     p_all.add_argument('-o', '--output', help='Output directory')
     p_all.set_defaults(func=cmd_all)
+
+    # sweep
+    p_swp = subparsers.add_parser('sweep', help='Run multi-run sensitivity studies and parameter sweeps')
+    p_swp.add_argument('scenario', help='Scenario name or path')
+    p_swp.add_argument('--param', action='append', required=True, help="Parameter to sweep: 'name=v1,v2,v3'")
+    p_swp.add_argument('--reps', type=int, default=1, help='Number of seed repetitions per configuration')
+    p_swp.add_argument('--seeds', type=str, help='Comma-separated explicit seeds (e.g. 42,43,44)')
+    p_swp.add_argument('-o', '--output', help='Output directory for sweep')
+    p_swp.set_defaults(func=cmd_sweep)
+
+    # view-3d
+    p_v3d = subparsers.add_parser('view-3d', help='Generate and view 3D Space-Ground Digital Twin (CesiumJS)')
+    p_v3d.add_argument('scenario', help='Scenario name or path')
+    p_v3d.add_argument('--open', action='store_true', default=True, help='Open 3D globe viewer in browser')
+    p_v3d.set_defaults(func=cmd_view3d)
+
+    # studio
+    p_std = subparsers.add_parser('studio', help='Launch NexaSim Studio local web control center')
+    p_std.add_argument('--port', type=int, default=8080, help='Port to bind (default: 8080)')
+    p_std.add_argument('--open', action='store_true', default=True, help='Open studio in browser')
+    p_std.set_defaults(func=cmd_studio)
 
     # clean
     p_clean = subparsers.add_parser('clean', help='Clean temporary simulation logs & artifacts')

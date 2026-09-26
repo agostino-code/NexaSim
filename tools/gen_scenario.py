@@ -319,12 +319,20 @@ class ScenarioGenerator:
         
         print(f"Generated {len(self.user_terminals)} user terminals")
     
+    def _get_package_name(self, output_dir: str) -> str:
+        out_p = Path(output_dir).resolve()
+        scenarios_dir = (Path(__file__).resolve().parent.parent / 'scenarios').resolve()
+        try:
+            rel = out_p.relative_to(scenarios_dir)
+            return ".".join(rel.parts)
+        except ValueError:
+            return f"generated.{out_p.name}"
+
     def _write_ned_file(self, output_dir: str):
         """Write OMNeT++ NED network file"""
         ned_path = os.path.join(output_dir, 'scenario.ned')
-        subpkg = Path(output_dir).name
-        package_name = f"generated.{subpkg}"
-        
+        package_name = self._get_package_name(output_dir)
+
         with open(ned_path, 'w') as f:
             f.write(f"""package {package_name};
 
@@ -395,7 +403,7 @@ network GeneratedScenario
         """Write OMNeT++ ini configuration file"""
         ini_path = os.path.join(output_dir, 'omnetpp.ini')
         subpkg = Path(output_dir).name
-        package_name = f"generated.{subpkg}"
+        package_name = self._get_package_name(output_dir)
         scenario_name = self.scenario.get('name', subpkg)
         
         duration = self.time.get('duration_s', 300)

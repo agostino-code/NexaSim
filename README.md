@@ -132,6 +132,9 @@ For complete reference on YAML syntax, simulation workflows, data analysis, and 
 ./nexasim run stelvio              # Run scenario in headless mode
 ./nexasim run stelvio --gui        # Run with Qtenv & SUMO-GUI Virtual Desktop (http://localhost:6080/vnc.html)
 ./nexasim analyze stelvio          # Evaluate KPIs and generate interactive Chart.js dashboard
+./nexasim sweep emergency_corridor --param switchingMode=coverage-based,qos-based # Parameter sweep benchmark
+./nexasim view-3d stelvio          # Launch 3D Space-Ground Digital Twin (CesiumJS)
+./nexasim studio                   # Start Web Control Center (http://localhost:8080)
 ./nexasim all highway_platooning   # End-to-end (generate -> run -> analyze)
 ```
 
@@ -141,6 +144,7 @@ For complete reference on YAML syntax, simulation workflows, data analysis, and 
 
 ```
 .
+├── nexasim                       # Root CLI launcher
 ├── CMakeLists.txt                # Root CMake project (NexaSim)
 ├── conanfile.py                  # Conan 2 package definition
 ├── conandata.yml                 # Dependency version locks
@@ -152,13 +156,39 @@ For complete reference on YAML syntax, simulation workflows, data analysis, and 
 │   │   ├── ntn/                  # Non-Terrestrial Network engine (ISL, Constellations, User Terminal)
 │   │   ├── nr/                   # 5G-NR Simu5G integration
 │   │   ├── inet/                 # INET 4.2.2 radio & mobility adapters
+│   │   ├── hybrid/               # Multi-RAT Vertical Handover & MEC Offloading
 │   │   ├── application/          # V2X ITS-G5 services & middleware
 │   │   ├── envmod/               # Environmental perception & radar sensors
 │   │   └── utility/              # Coordinate transforms, math, asio tasks
 │   └── traci/                    # SUMO TraCI interface & node managers
-├── scenarios/                    # OMNeT++ scenario configurations and NED topologies
-└── tools/                        # Scenario generator, simulation runner, analysis scripts
+├── scenarios/
+│   ├── library/                  # Declarative YAML scenario specifications
+│   ├── schema/                   # Pydantic JSON Schema for YAML autocompletion
+│   └── generated/                # Auto-generated OMNeT++ & SUMO runtime files
+└── tools/
+    ├── nexasim.py                # Core CLI implementation
+    ├── studio.py                 # Interactive Web Studio & Control Center
+    ├── sweep.py                  # Sensitivity study & parameter sweep runner
+    ├── czml_generator.py         # 3D Cesium globe & CZML digital twin generator
+    ├── sumo_generator.py         # Procedural SUMO network generator
+    ├── gen_scenario.py           # YAML to OMNeT++ scenario compiler
+    ├── analyze_results.py        # KPI evaluation engine
+    └── dashboard.py              # Executive Chart.js interactive dashboard
 ```
+
+---
+
+## Research & Innovation Roadmap
+
+In alignment with the Horizon Europe NexaSphere technical objectives:
+
+* **Milestone 1**: Modern Conan 2 Zero-Submodule Architecture & Multi-Domain Mobility *(Completed)*.
+* **Milestone 2**: Unified CLI & Procedural SUMO Traffic Generation *(Completed)*.
+* **Milestone 3**: Dynamic Multi-Tier VHO & Hierarchical MEC Edge Computing *(Completed)*.
+* **Milestone 4**: Multi-Run Benchmark Suite, 3D Digital Twin (CesiumJS) & Web Studio *(Completed)*.
+* **Milestone 5 (Upcoming)**: Multi-Hop Inter-Satellite Mesh Routing using Contact Graph Routing (CGR) and dynamic space Dijkstra.
+* **Milestone 6 (Upcoming)**: Reinforcement Learning (Deep Q-Network / PPO) for predictive make-before-break vertical handover.
+* **Milestone 7 (Upcoming)**: 3GPP Rel. 16/17 5G-NR V2X Sidelink (PC5) integration with Collective Perception Service (CPM).
 
 ---
 

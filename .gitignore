@@ -13,6 +13,7 @@ output/
 *.vec
 *.vci
 *.log
+*.czml
 scenarios/**/results/*.csv
 
 # Building website with mkdocs

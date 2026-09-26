@@ -379,3 +379,70 @@ sumo-gui -c scenarios/generated/stelvio/stelvio.sumocfg
 - **Geometria dei Tornanti**: Visualizzazione della mappa stradale dello Stelvio e delle pendenze.
 - **Dinamica del Crash ($t = 45\text{s}$)**: Arresto dell'auto coinvolta nell'incidente, rallentamento dei veicoli retrostanti e code in prossimità del tornante cieco.
 - **Interazione TraCI**: Sincronizzazione al millisecondo tra il movimento delle auto in SUMO e lo stack di telecomunicazioni in OMNeT++.
+
+---
+
+## 6. Benchmark Suite & Parameter Sweep (`nexasim sweep`)
+
+Per condurre studi di sensibilità e analisi statistiche Monte Carlo confrontando configurazioni multiple:
+
+```bash
+# Confronto diretto delle tre strategie di Vertical Handover
+./nexasim sweep stelvio --param switchingMode=coverage-based,qos-based,energy-aware --reps 3
+
+# Studio di sensibilità all'attenuazione meteo Ka-Band (pioggia)
+./nexasim sweep emergency_corridor --param rainRateMmPerH=0,15,30,50 --reps 1
+
+# Studio d'impatto della maschera d'elevazione orografica
+./nexasim sweep stelvio --param elevationMaskDeg=15,25,35 --reps 2
+```
+
+Il comando genera nella cartella `scenarios/generated/sweep_<nome>/`:
+- `sweep_summary.json`: tabella JSON di tutti i run con parametri e KPI estratti.
+- `sweep_report.html`: report esecutivo con grafici a barre e box plot comparativi Chart.js (frequenza VHO, distribuzione latenza, rapporto 5G vs NTN, consumo batteria residua).
+
+---
+
+## 7. Digital Twin 3D Geospaziale su Globo Terrestre (`nexasim view-3d`)
+
+Visualizzazione fotorealistica 3D geospaziale nello spazio e sul terreno tramite CesiumJS e CZML:
+
+```bash
+# Genera lo stream CZML e apre il globo 3D nel browser
+./nexasim view-3d stelvio
+```
+
+### Elementi visualizzati nel Digital Twin:
+- **Costellazione LEO (550 km)**: satelliti con dinamica orbitale Kepleriana / SGP4 attorno alla Terra WGS84.
+- **Link Laser Ottici (ISL)**: raggi laser ciano/oro tra satelliti adiacenti nello spazio.
+- **Celle 5G-NR**: coni di copertura radio volumetrica attorno ai tralicci base station gNodeB.
+- **Fasci di Tracciamento Phased-Array**: raggi dinamici magenta che collegano il veicolo al satellite agganciato in tempo reale.
+- **Viste Telecamera Preset**: `Global LEO`, `Vehicle 0 (Convoy Leader)`, `Regional 3D`.
+
+---
+
+## 8. NexaSim Studio: Web Control Center No-Code (`nexasim studio`)
+
+Per configurare, visualizzare e lanciare simulazioni tramite interfaccia web locale senza usare il terminale:
+
+```bash
+./nexasim studio --port 8080
+```
+Apri il browser all'indirizzo `http://localhost:8080`:
+- **Catalogo Scenari & Mappa Leaflet**: visualizzazione dei confini geografici, posizione delle antenne e ground tracks satellitari.
+- **Customizer Parametri**: slider grafici per tasso di pioggia, durata simulazione e strategia VHO.
+- **Console di Esecuzione in Streaming**: monitoraggio dell'avanzamento (`ev/sec`, tempo simulato) con log terminale live.
+- **Accesso Diretto a Dashboard e Globo 3D**: pulsanti dedicati per ispezionare i risultati con 1 click.
+
+---
+
+## 9. Roadmap di Ricerca & Sviluppo (Horizon Europe NexaSphere)
+
+- **Milestone 1**: Architettura modulare Conan 2 e mobilità unificata TN-NTN *(Completata)*.
+- **Milestone 2**: CLI unificata e generatore procedurale reti microscopiche SUMO *(Completata)*.
+- **Milestone 3**: Orchestrazione dinamica VHO e modulo Edge Computing MEC *(Completata)*.
+- **Milestone 4**: Benchmark Suite (`sweep`), Digital Twin 3D CesiumJS (`view-3d`) e Web Studio (`studio`) *(Completata)*.
+- **Milestone 5 (Pianificata)**: Routing multi-hop su maglia di satelliti ISL (Contact Graph Routing / Dijkstra dinamico spaziale).
+- **Milestone 6 (Pianificata)**: Decision-making per VHO basato su Reinforcement Learning (Deep Q-Network).
+- **Milestone 7 (Pianificata)**: Integrazione 5G-NR V2X Sidelink PC5 (3GPP Rel. 16/17) per Collective Perception cooperativa (CPM).
+
