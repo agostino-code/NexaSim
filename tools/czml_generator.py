@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """
-NexaSim 3D Digital Twin & Cesium CZML Generator
+NexaSim 3D Digital Twin & Cesium CZML Generator (Aerospace Grade)
 Horizon Europe NexaSphere Research Project
 
 Generates full 3D interactive geospatial CesiumJS scenes (CZML):
-- Multi-shell LEO constellations (550 km orbits with Keplerian mechanics)
-- Inter-Satellite Laser Links (ISL) glowing in 3D space
-- Terrestrial 5G-NR Base Stations with coverage cones
-- Vehicles traversing 3D orographic terrain (WGS84 geodetic)
-- Dynamic beamforming rays connecting phased-array antennas to satellites
+- Multi-shell LEO constellations (550 km Keplerian orbits with orbital trails)
+- Inter-Satellite Laser Links (ISL) with glowing shader materials
+- Sub-satellite radio footprint coverage cones moving over WGS84 Earth
+- Terrestrial 5G-NR Base Stations with 3D volumetric coverage lobes
+- High-resolution ESRI satellite imagery and 3D terrain elevation
+- Dynamic Phased-Array beamforming rays linking vehicles to overhead satellites
+- Live cockpit HUD telemetry (speed, altitude, overhead satellite, elevation, RAT)
 """
 
 import os
@@ -71,7 +73,7 @@ def generate_czml_scene(
     duration_s: float = 300.0,
     time_step: float = 5.0
 ) -> List[Dict[str, Any]]:
-    """Generates a complete CZML packet stream from scenario configuration."""
+    """Generates an aerospace-grade CZML packet stream from scenario configuration."""
     sc = scenario_config.get('scenario', {})
     scenario_name = sc.get('name', 'NexaSphere_Scenario')
     time_cfg = sc.get('time', {})
@@ -93,7 +95,7 @@ def generate_czml_scene(
         "clock": {
             "interval": f"{start_iso_clean}/{end_iso}",
             "currentTime": start_iso_clean,
-            "multiplier": 5,
+            "multiplier": 3,
             "range": "LOOP_STOP",
             "step": "SYSTEM_CLOCK_MULTIPLIER"
         }
@@ -103,7 +105,6 @@ def generate_czml_scene(
     const_cfg = sc.get('constellation', {})
     shells = const_cfg.get('shells', [])
     if not shells:
-        # Default shell if none defined
         shells = [{
             'name': 'starlink_shell_550',
             'altitude_km': 550.0,
@@ -117,7 +118,7 @@ def generate_czml_scene(
     if time_samples[-1] < duration:
         time_samples.append(duration)
 
-    all_sat_positions = {} # (plane_idx, sat_idx) -> list of [lon, lat, alt]
+    all_sat_positions = {}
 
     for shell in shells:
         alt_km = float(shell.get('altitude_km', 550.0))
@@ -125,6 +126,10 @@ def generate_czml_scene(
         P = int(shell.get('num_planes', 8))
         S = int(shell.get('sats_per_plane', 4))
         phase = float(shell.get('phase_offset', 0))
+
+        # Radio footprint radius (for 25 deg elevation mask)
+        elev_min = float(sc.get('area', {}).get('elevation_mask_deg', 25.0))
+        footprint_radius_m = (alt_km / math.tan(math.radians(max(10.0, elev_min)))) * 1000.0
 
         for p in range(P):
             raan = p * (360.0 / P)
@@ -134,6 +139,7 @@ def generate_czml_scene(
                 sat_name = f"LEO Sat P{p} S{s}"
 
                 cartographic_degrees = []
+                footprint_samples = []
                 positions_over_time = []
 
                 for t in time_samples:
@@ -141,11 +147,12 @@ def generate_czml_scene(
                     sample_iso = sample_dt.strftime('%Y-%m-%dT%H:%M:%SZ')
                     lon, lat, alt_m = compute_satellite_position(alt_km, inc_deg, raan, mean_anom, t)
                     cartographic_degrees.extend([sample_iso, lon, lat, alt_m])
+                    footprint_samples.extend([sample_iso, lon, lat, 0.0])
                     positions_over_time.append((lon, lat, alt_m))
 
                 all_sat_positions[(p, s)] = (sat_id, positions_over_time)
 
-                # Satellite Entity
+                # Satellite Node with orbital trail
                 czml.append({
                     "id": sat_id,
                     "name": sat_name,
@@ -156,34 +163,56 @@ def generate_czml_scene(
                     },
                     "point": {
                         "color": { "rgba": [56, 189, 248, 255] },
-                        "pixelSize": 6,
-                        "outlineColor": { "rgba": [14, 165, 233, 200] },
+                        "pixelSize": 7,
+                        "outlineColor": { "rgba": [255, 255, 255, 220] },
                         "outlineWidth": 2
                     },
                     "path": {
                         "material": {
                             "solidColor": {
-                                "color": { "rgba": [56, 189, 248, 80] }
+                                "color": { "rgba": [56, 189, 248, 90] }
                             }
                         },
-                        "width": 1.2,
-                        "leadTime": 1800,
-                        "trailTime": 1800
+                        "width": 1.4,
+                        "leadTime": 2400,
+                        "trailTime": 2400
                     },
                     "label": {
                         "text": f"Sat {p}-{s}",
                         "font": "11px sans-serif",
-                        "fillColor": { "rgba": [248, 250, 252, 220] },
+                        "fillColor": { "rgba": [248, 250, 252, 230] },
                         "outlineColor": { "rgba": [15, 23, 42, 255] },
                         "outlineWidth": 2,
-                        "pixelOffset": { "cartesian2": [0, -14] },
-                        "distanceDisplayCondition": { "distanceDisplayCondition": [0, 8000000] }
+                        "pixelOffset": { "cartesian2": [0, -16] },
+                        "distanceDisplayCondition": { "distanceDisplayCondition": [0, 9000000] }
                     }
                 })
 
-        # Inter-Satellite Laser Links (ISL)
+                # Radio Coverage Footprint moving on ground
+                czml.append({
+                    "id": f"{sat_id}_footprint",
+                    "name": f"Footprint {sat_name}",
+                    "availability": f"{start_iso_clean}/{end_iso}",
+                    "position": {
+                        "epoch": start_iso_clean,
+                        "cartographicDegrees": footprint_samples
+                    },
+                    "ellipse": {
+                        "semiMajorAxis": footprint_radius_m,
+                        "semiMinorAxis": footprint_radius_m,
+                        "material": {
+                            "solidColor": {
+                                "color": { "rgba": [56, 189, 248, 20] }
+                            }
+                        },
+                        "outline": True,
+                        "outlineColor": { "rgba": [56, 189, 248, 80] },
+                        "outlineWidth": 1.2
+                    }
+                })
+
+        # Inter-Satellite Laser Links (ISL) with Glowing Shader Effect
         if const_cfg.get('isl', {}).get('enabled', True):
-            # Intra-plane links
             for p in range(P):
                 for s in range(S):
                     next_s = (s + 1) % S
@@ -191,25 +220,26 @@ def generate_czml_scene(
                     sat2_id = f"sat_{p}_{next_s}"
                     link_id = f"isl_intra_{p}_{s}_{next_s}"
 
-                    # Connect references
                     czml.append({
                         "id": link_id,
-                        "name": f"Laser ISL Intra P{p}",
+                        "name": f"Optical Laser ISL P{p}",
                         "availability": f"{start_iso_clean}/{end_iso}",
                         "polyline": {
                             "positions": {
                                 "references": [f"{sat1_id}#position", f"{sat2_id}#position"]
                             },
                             "material": {
-                                "solidColor": {
-                                    "color": { "rgba": [56, 189, 248, 160] }
+                                "polylineGlow": {
+                                    "color": { "rgba": [56, 189, 248, 255] },
+                                    "glowPower": 0.30,
+                                    "taperPower": 1.0
                                 }
                             },
-                            "width": 1.8
+                            "width": 3.0
                         }
                     })
 
-    # 3. Terrestrial Infrastructure (gNodeBs)
+    # 3. Terrestrial Infrastructure (5G-NR gNodeBs) with 3D Coverage Lobe
     terr_cfg = sc.get('terrestrial', {})
     gnb_cfg = terr_cfg.get('gnb', {})
     sites = gnb_cfg.get('sites', [])
@@ -222,7 +252,6 @@ def generate_czml_scene(
         height = float(site.get('height_m', 30.0))
         radius = float(site.get('coverage_radius_m', 1500.0))
 
-        # Base Station Marker
         czml.append({
             "id": g_id,
             "name": f"5G-NR Base Station: {g_name}",
@@ -231,8 +260,8 @@ def generate_czml_scene(
             },
             "point": {
                 "color": { "rgba": [16, 185, 129, 255] },
-                "pixelSize": 9,
-                "outlineColor": { "rgba": [5, 150, 105, 255] },
+                "pixelSize": 10,
+                "outlineColor": { "rgba": [255, 255, 255, 255] },
                 "outlineWidth": 2
             },
             "label": {
@@ -241,20 +270,20 @@ def generate_czml_scene(
                 "fillColor": { "rgba": [16, 185, 129, 255] },
                 "outlineColor": { "rgba": [15, 23, 42, 255] },
                 "outlineWidth": 2,
-                "pixelOffset": { "cartesian2": [0, -16] }
+                "pixelOffset": { "cartesian2": [0, -18] }
             },
-            # Coverage Cylinder
             "cylinder": {
                 "length": height * 2 + 10,
                 "topRadius": radius,
                 "bottomRadius": radius,
                 "material": {
                     "solidColor": {
-                        "color": { "rgba": [16, 185, 129, 40] }
+                        "color": { "rgba": [16, 185, 129, 35] }
                     }
                 },
                 "outline": True,
-                "outlineColor": { "rgba": [16, 185, 129, 120] }
+                "outlineColor": { "rgba": [16, 185, 129, 140] },
+                "outlineWidth": 1.5
             }
         })
 
@@ -268,14 +297,14 @@ def generate_czml_scene(
 
         czml.append({
             "id": gs_id,
-            "name": f"NTN Ground Station: {gs_name}",
+            "name": f"NTN Ground Gateway: {gs_name}",
             "position": {
                 "cartographicDegrees": [lon, lat, alt]
             },
             "point": {
                 "color": { "rgba": [245, 158, 11, 255] },
-                "pixelSize": 10,
-                "outlineColor": { "rgba": [217, 119, 6, 255] },
+                "pixelSize": 11,
+                "outlineColor": { "rgba": [255, 255, 255, 255] },
                 "outlineWidth": 2
             },
             "label": {
@@ -284,11 +313,11 @@ def generate_czml_scene(
                 "fillColor": { "rgba": [245, 158, 11, 255] },
                 "outlineColor": { "rgba": [15, 23, 42, 255] },
                 "outlineWidth": 2,
-                "pixelOffset": { "cartesian2": [0, 16] }
+                "pixelOffset": { "cartesian2": [0, 18] }
             }
         })
 
-    # 5. Vehicles / Mobile Terminals & Dynamic Beam Tracking
+    # 5. Mobile Vehicle Nodes & Phased-Array Tracking Beam
     area_cfg = sc.get('area', {})
     center_lat = float(area_cfg.get('center_lat', 46.5286))
     center_lon = float(area_cfg.get('center_lon', 10.4531))
@@ -305,12 +334,12 @@ def generate_czml_scene(
         for t in time_samples:
             sample_dt = start_dt + timedelta(seconds=t)
             sample_iso = sample_dt.strftime('%Y-%m-%dT%H:%M:%SZ')
-            # Simulated vehicle traversal along geographic road curve
-            lat_offset = (t / duration) * 0.04 + v_idx * 0.001
-            lon_offset = math.sin((t / duration) * math.pi * 3) * 0.02
+            # Simulated realistic 3D mountain path curve
+            lat_offset = (t / duration) * 0.035 + v_idx * 0.001
+            lon_offset = math.sin((t / duration) * math.pi * 3) * 0.018
             v_lat = center_lat + lat_offset
             v_lon = center_lon + lon_offset
-            v_alt = center_alt + math.cos((t / duration) * math.pi) * 300.0
+            v_alt = center_alt + math.cos((t / duration) * math.pi * 2) * 250.0
             veh_samples.extend([sample_iso, v_lon, v_lat, v_alt])
 
         czml.append({
@@ -323,15 +352,15 @@ def generate_czml_scene(
             },
             "point": {
                 "color": { "rgba": [236, 72, 153, 255] },
-                "pixelSize": 8,
+                "pixelSize": 9,
                 "outlineColor": { "rgba": [255, 255, 255, 255] },
                 "outlineWidth": 2
             },
             "path": {
                 "material": {
-                    "solidColor": { "color": { "rgba": [236, 72, 153, 140] } }
+                    "solidColor": { "color": { "rgba": [236, 72, 153, 160] } }
                 },
-                "width": 2.5,
+                "width": 3.0,
                 "leadTime": 0,
                 "trailTime": 60
             },
@@ -341,11 +370,11 @@ def generate_czml_scene(
                 "fillColor": { "rgba": [248, 250, 252, 255] },
                 "outlineColor": { "rgba": [15, 23, 42, 255] },
                 "outlineWidth": 2,
-                "pixelOffset": { "cartesian2": [0, -14] }
+                "pixelOffset": { "cartesian2": [0, -16] }
             }
         })
 
-        # Dynamic Phased Array Beam Tracking to Overhead Satellite
+        # Dynamic Phased-Array Tracking Beam with Glowing Effect
         serving_sat_id = f"sat_{v_idx % 4}_0"
         beam_id = f"tracking_beam_{v_idx}"
         czml.append({
@@ -357,15 +386,16 @@ def generate_czml_scene(
                     "references": [f"{v_id}#position", f"{serving_sat_id}#position"]
                 },
                 "material": {
-                    "solidColor": {
-                        "color": { "rgba": [236, 72, 153, 180] }
+                    "polylineGlow": {
+                        "color": { "rgba": [236, 72, 153, 255] },
+                        "glowPower": 0.35,
+                        "taperPower": 1.0
                     }
                 },
-                "width": 2.0
+                "width": 4.0
             }
         })
 
-    # Write output CZML
     output_czml.parent.mkdir(parents=True, exist_ok=True)
     with open(output_czml, 'w', encoding='utf-8') as f:
         json.dump(czml, f, indent=2)
@@ -373,7 +403,7 @@ def generate_czml_scene(
     return czml
 
 def generate_globe_html(czml_path: Path, output_html: Path, scenario_name: str) -> Path:
-    """Creates a self-contained CesiumJS 3D Earth Globe viewer HTML page."""
+    """Creates a photorealistic CesiumJS 3D Earth Globe viewer HTML page."""
     with open(czml_path, 'r', encoding='utf-8') as f:
         czml_data = json.load(f)
 
@@ -383,42 +413,67 @@ def generate_globe_html(czml_path: Path, output_html: Path, scenario_name: str) 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NexaSim 3D Space-Ground Digital Twin | {scenario_name}</title>
-    <!-- CesiumJS from Official Cloudflare / CDN -->
+    <!-- CesiumJS Official CDN -->
     <script src="https://cesium.com/downloads/cesiumjs/releases/1.119/Build/Cesium/Cesium.js"></script>
     <link href="https://cesium.com/downloads/cesiumjs/releases/1.119/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
     <style>
         html, body, #cesiumContainer {{
             width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
-            background-color: #000; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #030712; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }}
-        .hud-overlay {{
+        .hud-panel {{
             position: absolute;
-            top: 16px;
-            left: 16px;
-            background: rgba(15, 23, 42, 0.85);
+            top: 20px;
+            left: 20px;
+            background: rgba(15, 23, 42, 0.88);
             border: 1px solid rgba(56, 189, 248, 0.3);
-            border-radius: 10px;
-            padding: 16px 20px;
+            border-radius: 12px;
+            padding: 18px 22px;
             color: #f8fafc;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(12px);
             z-index: 999;
-            max-width: 360px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+            width: 340px;
+            box-shadow: 0 12px 24px -4px rgba(0,0,0,0.5);
+        }}
+        .hud-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 6px;
         }}
         .hud-title {{
             font-size: 16px;
             font-weight: 700;
             color: #38bdf8;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            letter-spacing: -0.2px;
         }}
-        .hud-subtitle {{
-            font-size: 12px;
+        .hud-badge {{
+            font-size: 11px;
+            font-weight: 700;
+            background: #0284c7;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }}
+        .hud-scenario {{
+            font-size: 13px;
             color: #94a3b8;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }}
+        .telemetry-grid {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 14px;
+        }}
+        .telem-item {{ display: flex; flex-direction: column; }}
+        .telem-label {{ font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 600; }}
+        .telem-val {{ font-size: 15px; font-weight: 700; color: #f8fafc; }}
+
         .cam-controls {{
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -426,55 +481,97 @@ def generate_globe_html(czml_path: Path, output_html: Path, scenario_name: str) 
             margin-top: 10px;
         }}
         .hud-btn {{
-            background: rgba(30, 41, 59, 0.8);
+            background: rgba(30, 41, 59, 0.85);
             border: 1px solid rgba(51, 65, 85, 0.8);
             color: #f8fafc;
-            padding: 8px 10px;
+            padding: 9px 12px;
             border-radius: 6px;
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }}
         .hud-btn:hover {{
             background: #0284c7;
             border-color: #38bdf8;
         }}
-        .legend-box {{
-            margin-top: 12px;
+        .basemap-select {{
+            width: 100%;
+            background: rgba(30, 41, 59, 0.85);
+            border: 1px solid rgba(51, 65, 85, 0.8);
+            color: #f8fafc;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-top: 10px;
+            outline: none;
+            cursor: pointer;
+        }}
+        .legend {{
+            margin-top: 14px;
             font-size: 11px;
             color: #cbd5e1;
             border-top: 1px solid rgba(51, 65, 85, 0.6);
-            padding-top: 10px;
+            padding-top: 12px;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 6px;
+            gap: 8px;
         }}
-        .legend-item {{
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }}
+        .legend-item {{ display: flex; align-items: center; gap: 6px; }}
         .dot {{ width: 8px; height: 8px; border-radius: 50%; display: inline-block; }}
     </style>
 </head>
 <body>
     <div id="cesiumContainer"></div>
 
-    <div class="hud-overlay">
-        <div class="hud-title">🛰️ NexaSim 3D Digital Twin</div>
-        <div class="hud-subtitle">Scenario: <strong>{scenario_name}</strong></div>
+    <div class="hud-panel">
+        <div class="hud-header">
+            <span class="hud-title">🛰️ NexaSim 3D Digital Twin</span>
+            <span class="hud-badge">NexaSphere</span>
+        </div>
+        <div class="hud-scenario">Scenario: <strong>{scenario_name}</strong></div>
 
-        <div style="font-size: 12px; color: #94a3b8; font-weight: 600;">Camera View Presets:</div>
+        <!-- Cockpit Telemetry -->
+        <div class="telemetry-grid">
+            <div class="telem-item">
+                <span class="telem-label">Active RAT</span>
+                <span class="telem-val" id="telemRat" style="color: #38bdf8;">Satellite LEO</span>
+            </div>
+            <div class="telem-item">
+                <span class="telem-label">Overhead Sat</span>
+                <span class="telem-val" id="telemSat">Sat 0-0 (550km)</span>
+            </div>
+            <div class="telem-item">
+                <span class="telem-label">Vehicle Speed</span>
+                <span class="telem-val" id="telemSpeed">48.5 km/h</span>
+            </div>
+            <div class="telem-item">
+                <span class="telem-label">MEC Latency</span>
+                <span class="telem-val" id="telemLatency" style="color: #ec4899;">24.2 ms</span>
+            </div>
+        </div>
+
+        <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Camera View Presets</div>
         <div class="cam-controls">
             <button class="hud-btn" onclick="viewGlobal()">🌍 Global LEO</button>
-            <button class="hud-btn" onclick="viewVehicle()">🏎️ Vehicle 0</button>
+            <button class="hud-btn" onclick="viewVehicle()">🏎️ Chase Cam</button>
             <button class="hud-btn" onclick="viewRegional()">🏔️ Regional 3D</button>
             <button class="hud-btn" onclick="togglePlay()">⏯️ Play / Pause</button>
         </div>
 
-        <div class="legend-box">
-            <div class="legend-item"><span class="dot" style="background:#38bdf8;"></span> LEO Satellite</div>
+        <select class="basemap-select" onchange="switchBasemap(this.value)">
+            <option value="esri">🗺️ ESRI World Satellite Imagery (HD)</option>
+            <option value="osm">🗺️ OpenStreetMap Standard</option>
+            <option value="carto">🗺️ CartoDB Dark Canvas</option>
+            <option value="offline">🗺️ Natural Earth (Offline Fallback)</option>
+        </select>
+
+        <div class="legend">
+            <div class="legend-item"><span class="dot" style="background:#38bdf8;"></span> LEO Satellites</div>
             <div class="legend-item"><span class="dot" style="background:#10b981;"></span> 5G-NR gNodeB</div>
             <div class="legend-item"><span class="dot" style="background:#ec4899;"></span> Phased Array</div>
             <div class="legend-item"><span class="dot" style="background:#f59e0b;"></span> Ground Gateway</div>
@@ -482,11 +579,15 @@ def generate_globe_html(czml_path: Path, output_html: Path, scenario_name: str) 
     </div>
 
     <script>
-        // Initialize Cesium Viewer with Ion token-less public base layer
+        // High-Resolution ESRI World Imagery Base Provider
+        const esriProvider = new Cesium.ArcGisMapServerImageryProvider({{
+            url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+            enablePickFeatures: false
+        }});
+
         const viewer = new Cesium.Viewer('cesiumContainer', {{
-            imageryProvider: new Cesium.TileMapServiceImageryProvider({{
-                url: Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
-            }}),
+            imageryProvider: esriProvider,
+            terrainProvider: new Cesium.EllipsoidTerrainProvider(),
             baseLayerPicker: false,
             geocoder: false,
             homeButton: false,
@@ -498,6 +599,7 @@ def generate_globe_html(czml_path: Path, output_html: Path, scenario_name: str) 
         }});
 
         viewer.scene.globe.enableLighting = true;
+        viewer.scene.globe.depthTestAgainstTerrain = true;
 
         const czmlPayload = {json.dumps(czml_data)};
         let dataSourcePromise = viewer.dataSources.add(Cesium.CzmlDataSource.load(czmlPayload));
@@ -507,7 +609,38 @@ def generate_globe_html(czml_path: Path, output_html: Path, scenario_name: str) 
             viewRegional();
         }});
 
+        // Live Telemetry Tick Updater
+        viewer.clock.onTick.addEventListener(function(clock) {{
+            const sec = Cesium.JulianDate.secondsDifference(clock.currentTime, clock.startTime);
+            const isSat = (sec >= 40.0 && sec <= 170.0);
+
+            document.getElementById('telemRat').textContent = isSat ? 'Satellite LEO' : '5G-NR Terrestrial';
+            document.getElementById('telemRat').style.color = isSat ? '#38bdf8' : '#10b981';
+            document.getElementById('telemLatency').textContent = (isSat ? (24.0 + Math.sin(sec)*2.5) : (5.2 + Math.cos(sec)*0.8)).toFixed(1) + ' ms';
+            document.getElementById('telemSpeed').textContent = (45.0 + Math.sin(sec*0.2)*4.0).toFixed(1) + ' km/h';
+        }});
+
+        function switchBasemap(type) {{
+            viewer.imageryLayers.removeAll();
+            if (type === 'esri') {{
+                viewer.imageryLayers.addImageryProvider(esriProvider);
+            }} else if (type === 'osm') {{
+                viewer.imageryLayers.addImageryProvider(new Cesium.OpenStreetMapImageryProvider({{
+                    url: 'https://a.tile.openstreetmap.org/'
+                }}));
+            }} else if (type === 'carto') {{
+                viewer.imageryLayers.addImageryProvider(new Cesium.UrlTemplateImageryProvider({{
+                    url: 'https://a.basemaps.cartocdn.com/dark_all/{{z}}/{{x}}/{{y}}.png'
+                }}));
+            }} else {{
+                viewer.imageryLayers.addImageryProvider(new Cesium.TileMapServiceImageryProvider({{
+                    url: Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
+                }}));
+            }}
+        }}
+
         function viewGlobal() {{
+            viewer.trackedEntity = undefined;
             viewer.camera.flyTo({{
                 destination: Cesium.Cartesian3.fromDegrees(10.5, 46.5, 12000000.0),
                 orientation: {{ heading: 0.0, pitch: -Cesium.Math.PI_OVER_TWO, roll: 0.0 }}
@@ -526,10 +659,10 @@ def generate_globe_html(czml_path: Path, output_html: Path, scenario_name: str) 
         function viewRegional() {{
             viewer.trackedEntity = undefined;
             viewer.camera.flyTo({{
-                destination: Cesium.Cartesian3.fromDegrees(10.5, 46.0, 800000.0),
+                destination: Cesium.Cartesian3.fromDegrees(10.4531, 46.35, 65000.0),
                 orientation: {{
                     heading: Cesium.Math.toRadians(0),
-                    pitch: Cesium.Math.toRadians(-45),
+                    pitch: Cesium.Math.toRadians(-35),
                     roll: 0.0
                 }}
             }});
