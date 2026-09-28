@@ -54,3 +54,13 @@ __pycache__/
 node_modules/
 package.json
 package-lock.json
+
+# Local skills and development assistant configurations
+.agents/
+.claude/
+skills-lock.json
+AGENTS.md
+.github/agents/
+.github/skills/
+.github/prompts/
+.github/hooks/
