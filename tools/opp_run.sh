@@ -121,13 +121,19 @@ set +e
 
 # Execute via python runner to isolate and handle INET 4.2.2 static destructor crash
 # in __run_exit_handlers (SIGSEGV / code 139 / -11) after clean simulation finish
+
+EXTRA_ARGS=""
+if [[ "$*" == *"-u Cmdenv"* ]]; then
+    EXTRA_ARGS="--cmdenv-express-mode=true --cmdenv-performance-display=false"
+fi
+
 python3 -c "
 import subprocess, sys
 args = sys.argv[1:]
 res = subprocess.run(args)
 rc = 0 if res.returncode in (-11, 139) else res.returncode
 sys.exit(rc)
-" "$OPP_EXEC" -n "${NED_PATH}" $LIBS_ARGS "$@"
+" "$OPP_EXEC" -n "${NED_PATH}" $LIBS_ARGS $EXTRA_ARGS "$@"
 EXIT_CODE=$?
 
 exit $EXIT_CODE

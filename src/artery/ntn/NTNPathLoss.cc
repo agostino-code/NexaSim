@@ -52,7 +52,8 @@ double NTNPathLoss::computePathLoss(inet::mps propagationSpeed, inet::Hz frequen
     params.rainRateMmPerH = rainRateMmPerH;
     params.cloudLiquidWater = cloudLiquidWater;
 
-    auto plResult = const_cast<NTNChannelModel&>(channelModel).calculatePathLoss(params, 7.6, 0.03);
+    omnetpp::cRNG* rng = getRNG(0);
+    auto plResult = const_cast<NTNChannelModel&>(channelModel).calculatePathLoss(params, 7.6, 0.03, rng);
     return inet::math::dB2fraction(-plResult.totalLossDb);
 }
 
@@ -64,9 +65,14 @@ double NTNPathLoss::computePathLoss(const inet::physicallayer::ITransmission *tr
     double distanceM = diff.length();
     if (distanceM <= 0.0) return 1.0;
 
-    // Elevation angle in degrees relative to horizontal ground plane
-    double heightDiff = std::abs(txPos.z - rxPos.z);
-    double elevationDeg = (distanceM > 0.0) ? (std::asin(std::min(1.0, heightDiff / distanceM)) * 180.0 / M_PI) : 90.0;
+    // Exact spherical Earth elevation angle
+    double R_E = 6371000.0; // Earth radius in meters
+    double r_tx = R_E + txPos.z;
+    double r_rx = R_E + rxPos.z;
+    double cosPsi = (r_tx * r_tx + r_rx * r_rx - distanceM * distanceM) / (2.0 * r_tx * r_rx);
+    cosPsi = std::max(-1.0, std::min(1.0, cosPsi));
+    double elevationRad = std::atan2(r_tx * std::sin(std::acos(cosPsi)), r_tx * cosPsi - r_rx);
+    double elevationDeg = elevationRad * 180.0 / M_PI;
 
     auto radioMedium = transmission->getMedium();
     inet::Hz centerFrequency = inet::Hz(28e9);
@@ -99,7 +105,7 @@ double NTNPathLoss::computePathLoss(const inet::physicallayer::ITransmission *tr
     else if (environmentType == "aeronautical") env = NTNChannelModel::Environment::AERONAUTICAL;
     params.env = env;
 
-    auto plResult = const_cast<NTNChannelModel&>(channelModel).calculatePathLoss(params, 7.6, 0.03);
+    auto plResult = const_cast<NTNChannelModel&>(channelModel).calculatePathLoss(params, 7.6, 0.03, rng);
     double totalLossDb = plResult.totalLossDb + topoLossDb;
 
     // Convert dB to linear attenuation factor (P_rx / P_tx <= 1.0)

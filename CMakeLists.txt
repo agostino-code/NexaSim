@@ -31,9 +31,9 @@ option(VSCODE_LAUNCH_INTEGRATION "Generate VS Code configuration for debugging (
 # Artery build configuration #
 ##############################
 
-# use "RelWithDebInfo" as default build type
+# use "Release" as default build type for maximum performance
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-    set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "CMake build type" FORCE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "CMake build type" FORCE)
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 

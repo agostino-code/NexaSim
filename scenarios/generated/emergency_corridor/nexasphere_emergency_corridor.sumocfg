@@ -3,6 +3,10 @@
         <net-file value="nexasphere_emergency_corridor.net.xml"/>
         <route-files value="nexasphere_emergency_corridor.rou.xml"/>
     </input>
+    <output>
+        <fcd-output value="trace_fcd.xml"/>
+        <fcd-output.geo value="true"/>
+    </output>
     <time>
         <begin value="0"/>
         <end value="180"/>

@@ -14,8 +14,20 @@ Benvenuto nella guida ufficiale di **NexaSim**, il simulatore unificato 3D per r
    - [2.5 Simulazione di Incidenti & Allerte di Emergenza (`incident`)](#25-simulazione-di-incidenti--allerte-di-emergenza)
    - [2.6 Metriche e Configurazione di Output (`output`)](#26-metriche-e-configurazione-di-output)
 3. [Generazione ed Esecuzione degli Scenari](#3-generazione-ed-esecuzione-degli-scenari)
-4. [Analisi dei Dati e Metriche KPI (`analyze_results.py`)](#4-analisi-dei-dati-e-metriche-kpi)
+4. [Analisi dei Dati, Metriche KPI e Dashboard Interattiva](#4-analisi-dei-dati-e-metriche-kpi)
 5. [Visualizzazione Grafica della Rete e del Traffico (OMNeT++ Qtenv & SUMO-GUI)](#5-visualizzazione-grafica-della-rete-e-del-traffico-omnet-qtenv--sumo-gui)
+6. [Benchmark Suite & Parameter Sweep (`nexasim sweep`)](#6-benchmark-suite--parameter-sweep-nexasim-sweep)
+7. [Digital Twin 3D Geospaziale su Globo Terrestre (`nexasim view-3d`)](#7-digital-twin-3d-geospaziale-su-globo-terrestre-nexasim-view-3d)
+   - [7.1 Viste Telecamera Preset](#71-viste-telecamera-preset)
+   - [7.2 Selezione Basemap e Terreno](#72-selezione-basemap-e-terreno)
+   - [7.3 Gestione HUD in modalità Dual](#73-gestione-hud-in-modalita-dual)
+8. [NexaSim Studio: Web Control Center No-Code (`nexasim studio`)](#8-nexasim-studio-web-control-center-no-code-nexasim-studio)
+   - [8.1 Layout del Control Center](#81-layout-del-control-center)
+   - [8.2 Vista Single 2D — Mappa Tattica Leaflet](#82-vista-single-2d--mappa-tattica-leaflet)
+   - [8.3 Vista Single 3D — Globo CesiumJS](#83-vista-single-3d--globo-cesiumjs)
+   - [8.4 Vista Dual — 2D + 3D affiancati](#84-vista-dual--2d--3d-affiancati)
+   - [8.5 Drawer Inferiore — Dashboard Esecutiva](#85-drawer-inferiore--dashboard-esecutiva)
+   - [8.6 Customizer Parametri e Console di Esecuzione](#86-customizer-parametri-e-console-di-esecuzione)
 
 ---
 
@@ -295,8 +307,25 @@ Per analizzare le prestazioni della simulazione ed estrarre tutti i parametri di
 ```
 
 Questo comando calcola tutti i KPI di rete e genera contemporaneamente nella cartella `results/`:
-1. **`dashboard.html`**: dashboard web moderna e reattiva con KPI cards e grafici Chart.js (Timeline Interfaccia Attiva 5G vs NTN, Handovers cumulativi, Utility QoS, Stato di Carica Batteria, Latenze Task MEC).
+1. **`dashboard.html`**: dashboard web moderna e reattiva con KPI cards e grafici Chart.js organizzati in una griglia 2x2 unificata (Active Interface, QoS Utility Score, MEC Latency, Cumulative Handovers), più Fleet Multi-RAT Telemetry Summary e Physical Link Budget.
 2. **`kpi_summary.json`**: esportazione strutturata dei KPI aggregati per pipeline CI/CD o benchmarking comparativo.
+
+### 4.1 Griglia 2x2 della Dashboard Esecutiva
+
+La dashboard è stata ridisegnata da una struttura a schede (6 tab) a una **griglia CSS 2x2 unificata** che mostra i quattro grafici più rilevanti per il monitoring operativo:
+
+| Grafico | Tipo | Cosa mostra |
+| :--- | :--- | :--- |
+| **Active Interface** | Area | Timeline dell'interfaccia attiva per ciascun veicolo (5G-NR vs Satellite LEO). |
+| **QoS Utility Score** | Linea | Metrica di utilità di rete (0-1) che combina throughput, latenza e affidabilità. |
+| **MEC Latency** | Barra | Latenza task di edge computing (upload + elaborazione + download). |
+| **Cumulative Handovers** | Linea | Numero cumulativo di handover verticali nel tempo (make-before-break). |
+
+Sotto la griglia sono presenti due sezioni di supporto:
+- **Fleet Multi-RAT Telemetry Summary**: tabella riassuntiva per ciascun veicolo (RAT primaria, throughput, latenza, energia residua).
+- **Physical Link Budget**: bilancio di link fisico (RSSI, SNR, attenuazione meteo, margine di link).
+
+I grafici sono generati dinamicamente da `tools/dashboard.py` tramite **Chart.js**, con tooltip e legenda interattivi, e sono ri-disegnati automaticamente al redimensionamento della finestra.
 
 ### Esempio di Report Generato a Terminale:
 ```text
@@ -405,7 +434,7 @@ Il comando genera nella cartella `scenarios/generated/sweep_<nome>/`:
 
 ## 7. Digital Twin 3D Geospaziale su Globo Terrestre (`nexasim view-3d`)
 
-Visualizzazione fotorealistica 3D geospaziale nello spazio e sul terreno tramite CesiumJS e CZML:
+Visualizzazione fotorealistica 3D geospaziale nello spazio e sul terreno tramite **CesiumJS 1.119** e pacchetti **CZML** generati dinamicamente da `tools/czml_generator.py`:
 
 ```bash
 # Genera lo stream CZML e apre il globo 3D nel browser
@@ -417,7 +446,34 @@ Visualizzazione fotorealistica 3D geospaziale nello spazio e sul terreno tramite
 - **Link Laser Ottici (ISL)**: raggi laser ciano/oro tra satelliti adiacenti nello spazio.
 - **Celle 5G-NR**: coni di copertura radio volumetrica attorno ai tralicci base station gNodeB.
 - **Fasci di Tracciamento Phased-Array**: raggi dinamici magenta che collegano il veicolo al satellite agganciato in tempo reale.
-- **Viste Telecamera Preset**: `Global LEO`, `Vehicle 0 (Convoy Leader)`, `Regional 3D`.
+- **Veicoli sul terreno**: marker 3D dei veicoli del convoglio, allineati al terreno grazie a `heightReference: "CLAMP_TO_GROUND"` (quota di altitudine forzata a 0 m sul modello digitale del terreno).
+
+### 7.1 Viste Telecamera Preset
+
+Il globo 3D mette a disposizione tre preset di inquadratura, calibrati sui coordinate geografiche effettive dello scenario (non valori hardcoded):
+
+| Pulsante | Descrizione | Comportamento |
+| :--- | :--- | :--- |
+| **Tactical** | Vista tattica regionale | Inquadra l'area dello scenario a 5.5 km di distanza, inclinazione -32°, heading 20°. Mostra l'intera area di studio con terreno, gNodeB e costellazione. |
+| **Chase Cam** | Inseguimento del veicolo | Sblocca la telecamera sul veicolo 0 (`veh_0`, capo convoglio) con `viewFrom` relativo. La telecamera segue il veicolo mentre questo si sposta lungo la traiettoria. |
+| **Orbit LEO** | Orbita LEO costellazione | Vista d'insieme della costellazione: raggio 150 km, distanza 2.200 km, inclinazione -50°. Permette di osservare la dinamica orbitale dei satelliti e gli ISL. |
+
+Tutti i preset usano `viewer.camera.flyToBoundingSphere` con `Cesium.HeadingPitchRange` e una durata di 1.5-2.0 s (animazione fluida, non salto istantaneo).
+
+### 7.2 Selezione Basemap e Terreno
+
+Il pannello di controllo in alto a destra del globo permette di switchare la mappa di base:
+- **Cesium World Terrain** (terreno fotorealistico 3D con dati bathymetrici e ortofoto).
+- **ESRI World Imagery** (via `UrlTemplateImageryProvider`, endpoint `server.arcgisonline.com` — evita l'errore del provider deprecato `ArcGisMapServerImageryProvider`).
+- **Cesium Black Marble** (mappa notturna, utile per ridurre il disturbo visivo sui link laser nello spazio).
+
+La scelta del terreno è protetta da un try/catch: in caso di mancato caricamento del World Terrain (assenza di token Cesium Ion valido), il viewer cade back a `EllipsoidTerrainProvider` (terreno liscio, niente crash).
+
+### 7.3 Gestione HUD in modalità Dual
+
+Quando il globo viene mostrato in modalità **Dual** (2D+3D affiancati), il pannello HUD del globo deve essere nascosto per evitare sovrapposizioni con la mappa 2D. Questa gestione avviene in due direzioni:
+1. Lo studio.html aggiunge `?hud=0` alla query string dell'iframe del globo in modalità dual.
+2. Il globo ascolta i messaggi `postMessage` dal parent (`{ showHud: false }`) per nascondere/mostrare il pannello HUD dinamicamente.
 
 ---
 
@@ -428,11 +484,73 @@ Per configurare, visualizzare e lanciare simulazioni tramite interfaccia web loc
 ```bash
 ./nexasim studio --port 8080
 ```
-Apri il browser all'indirizzo `http://localhost:8080`:
-- **Catalogo Scenari & Mappa Leaflet**: visualizzazione dei confini geografici, posizione delle antenne e ground tracks satellitari.
-- **Customizer Parametri**: slider grafici per tasso di pioggia, durata simulazione e strategia VHO.
-- **Console di Esecuzione in Streaming**: monitoraggio dell'avanzamento (`ev/sec`, tempo simulato) con log terminale live.
-- **Accesso Diretto a Dashboard e Globo 3D**: pulsanti dedicati per ispezionare i risultati con 1 click.
+Apri il browser all'indirizzo `http://localhost:8080`.
+La documentazione interattiva OpenAPI / Swagger dell'API REST è disponibile a `http://localhost:8080/docs`.
+Il token Cesium Ion e la CARTO API Key sono letti da `.env` (isolato e `.gitignore`-ato, mai commitato).
+
+### 8.0 Architettura Backend ad Alte Prestazioni (FastAPI & Uvicorn)
+
+Il backend di NexaSim Studio è basato su **FastAPI** e servito tramite il server ASGI **Uvicorn**:
+- **Esecuzione Asincrona con Background Tasks**: Le simulazioni pesanti di OMNeT++ vengono delegate a thread asincroni in background (`BackgroundTasks`), garantendo che l'interfaccia web e gli endpoint REST rimangano sempre reattivi al 100%.
+- **Sicurezza Integrata Contro Path Traversal**: La distribuzione degli artefatti (`/results/`) è gestita tramite `StaticFiles` di Starlette con confinamento rigoroso nella cartella `scenarios/generated/`, impedendo attacchi LFI (Local File Inclusion).
+- **Validazione dei Payload**: Le modifiche e i salvataggi dei file YAML (`/api/save`, `/api/generate`, `/api/run`) vengono convalidati preventivamente tramite modelli Pydantic.
+
+### 8.1 Layout del Control Center
+
+Il layout è organizzato in CSS Grid:
+- **Header**: titolo e pulsanti di vista (Single 2D / Single 3D / Dual).
+- **Sidebar sinistra (340 px)**: catalogo scenari, pulsanti di azione (Genera, Esegui, Analizza) e drawer inferiore.
+- **Area principale**: mappa tattica 2D (Leaflet) e/o globo 3D (CesiumJS in iframe), a seconda della vista selezionata.
+- **Drawer inferiore (45% dell'altezza)**: pannello estraibile con la dashboard esecutiva e i grafici di sintesi.
+
+### 8.2 Vista Single 2D — Mappa Tattica Leaflet
+
+La mappa 2D usa Leaflet 1.9.4 con basemap CARTO Dark / ESRI Dark Gray / ESRI Satellite. La chiave API CARTO viene iniettata dinamicamente nel placeholder `__CARTO_API_KEY__` al momento del servizio, evitando la dicitura "API key required".
+
+Sulla mappa sono sovrapposti:
+- **Confine geografico** dell'area dello scenario (rettangolo tratteggiato).
+- **gNodeB** (marker arancione) con tooltip con potenza, frequenza, bandwidth.
+- **Ground Station** (marker viola) con tooltip feeder/user link.
+- **Satelliti visibili** (marker blu) con tooltip altitudine, inclinazione, piano orbitale.
+- **Convoglio di veicoli animato**: un timer JavaScript sposta i marker dei veicoli lungo la traiettoria del percorso stradale, con un progresso sfasato per ciascun veicolo (`vIdx * 0.08`). Ogni marker mostra la RAT attiva:
+  - **Verde** (`#10b981`) → 5G-NR Terrestrial.
+  - **Ciano** (`#38bdf8`) → Satellite LEO NTN (quando il veicolo è in una zona d'ombra / blind spot).
+
+### 8.3 Vista Single 3D — Globo CesiumJS
+
+In questa vista l'area principale mostra il globo 3D (generato da `tools/czml_generator.py`). Il drawer inferiore è automaticamente richiuso per evitare sovrapposizioni.
+
+### 8.4 Vista Dual — 2D + 3D affiancati
+
+Selezionando **Dual**, la schermata si divide a metà:
+- A sinistra: mappa 2D Leaflet.
+- A destra: globo 3D CesiumJS.
+- Il drawer inferiore si chiude automaticamente.
+- Il pannello HUD del globo viene nascosto via `postMessage({ showHud: false })` e l'iframe viene caricato con `?hud=0`.
+
+### 8.5 Drawer Inferiore — Dashboard Esecutiva
+
+Il drawer inferiore (che si apre con il pulsante in basso) contiene la **dashboard esecutiva Chart.js** generata da `tools/dashboard.py`. È una griglia 2x2 con i grafici più utili per il monitoring in tempo reale:
+
+| Grafico | Tipo | Cosa mostra |
+| :--- | :--- | :--- |
+| **Active Interface** | Area | Timeline dell'interfaccia attiva per ciascun veicolo (5G-NR vs Satellite LEO). |
+| **QoS Utility Score** | Linea | Metrica di utilità di rete (0-1) che combina throughput, latenza e affidabilità. |
+| **MEC Latency** | Barra | Latenza task di edge computing (upload + elaborazione + download). |
+| **Cumulative Handovers** | Linea | Numero cumulativo di handover verticali nel tempo (make-before-break). |
+
+Sotto la griglia sono presenti due sezioni di supporto:
+- **Fleet Multi-RAT Telemetry Summary**: tabella riassuntiva per ciascun veicolo (RAT primaria, throughput, latenza, energia residua).
+- **Physical Link Budget**: bilancio di link fisico (RSSI, SNR, attenuazione meteo, margine di link).
+
+### 8.6 Customizer Parametri e Console di Esecuzione
+
+La sidebar sinistra include slider grafici per:
+- Tasso di pioggia (mm/h).
+- Durata simulazione (s).
+- Strategia VHO (coverage-based / qos-based / energy-aware).
+
+La console di esecuzione in streaming mostra l'avanzamento (`ev/sec`, tempo simulato) con log terminale live.
 
 ---
 

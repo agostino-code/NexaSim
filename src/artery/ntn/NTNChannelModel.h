@@ -33,6 +33,12 @@ public:
         W_BAND     // 75-110 GHz
     };
     
+    enum class MarkovState {
+        STATE_GOOD_LOS = 0,    // Ricean fading (K = 6..12 dB)
+        STATE_BAD_SHADOWED = 1, // Rayleigh + Log-Normal (sigma = 4..8 dB)
+        STATE_DEEP_FADE = 2     // Diffraction / Obstruction (-30 dB)
+    };
+
     enum class Environment {
         URBAN,
         SUBURBAN,
@@ -83,11 +89,13 @@ public:
      * @param params Channel parameters
      * @param satelliteVelocityKmps Satellite velocity in km/s
      * @param groundVelocityKmps Ground terminal velocity in km/s
+     * @param rng Optional OMNeT++ RNG stream for strict simulation repeatability
      * @return PathLossResult with all components
      */
     static PathLossResult calculatePathLoss(const ChannelParams& params,
                                              double satelliteVelocityKmps = 7.5,
-                                             double groundVelocityKmps = 0.0);
+                                             double groundVelocityKmps = 0.0,
+                                             omnetpp::cRNG* rng = nullptr);
     
     /**
      * Calculate LOS probability based on 3GPP TR 38.811
@@ -163,12 +171,18 @@ public:
                                         double frequencyGhz, double elevationDeg, double azimuthDeg);
     
     /**
-     * Calculate shadowing (log-normal)
+     * Calculate shadowing (log-normal) per 3GPP TR 38.811
      * @param distanceKm Distance in km
      * @param environment Environment type
-     * @return Shadowing in dB (random variable)
+     * @param rng Optional OMNeT++ RNG stream
+     * @return Shadowing in dB
      */
-    static double calculateShadowing(double distanceKm, Environment env);
+    static double calculateShadowing(double distanceKm, Environment env, omnetpp::cRNG* rng = nullptr);
+
+    /**
+     * Update 3GPP 3-state Markov channel state
+     */
+    static MarkovState updateMarkovState(MarkovState current, double elevationDeg, double distanceTraveledMeters, omnetpp::cRNG* rng = nullptr);
     
     /**
      * Get frequency band from GHz

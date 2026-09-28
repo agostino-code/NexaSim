@@ -4,6 +4,8 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <queue>
+#include <limits>
 
 namespace artery {
 namespace ntn {
@@ -53,6 +55,9 @@ void ConstellationManager::initialize(int stage) {
         islBrokenSignal = registerSignal("islBroken");
         handoverSignal = registerSignal("handover");
         visibilitySignal = registerSignal("visibilityUpdate");
+        m_sigIslHopCount = registerSignal("islHopCount");
+        m_sigIslRouteLatency = registerSignal("islRouteLatency");
+        m_sigIslMeshOutage = registerSignal("islMeshOutage");
         
         // Load configuration
         loadConfiguration();
@@ -344,8 +349,9 @@ void ConstellationManager::updateVisibility() {
     updateSatellitePositions();
     computeISLTopology();
     computeGroundStationVisibility();
+    computeISLMeshShortestPaths();
     // computeUEVisibility(); // Would need UE references
-    
+
     emit(visibilitySignal, omnetpp::simTime().dbl());
 }
 
@@ -653,9 +659,136 @@ void ConstellationManager::configureFromYAML(const std::string& yamlContent) {
     // Simplified YAML parsing - in production use a proper YAML library
     // For now, just log that we received config
     EV_INFO << "Received YAML configuration (" << yamlContent.length() << " chars)\n";
-    
-    // TODO: Parse YAML and populate shells, groundStations, etc.
-    // This would use a library like yaml-cpp
+}
+
+void ConstellationManager::computeISLMeshShortestPaths() {
+    int N = satellites.size();
+    int M = gstations.size();
+    if (N == 0) return;
+
+    // 1. Build adjacency list for current active ISL topology
+    m_islAdjacency.assign(N, std::vector<GraphEdge>());
+    for (const auto& link : islLinks) {
+        if (!link.active) continue;
+        int u = link.satA;
+        int v = link.satB;
+        if (u < 0 || u >= N || v < 0 || v >= N) continue;
+
+        double propDelayMs = (link.distanceKm / 299792.458) * 1000.0;
+        double weightMs = propDelayMs + 0.050; // Propagation + OEO processing delay
+
+        m_islAdjacency[u].push_back({v, weightMs, link.linkQuality});
+        m_islAdjacency[v].push_back({u, weightMs, link.linkQuality});
+    }
+
+    // 2. Compute shortest path from each satellite to all ground stations via Dijkstra
+    m_cachedRoutes.assign(N, std::vector<ISLRouteResult>(M));
+
+    for (int g = 0; g < M; ++g) {
+        const auto& targetSats = gstations[g].visibleSats;
+        if (targetSats.empty()) continue;
+
+        for (int s = 0; s < N; ++s) {
+            std::vector<double> dist(N, std::numeric_limits<double>::infinity());
+            std::vector<int> prev(N, -1);
+            std::vector<double> minQuality(N, 1.0);
+
+            using DistPair = std::pair<double, int>;
+            std::priority_queue<DistPair, std::vector<DistPair>, std::greater<DistPair>> pq;
+
+            dist[s] = 0.0;
+            pq.push({0.0, s});
+
+            while (!pq.empty()) {
+                auto topItem = pq.top();
+                double d = topItem.first;
+                int u = topItem.second;
+                pq.pop();
+
+                if (d > dist[u]) continue;
+
+                for (const auto& edge : m_islAdjacency[u]) {
+                    int v = edge.targetSat;
+                    double altDist = d + edge.weightMs;
+                    if (altDist < dist[v]) {
+                        dist[v] = altDist;
+                        prev[v] = u;
+                        minQuality[v] = std::min(minQuality[u], edge.linkQuality);
+                        pq.push({altDist, v});
+                    }
+                }
+            }
+
+            int bestTargetSat = -1;
+            double bestDist = std::numeric_limits<double>::infinity();
+            for (int tSat : targetSats) {
+                if (tSat >= 0 && tSat < N && dist[tSat] < bestDist) {
+                    bestDist = dist[tSat];
+                    bestTargetSat = tSat;
+                }
+            }
+
+            ISLRouteResult res;
+            res.sourceSatId = s;
+            res.gatewayIndex = g;
+
+            if (bestTargetSat != -1 && bestDist < std::numeric_limits<double>::infinity()) {
+                res.routeFound = true;
+                res.targetSatId = bestTargetSat;
+                res.totalLatencyMs = bestDist;
+                res.bottleneckQuality = minQuality[bestTargetSat];
+
+                std::vector<int> path;
+                for (int at = bestTargetSat; at != -1; at = prev[at]) {
+                    path.push_back(at);
+                    if (at == s) break;
+                }
+                std::reverse(path.begin(), path.end());
+                res.pathSats = path;
+                res.hopCount = std::max(0, static_cast<int>(path.size()) - 1);
+            } else {
+                res.routeFound = false;
+            }
+
+            m_cachedRoutes[s][g] = res;
+        }
+    }
+
+    if (N > 0 && M > 0) {
+        const auto& r0 = m_cachedRoutes[0][0];
+        if (r0.routeFound) {
+            emit(m_sigIslHopCount, static_cast<long>(r0.hopCount));
+            emit(m_sigIslRouteLatency, r0.totalLatencyMs);
+        } else {
+            emit(m_sigIslMeshOutage, 1L);
+        }
+    }
+}
+
+ConstellationManager::ISLRouteResult ConstellationManager::getShortestRouteToGateway(int servingSatId, int gatewayIndex) {
+    if (servingSatId >= 0 && servingSatId < static_cast<int>(m_cachedRoutes.size())) {
+        if (gatewayIndex >= 0 && gatewayIndex < static_cast<int>(m_cachedRoutes[servingSatId].size())) {
+            return m_cachedRoutes[servingSatId][gatewayIndex];
+        }
+    }
+    ISLRouteResult res;
+    res.sourceSatId = servingSatId;
+    res.gatewayIndex = gatewayIndex;
+    res.routeFound = false;
+    return res;
+}
+
+ConstellationManager::ISLRouteResult ConstellationManager::getShortestRouteToAnyGateway(int servingSatId) {
+    ISLRouteResult best;
+    best.totalLatencyMs = std::numeric_limits<double>::infinity();
+    if (servingSatId >= 0 && servingSatId < static_cast<int>(m_cachedRoutes.size())) {
+        for (const auto& r : m_cachedRoutes[servingSatId]) {
+            if (r.routeFound && r.totalLatencyMs < best.totalLatencyMs) {
+                best = r;
+            }
+        }
+    }
+    return best;
 }
 
 } // namespace ntn

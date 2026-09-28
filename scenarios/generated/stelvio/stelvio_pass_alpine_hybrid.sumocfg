@@ -12,4 +12,8 @@
         <start value="true"/>
         <gui-settings-file value="stelvio_pass_alpine_hybrid.view.xml"/>
     </gui_only>
+    <output>
+        <fcd-output value="trace_fcd.xml"/>
+        <fcd-output.geo value="true"/>
+    </output>
 </configuration>

@@ -1,7 +1,7 @@
 version 2
-run General-0-20260926-17:37:05-246
+run General-0-20260928-17:57:07-246
 attr configname General
-attr datetime 20260926-17:37:05
+attr datetime 20260928-17:57:07
 attr experiment General
 attr inifile /artery/scenarios/generated/emergency_corridor/omnetpp.ini
 attr iterationvars ""
@@ -242,121 +242,121 @@ param *.userTerminal[0].terminal.terminalId 0
 param *.userTerminal[0].terminal.terminalType "\"residential\""
 param *.userTerminal[0].terminal.arrayNumElements 64
 param *.userTerminal[0].terminal.dualConnectivityEnabled true
-param *.userTerminal[0].mobility.initialX 1238883.1874733677m
-param *.userTerminal[0].mobility.initialY 4864487.625236967m
+param *.userTerminal[0].mobility.initialX 1251713.0691681502m
+param *.userTerminal[0].mobility.initialY 4866385.461730988m
 param *.userTerminal[0].mobility.initialZ 0m
-param *.ue[0].mobility.initialX 1238883.1874733677m
-param *.ue[0].mobility.initialY 4864487.625236967m
+param *.ue[0].mobility.initialX 1251713.0691681502m
+param *.ue[0].mobility.initialY 4866385.461730988m
 param *.ue[0].mobility.initialZ 0m
 param *.userTerminal[1].terminal.terminalId 1
 param *.userTerminal[1].terminal.terminalType "\"residential\""
 param *.userTerminal[1].terminal.arrayNumElements 64
 param *.userTerminal[1].terminal.dualConnectivityEnabled true
-param *.userTerminal[1].mobility.initialX 1252130.7063429437m
-param *.userTerminal[1].mobility.initialY 4859931.3519608695m
+param *.userTerminal[1].mobility.initialX 1240622.9684549584m
+param *.userTerminal[1].mobility.initialY 4861968.248796217m
 param *.userTerminal[1].mobility.initialZ 0m
-param *.ue[1].mobility.initialX 1252130.7063429437m
-param *.ue[1].mobility.initialY 4859931.3519608695m
+param *.ue[1].mobility.initialX 1240622.9684549584m
+param *.ue[1].mobility.initialY 4861968.248796217m
 param *.ue[1].mobility.initialZ 0m
 param *.userTerminal[2].terminal.terminalId 2
 param *.userTerminal[2].terminal.terminalType "\"residential\""
 param *.userTerminal[2].terminal.arrayNumElements 64
 param *.userTerminal[2].terminal.dualConnectivityEnabled true
-param *.userTerminal[2].mobility.initialX 1255963.1830645371m
-param *.userTerminal[2].mobility.initialY 4866557.494591972m
+param *.userTerminal[2].mobility.initialX 1242652.6219033091m
+param *.userTerminal[2].mobility.initialY 4860519.833129154m
 param *.userTerminal[2].mobility.initialZ 0m
-param *.ue[2].mobility.initialX 1255963.1830645371m
-param *.ue[2].mobility.initialY 4866557.494591972m
+param *.ue[2].mobility.initialX 1242652.6219033091m
+param *.ue[2].mobility.initialY 4860519.833129154m
 param *.ue[2].mobility.initialZ 0m
 param *.userTerminal[3].terminal.terminalId 3
 param *.userTerminal[3].terminal.terminalType "\"residential\""
 param *.userTerminal[3].terminal.arrayNumElements 64
 param *.userTerminal[3].terminal.dualConnectivityEnabled true
-param *.userTerminal[3].mobility.initialX 1242827.314900726m
-param *.userTerminal[3].mobility.initialY 4855089.15486799m
+param *.userTerminal[3].mobility.initialX 1240940.1673111732m
+param *.userTerminal[3].mobility.initialY 4855504.389277596m
 param *.userTerminal[3].mobility.initialZ 0m
-param *.ue[3].mobility.initialX 1242827.314900726m
-param *.ue[3].mobility.initialY 4855089.15486799m
+param *.ue[3].mobility.initialX 1240940.1673111732m
+param *.ue[3].mobility.initialY 4855504.389277596m
 param *.ue[3].mobility.initialZ 0m
 param *.userTerminal[4].terminal.terminalId 4
 param *.userTerminal[4].terminal.terminalType "\"residential\""
 param *.userTerminal[4].terminal.arrayNumElements 64
 param *.userTerminal[4].terminal.dualConnectivityEnabled true
-param *.userTerminal[4].mobility.initialX 1239704.4959057302m
-param *.userTerminal[4].mobility.initialY 4857349.892829873m
+param *.userTerminal[4].mobility.initialX 1258311.5544573336m
+param *.userTerminal[4].mobility.initialY 4862953.8857865725m
 param *.userTerminal[4].mobility.initialZ 0m
-param *.ue[4].mobility.initialX 1239704.4959057302m
-param *.ue[4].mobility.initialY 4857349.892829873m
+param *.ue[4].mobility.initialX 1258311.5544573336m
+param *.ue[4].mobility.initialY 4862953.8857865725m
 param *.ue[4].mobility.initialZ 0m
 param *.userTerminal[5].terminal.terminalId 5
 param *.userTerminal[5].terminal.terminalType "\"residential\""
 param *.userTerminal[5].terminal.arrayNumElements 64
 param *.userTerminal[5].terminal.dualConnectivityEnabled true
-param *.userTerminal[5].mobility.initialX 1253254.8500868217m
-param *.userTerminal[5].mobility.initialY 4866296.30384032m
+param *.userTerminal[5].mobility.initialX 1248818.7190088837m
+param *.userTerminal[5].mobility.initialY 4864675.417934039m
 param *.userTerminal[5].mobility.initialZ 0m
-param *.ue[5].mobility.initialX 1253254.8500868217m
-param *.ue[5].mobility.initialY 4866296.30384032m
+param *.ue[5].mobility.initialX 1248818.7190088837m
+param *.ue[5].mobility.initialY 4864675.417934039m
 param *.ue[5].mobility.initialZ 0m
 param *.userTerminal[6].terminal.terminalId 6
 param *.userTerminal[6].terminal.terminalType "\"residential\""
 param *.userTerminal[6].terminal.arrayNumElements 64
 param *.userTerminal[6].terminal.dualConnectivityEnabled true
-param *.userTerminal[6].mobility.initialX 1254423.5549714328m
-param *.userTerminal[6].mobility.initialY 4859949.020104462m
+param *.userTerminal[6].mobility.initialX 1256252.3884024885m
+param *.userTerminal[6].mobility.initialY 4853932.985010466m
 param *.userTerminal[6].mobility.initialZ 0m
-param *.ue[6].mobility.initialX 1254423.5549714328m
-param *.ue[6].mobility.initialY 4859949.020104462m
+param *.ue[6].mobility.initialX 1256252.3884024885m
+param *.ue[6].mobility.initialY 4853932.985010466m
 param *.ue[6].mobility.initialZ 0m
 param *.userTerminal[7].terminal.terminalId 7
 param *.userTerminal[7].terminal.terminalType "\"residential\""
 param *.userTerminal[7].terminal.arrayNumElements 64
 param *.userTerminal[7].terminal.dualConnectivityEnabled true
-param *.userTerminal[7].mobility.initialX 1246761.7574836954m
-param *.userTerminal[7].mobility.initialY 4853344.567432738m
+param *.userTerminal[7].mobility.initialX 1258656.1419683557m
+param *.userTerminal[7].mobility.initialY 4865598.532489309m
 param *.userTerminal[7].mobility.initialZ 0m
-param *.ue[7].mobility.initialX 1246761.7574836954m
-param *.ue[7].mobility.initialY 4853344.567432738m
+param *.ue[7].mobility.initialX 1258656.1419683557m
+param *.ue[7].mobility.initialY 4865598.532489309m
 param *.ue[7].mobility.initialZ 0m
 param *.userTerminal[8].terminal.terminalId 8
 param *.userTerminal[8].terminal.terminalType "\"residential\""
 param *.userTerminal[8].terminal.arrayNumElements 64
 param *.userTerminal[8].terminal.dualConnectivityEnabled true
-param *.userTerminal[8].mobility.initialX 1247752.27867614m
-param *.userTerminal[8].mobility.initialY 4864962.204317323m
+param *.userTerminal[8].mobility.initialX 1258905.0004975002m
+param *.userTerminal[8].mobility.initialY 4850868.778660656m
 param *.userTerminal[8].mobility.initialZ 0m
-param *.ue[8].mobility.initialX 1247752.27867614m
-param *.ue[8].mobility.initialY 4864962.204317323m
+param *.ue[8].mobility.initialX 1258905.0004975002m
+param *.ue[8].mobility.initialY 4850868.778660656m
 param *.ue[8].mobility.initialZ 0m
 param *.userTerminal[9].terminal.terminalId 9
 param *.userTerminal[9].terminal.terminalType "\"residential\""
 param *.userTerminal[9].terminal.arrayNumElements 64
 param *.userTerminal[9].terminal.dualConnectivityEnabled true
-param *.userTerminal[9].mobility.initialX 1240092.750584279m
-param *.userTerminal[9].mobility.initialY 4861315.0441178745m
+param *.userTerminal[9].mobility.initialX 1245077.414280762m
+param *.userTerminal[9].mobility.initialY 4859181.967699064m
 param *.userTerminal[9].mobility.initialZ 0m
-param *.ue[9].mobility.initialX 1240092.750584279m
-param *.ue[9].mobility.initialY 4861315.0441178745m
+param *.ue[9].mobility.initialX 1245077.414280762m
+param *.ue[9].mobility.initialY 4859181.967699064m
 param *.ue[9].mobility.initialZ 0m
 param *.userTerminal[10].terminal.terminalId 10
 param *.userTerminal[10].terminal.terminalType "\"residential\""
 param *.userTerminal[10].terminal.arrayNumElements 64
 param *.userTerminal[10].terminal.dualConnectivityEnabled true
-param *.userTerminal[10].mobility.initialX 1258885.2382734749m
-param *.userTerminal[10].mobility.initialY 4867187.900772024m
+param *.userTerminal[10].mobility.initialX 1257478.8485035964m
+param *.userTerminal[10].mobility.initialY 4858025.128384917m
 param *.userTerminal[10].mobility.initialZ 0m
-param *.ue[10].mobility.initialX 1258885.2382734749m
-param *.ue[10].mobility.initialY 4867187.900772024m
+param *.ue[10].mobility.initialX 1257478.8485035964m
+param *.ue[10].mobility.initialY 4858025.128384917m
 param *.ue[10].mobility.initialZ 0m
 param *.userTerminal[11].terminal.terminalId 11
 param *.userTerminal[11].terminal.terminalType "\"residential\""
 param *.userTerminal[11].terminal.arrayNumElements 64
 param *.userTerminal[11].terminal.dualConnectivityEnabled true
-param *.userTerminal[11].mobility.initialX 1252037.735554862m
-param *.userTerminal[11].mobility.initialY 4860654.910750601m
+param *.userTerminal[11].mobility.initialX 1244060.9610017324m
+param *.userTerminal[11].mobility.initialY 4862096.601900873m
 param *.userTerminal[11].mobility.initialZ 0m
-param *.ue[11].mobility.initialX 1252037.735554862m
-param *.ue[11].mobility.initialY 4860654.910750601m
+param *.ue[11].mobility.initialX 1244060.9610017324m
+param *.ue[11].mobility.initialY 4862096.601900873m
 param *.ue[11].mobility.initialZ 0m
 param *.nrManager.channelModel "\"RMa\""
 param *.nrManager.carrierAggregationEnabled true
@@ -472,6 +472,7 @@ param *.node[*].mecClient.taskGenerationInterval 1.0s
 param *.node[*].mecClient.taskInstructions 10000000
 param *.satellite[*].mecServer.localPort 5000
 param *.groundStation[*].mecServer.localPort 5000
+param *.node[*].hybridManager.switchingMode "\"coverage-based\""
 param *.visualizer.dataLinkVisualizer.displayLinks true
 param *.visualizer.dataLinkVisualizer.lineColor "\"darkcyan\""
 param *.visualizer.dataLinkVisualizer.packetFilter "\"*\""
@@ -479,8 +480,8 @@ param *.visualizer.dataLinkVisualizer.fadeTime 1s
 param *.visualizer.physicalLinkVisualizer.displayLinks true
 param *.visualizer.physicalLinkVisualizer.lineColor "\"green\""
 param *.visualizer.physicalLinkVisualizer.fadeTime 1s
-param *.visualizer.mediumVisualizer.displaySignals true
-param *.visualizer.mediumVisualizer.signalColor "\"gold\""
+param *.visualizer.mediumVisualizer.typename "\"\""
+param *.visualizer.mediumVisualizer.displaySignals false
 param *.visualizer.mobilityVisualizer.displayVelocities true
 param *.visualizer.mobilityVisualizer.displayMovementTrails true
 param *.visualizer.mobilityVisualizer.trailLength 20
@@ -488,7 +489,7 @@ param **.hybridManager.switchingMode "\"qos-based\""
 param **.hybridManager.checkInterval 0.5s
 param **.hybridManager.elevationMaskDeg 25.0
 
-scalar GeneratedScenario.traci.launcher port 38201
+scalar GeneratedScenario.traci.launcher port 38619
 scalar GeneratedScenario.node[0].wlan[0].agent dropConfirm:count 0
 attr title "dropped confirms, count"
 scalar GeneratedScenario.node[0].wlan[0].agent acceptConfirm:count 0
@@ -2565,68 +2566,88 @@ attr source transmissionStateChanged
 attr title "Radio transmission state, count"
 statistic GeneratedScenario.node[0].wlan[0].radio minSnir:histogram
 field count 32
-field mean 8671.1666380615
-field stddev 36181.700138862
-field min 326.98293193532
-field max 205853.39549524
-field sum 277477.33241797
-field sqrsum 42988630360.774
+field mean 3900.4161777226
+field stddev 10263.531541811
+field min 331.247124026
+field max 57366.745338798
+field sum 124813.31768712
+field sqrsum 3752366354.5042
 attr source minimumSnir(packetSentToUpper)
 attr title "Min SNIR, histogram"
 bin	-inf	0
-bin	0	29
+bin	0	16
+bin	1000	7
+bin	2000	2
+bin	3000	2
+bin	4000	1
 bin	5000	0
-bin	10000	1
+bin	6000	0
+bin	7000	1
+bin	8000	1
+bin	9000	0
+bin	10000	0
+bin	11000	0
+bin	12000	0
+bin	13000	0
+bin	14000	0
 bin	15000	1
+bin	16000	0
+bin	17000	0
+bin	18000	0
+bin	19000	0
 bin	20000	0
+bin	21000	0
+bin	22000	0
+bin	23000	0
+bin	24000	0
 bin	25000	0
+bin	26000	0
+bin	27000	0
+bin	28000	0
+bin	29000	0
 bin	30000	0
+bin	31000	0
+bin	32000	0
+bin	33000	0
+bin	34000	0
 bin	35000	0
+bin	36000	0
+bin	37000	0
+bin	38000	0
+bin	39000	0
 bin	40000	0
+bin	41000	0
+bin	42000	0
+bin	43000	0
+bin	44000	0
 bin	45000	0
+bin	46000	0
+bin	47000	0
+bin	48000	0
+bin	49000	0
 bin	50000	0
+bin	51000	0
+bin	52000	0
+bin	53000	0
+bin	54000	0
 bin	55000	0
+bin	56000	0
+bin	57000	1
+bin	58000	0
+bin	59000	0
 bin	60000	0
+bin	61000	0
+bin	62000	0
+bin	63000	0
+bin	64000	0
 bin	65000	0
+bin	66000	0
+bin	67000	0
+bin	68000	0
+bin	69000	0
 bin	70000	0
-bin	75000	0
-bin	80000	0
-bin	85000	0
-bin	90000	0
-bin	95000	0
-bin	100000	0
-bin	105000	0
-bin	110000	0
-bin	115000	0
-bin	120000	0
-bin	125000	0
-bin	130000	0
-bin	135000	0
-bin	140000	0
-bin	145000	0
-bin	150000	0
-bin	155000	0
-bin	160000	0
-bin	165000	0
-bin	170000	0
-bin	175000	0
-bin	180000	0
-bin	185000	0
-bin	190000	0
-bin	195000	0
-bin	200000	0
-bin	205000	1
-bin	210000	0
-bin	215000	0
-bin	220000	0
-bin	225000	0
-bin	230000	0
-bin	235000	0
-bin	240000	0
-bin	245000	0
-bin	250000	0
-bin	255000	0
-bin	260000	0
+bin	71000	0
+bin	72000	0
 statistic GeneratedScenario.node[0].wlan[0].radio packetErrorRate:histogram
 field count 32
 field mean 0
@@ -2900,23 +2921,26 @@ attr title "Symbol error rate, histogram"
 bin	-inf	0
 bin	0	0
 bin	1	0
-scalar GeneratedScenario.node[0].hybridManager totalSwitches 1
-scalar GeneratedScenario.node[0].hybridManager satTotalDuration 130.5
-scalar GeneratedScenario.node[0].hybridManager cellTotalDuration 41.1
-scalar GeneratedScenario.node[0].hybridManager satUsageRatio 0.76048951048951
-scalar GeneratedScenario.node[0].hybridManager cellUsageRatio 0.23951048951049
+scalar GeneratedScenario.node[0].hybridManager totalSwitches 2
+scalar GeneratedScenario.node[0].hybridManager satTotalDuration 130
+scalar GeneratedScenario.node[0].hybridManager cellTotalDuration 41.6
+scalar GeneratedScenario.node[0].hybridManager satUsageRatio 0.75757575757576
+scalar GeneratedScenario.node[0].hybridManager cellUsageRatio 0.24242424242424
+scalar GeneratedScenario.node[0].hybridManager timeToLoss:min -nan
+attr title "Predictive Time-To-Loss, min"
+attr unit s
 scalar GeneratedScenario.node[0].hybridManager batterySoC:last nan
 attr title "Battery State of Charge, last"
-scalar GeneratedScenario.node[0].hybridManager qosScore:mean 0.90012725467533
+scalar GeneratedScenario.node[0].hybridManager qosScore:mean -nan
 attr title "QoS Score, mean"
-scalar GeneratedScenario.node[0].hybridManager switchCount:last 1
+scalar GeneratedScenario.node[0].hybridManager switchCount:last 2
 attr title "Vertical Handover Count, last"
-scalar GeneratedScenario.node[0].hybridManager activeInterface:last 1
+scalar GeneratedScenario.node[0].hybridManager activeInterface:last 0
 attr title "Active Interface (0=5G, 1=Sat), last"
-scalar GeneratedScenario.node[0].mecClient mecTaskLatency:mean 0.025112550821417
+scalar GeneratedScenario.node[0].mecClient mecTaskLatency:mean 0.025178759631751
 attr title "MEC Task Latency (RTT + Compute), mean"
 attr unit s
-scalar GeneratedScenario.node[0].mecClient mecTaskLatency:max 0.031997068626108
+scalar GeneratedScenario.node[0].mecClient mecTaskLatency:max 0.031931284993654
 attr title "MEC Task Latency (RTT + Compute), max"
 attr unit s
 scalar GeneratedScenario.node[1].wlan[0].agent dropConfirm:count 0
@@ -3343,7 +3367,7 @@ scalar GeneratedScenario.node[1].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames 
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, max"
-scalar GeneratedScenario.node[1].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.6224084071267e-05
+scalar GeneratedScenario.node[1].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.6293169642258e-05
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
@@ -4995,103 +5019,104 @@ attr source transmissionStateChanged
 attr title "Radio transmission state, count"
 statistic GeneratedScenario.node[1].wlan[0].radio minSnir:histogram
 field count 33
-field mean 19546.766562732
-field stddev 72487.712729917
-field min 337.14588911838
-field max 347823.24174081
-field sum 645043.29657015
-field sqrsum 180751502638.99
+field mean 7600.3984297628
+field stddev 19059.987634996
+field min 344.40156486642
+field max 70137.11129731
+field sum 250813.14818217
+field sqrsum 13531339974.286
 attr source minimumSnir(packetSentToUpper)
 attr title "Min SNIR, histogram"
 bin	-inf	0
-bin	0	29
+bin	0	16
+bin	1000	7
+bin	2000	3
+bin	3000	1
+bin	4000	0
 bin	5000	2
+bin	6000	0
+bin	7000	0
+bin	8000	0
+bin	9000	0
 bin	10000	0
+bin	11000	1
+bin	12000	0
+bin	13000	0
+bin	14000	0
 bin	15000	0
+bin	16000	0
+bin	17000	0
+bin	18000	0
+bin	19000	0
 bin	20000	0
+bin	21000	0
+bin	22000	0
+bin	23000	0
+bin	24000	0
 bin	25000	0
+bin	26000	0
+bin	27000	0
+bin	28000	0
+bin	29000	0
 bin	30000	0
+bin	31000	0
+bin	32000	0
+bin	33000	0
+bin	34000	0
 bin	35000	0
+bin	36000	0
+bin	37000	0
+bin	38000	0
+bin	39000	0
 bin	40000	0
+bin	41000	0
+bin	42000	0
+bin	43000	0
+bin	44000	0
 bin	45000	0
+bin	46000	0
+bin	47000	0
+bin	48000	0
+bin	49000	0
 bin	50000	0
+bin	51000	0
+bin	52000	0
+bin	53000	0
+bin	54000	0
 bin	55000	0
+bin	56000	0
+bin	57000	0
+bin	58000	0
+bin	59000	0
 bin	60000	0
+bin	61000	0
+bin	62000	1
+bin	63000	0
+bin	64000	0
 bin	65000	0
-bin	70000	0
+bin	66000	1
+bin	67000	0
+bin	68000	0
+bin	69000	0
+bin	70000	1
+bin	71000	0
+bin	72000	0
+bin	73000	0
+bin	74000	0
 bin	75000	0
+bin	76000	0
+bin	77000	0
+bin	78000	0
+bin	79000	0
 bin	80000	0
+bin	81000	0
+bin	82000	0
+bin	83000	0
+bin	84000	0
 bin	85000	0
-bin	90000	0
-bin	95000	0
-bin	100000	0
-bin	105000	0
-bin	110000	0
-bin	115000	0
-bin	120000	0
-bin	125000	0
-bin	130000	0
-bin	135000	0
-bin	140000	0
-bin	145000	0
-bin	150000	0
-bin	155000	0
-bin	160000	0
-bin	165000	0
-bin	170000	0
-bin	175000	0
-bin	180000	0
-bin	185000	0
-bin	190000	0
-bin	195000	0
-bin	200000	0
-bin	205000	0
-bin	210000	0
-bin	215000	0
-bin	220000	0
-bin	225000	0
-bin	230000	0
-bin	235000	0
-bin	240000	1
-bin	245000	0
-bin	250000	0
-bin	255000	0
-bin	260000	0
-bin	265000	0
-bin	270000	0
-bin	275000	0
-bin	280000	0
-bin	285000	0
-bin	290000	0
-bin	295000	0
-bin	300000	0
-bin	305000	0
-bin	310000	0
-bin	315000	0
-bin	320000	0
-bin	325000	0
-bin	330000	0
-bin	335000	0
-bin	340000	0
-bin	345000	1
-bin	350000	0
-bin	355000	0
-bin	360000	0
-bin	365000	0
-bin	370000	0
-bin	375000	0
-bin	380000	0
-bin	385000	0
-bin	390000	0
-bin	395000	0
-bin	400000	0
-bin	405000	0
-bin	410000	0
-bin	415000	0
-bin	420000	0
-bin	425000	0
-bin	430000	0
-bin	435000	0
+bin	86000	0
+bin	87000	0
+bin	88000	0
 statistic GeneratedScenario.node[1].wlan[0].radio packetErrorRate:histogram
 field count 33
 field mean 0
@@ -5365,23 +5390,26 @@ attr title "Symbol error rate, histogram"
 bin	-inf	0
 bin	0	0
 bin	1	0
-scalar GeneratedScenario.node[1].hybridManager totalSwitches 1
-scalar GeneratedScenario.node[1].hybridManager satTotalDuration 138.9
-scalar GeneratedScenario.node[1].hybridManager cellTotalDuration 41.1
-scalar GeneratedScenario.node[1].hybridManager satUsageRatio 0.77166666666667
-scalar GeneratedScenario.node[1].hybridManager cellUsageRatio 0.22833333333333
+scalar GeneratedScenario.node[1].hybridManager totalSwitches 2
+scalar GeneratedScenario.node[1].hybridManager satTotalDuration 130
+scalar GeneratedScenario.node[1].hybridManager cellTotalDuration 50
+scalar GeneratedScenario.node[1].hybridManager satUsageRatio 0.72222222222222
+scalar GeneratedScenario.node[1].hybridManager cellUsageRatio 0.27777777777778
+scalar GeneratedScenario.node[1].hybridManager timeToLoss:min -nan
+attr title "Predictive Time-To-Loss, min"
+attr unit s
 scalar GeneratedScenario.node[1].hybridManager batterySoC:last nan
 attr title "Battery State of Charge, last"
-scalar GeneratedScenario.node[1].hybridManager qosScore:mean 0.89987388692922
+scalar GeneratedScenario.node[1].hybridManager qosScore:mean -nan
 attr title "QoS Score, mean"
-scalar GeneratedScenario.node[1].hybridManager switchCount:last 1
+scalar GeneratedScenario.node[1].hybridManager switchCount:last 2
 attr title "Vertical Handover Count, last"
-scalar GeneratedScenario.node[1].hybridManager activeInterface:last 1
+scalar GeneratedScenario.node[1].hybridManager activeInterface:last 0
 attr title "Active Interface (0=5G, 1=Sat), last"
-scalar GeneratedScenario.node[1].mecClient mecTaskLatency:mean 0.025235963974109
+scalar GeneratedScenario.node[1].mecClient mecTaskLatency:mean 0.02418269971116
 attr title "MEC Task Latency (RTT + Compute), mean"
 attr unit s
-scalar GeneratedScenario.node[1].mecClient mecTaskLatency:max 0.031865488740616
+scalar GeneratedScenario.node[1].mecClient mecTaskLatency:max 0.031979656204814
 attr title "MEC Task Latency (RTT + Compute), max"
 attr unit s
 scalar GeneratedScenario.node[3].wlan[0].agent dropConfirm:count 0
@@ -5463,7 +5491,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[3].wlan[0].mac.dcf.channelAccess.contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[3].wlan[0].mac.dcf.channelAccess.contention stateChanged:count 234
+scalar GeneratedScenario.node[3].wlan[0].mac.dcf.channelAccess.contention stateChanged:count 238
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[3].wlan[0].mac.dcf.channelAccess channelOwnershipChanged:count 0
@@ -5808,13 +5836,13 @@ scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames 
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, max"
-scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.6857347686081e-05
+scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.6732214055531e-05
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[0].contention channelAccessGranted:count 45
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 414
+scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 418
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[0].txopProcedure txopEnded:count 45
@@ -6009,7 +6037,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[1].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 234
+scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 238
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[1].txopProcedure txopEnded:count 0
@@ -6154,7 +6182,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[2].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 234
+scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 238
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[2].txopProcedure txopEnded:count 0
@@ -6299,7 +6327,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[3].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 234
+scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 238
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[3].txopProcedure txopEnded:count 0
@@ -6379,7 +6407,7 @@ scalar GeneratedScenario.node[3].wlan[0].mac.hcf.originatorMacDataService packet
 attr title "packets fragmented, count"
 scalar GeneratedScenario.node[3].wlan[0].mac.hcf.recipientMacDataService packetDeaggregated:count 0
 attr title "packets deaggregated, count"
-scalar GeneratedScenario.node[3].wlan[0].mac.hcf.recipientMacDataService packetDefragmented:count 13
+scalar GeneratedScenario.node[3].wlan[0].mac.hcf.recipientMacDataService packetDefragmented:count 14
 attr title "packets defragmented, count"
 scalar GeneratedScenario.node[3].wlan[0].mac.hcf.recipientMacDataService packetDropDuplicateDetected:count 0
 attr interpolationmode none
@@ -6482,19 +6510,19 @@ scalar GeneratedScenario.node[3].wlan[0].mac.hcf packetReceivedFromPeerUnicast:s
 attr interpolationmode none
 attr source ieee80211Unicast(packetReceivedFromPeer)
 attr title "packets received: unicast, sum(packetBytes)"
-scalar GeneratedScenario.node[3].wlan[0].mac.hcf packetReceivedFromPeerMulticast:count 13
+scalar GeneratedScenario.node[3].wlan[0].mac.hcf packetReceivedFromPeerMulticast:count 14
 attr interpolationmode none
 attr source ieee80211Multicast(packetReceivedFromPeer)
 attr title "packets received: multicast, count"
-scalar GeneratedScenario.node[3].wlan[0].mac.hcf packetReceivedFromPeerMulticast:sum(packetBytes) 884
+scalar GeneratedScenario.node[3].wlan[0].mac.hcf packetReceivedFromPeerMulticast:sum(packetBytes) 952
 attr interpolationmode none
 attr source ieee80211Multicast(packetReceivedFromPeer)
 attr title "packets received: multicast, sum(packetBytes)"
-scalar GeneratedScenario.node[3].wlan[0].mac.hcf packetReceivedFromPeerBroadcast:count 13
+scalar GeneratedScenario.node[3].wlan[0].mac.hcf packetReceivedFromPeerBroadcast:count 14
 attr interpolationmode none
 attr source ieee80211Broadcast(packetReceivedFromPeer)
 attr title "packets received: broadcast, count"
-scalar GeneratedScenario.node[3].wlan[0].mac.hcf packetReceivedFromPeerBroadcast:sum(packetBytes) 884
+scalar GeneratedScenario.node[3].wlan[0].mac.hcf packetReceivedFromPeerBroadcast:sum(packetBytes) 952
 attr interpolationmode none
 attr source ieee80211Broadcast(packetReceivedFromPeer)
 attr title "packets received: broadcast, sum(packetBytes)"
@@ -6506,11 +6534,11 @@ scalar GeneratedScenario.node[3].wlan[0].mac.hcf packetReceivedFromPeerWithRetry
 attr interpolationmode none
 attr source ieee80211Retry(packetReceivedFromPeer)
 attr title "packets received: with retry, sum(packetBytes)"
-scalar GeneratedScenario.node[3].wlan[0].mac.hcf packetReceivedFromPeerWithoutRetry:count 13
+scalar GeneratedScenario.node[3].wlan[0].mac.hcf packetReceivedFromPeerWithoutRetry:count 14
 attr interpolationmode none
 attr source ieee80211NotRetry(packetReceivedFromPeer)
 attr title "packets received: without retry, count"
-scalar GeneratedScenario.node[3].wlan[0].mac.hcf packetReceivedFromPeerWithoutRetry:sum(packetBytes) 884
+scalar GeneratedScenario.node[3].wlan[0].mac.hcf packetReceivedFromPeerWithoutRetry:sum(packetBytes) 952
 attr interpolationmode none
 attr source ieee80211NotRetry(packetReceivedFromPeer)
 attr title "packets received: without retry, sum(packetBytes)"
@@ -6595,7 +6623,7 @@ attr title "packet drops: retry limit reached, sum(packetBytes)"
 scalar GeneratedScenario.node[3].wlan[0].mac.hcf linkBroken:count 0
 attr interpolationmode none
 attr title "link breaks, count"
-scalar GeneratedScenario.node[3].wlan[0].mac.rx ChannelLoad:timeavg 7.6830087306917e-06
+scalar GeneratedScenario.node[3].wlan[0].mac.rx ChannelLoad:timeavg 8.2740094022834e-06
 scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[0].pendingQueue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -6669,7 +6697,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[0].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 234
+scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 238
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[0].txopProcedure txopEnded:count 0
@@ -6814,7 +6842,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[1].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 234
+scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 238
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[1].txopProcedure txopEnded:count 0
@@ -6959,7 +6987,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[2].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 234
+scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 238
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[2].txopProcedure txopEnded:count 0
@@ -7104,7 +7132,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[3].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 234
+scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 238
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[3].wlan[0].mac.hcf.edca.edcaf[3].txopProcedure txopEnded:count 0
@@ -7349,10 +7377,10 @@ attr title "packet drops: retry limit reached, sum(packetBytes)"
 scalar GeneratedScenario.node[3].wlan[0].mac.hcf linkBroken:count 0
 attr interpolationmode none
 attr title "link breaks, count"
-scalar GeneratedScenario.node[3].wlan[0].mac packetReceivedFromLower:count 13
+scalar GeneratedScenario.node[3].wlan[0].mac packetReceivedFromLower:count 14
 attr interpolationmode none
 attr title "packets received from lower layer, count"
-scalar GeneratedScenario.node[3].wlan[0].mac packetReceivedFromLower:sum(packetBytes) 884
+scalar GeneratedScenario.node[3].wlan[0].mac packetReceivedFromLower:sum(packetBytes) 952
 attr interpolationmode none
 attr title "packets received from lower layer, sum(packetBytes)"
 scalar GeneratedScenario.node[3].wlan[0].mac packetSentToLower:count 45
@@ -7367,10 +7395,10 @@ attr title "packets received from upper layer, count"
 scalar GeneratedScenario.node[3].wlan[0].mac packetReceivedFromUpper:sum(packetBytes) 1710
 attr interpolationmode none
 attr title "packets received from upper layer, sum(packetBytes)"
-scalar GeneratedScenario.node[3].wlan[0].mac packetSentToUpper:count 13
+scalar GeneratedScenario.node[3].wlan[0].mac packetSentToUpper:count 14
 attr interpolationmode none
 attr title "packets sent to upper layer, count"
-scalar GeneratedScenario.node[3].wlan[0].mac packetSentToUpper:sum(packetBytes) 494
+scalar GeneratedScenario.node[3].wlan[0].mac packetSentToUpper:sum(packetBytes) 532
 attr interpolationmode none
 attr title "packets sent to upper layer, sum(packetBytes)"
 scalar GeneratedScenario.node[3].wlan[0].mac packetDrop:count 0
@@ -7451,7 +7479,7 @@ scalar GeneratedScenario.node[3].wlan[0].radio radioMode:count 93
 attr interpolationmode sample-hold
 attr source radioModeChanged
 attr title "Radio mode, count"
-scalar GeneratedScenario.node[3].wlan[0].radio receptionState:count 117
+scalar GeneratedScenario.node[3].wlan[0].radio receptionState:count 119
 attr interpolationmode sample-hold
 attr source receptionStateChanged
 attr title "Radio reception state, count"
@@ -7460,19 +7488,19 @@ attr interpolationmode sample-hold
 attr source transmissionStateChanged
 attr title "Radio transmission state, count"
 statistic GeneratedScenario.node[3].wlan[0].radio minSnir:histogram
-field count 13
-field mean 39412.296326079
-field stddev 77239.855122125
-field min 350.6461752113
-field max 248770.92132373
-field sum 512359.85223902
-field sqrsum 91785220953.473
+field count 14
+field mean 44373.79377158
+field stddev 107712.34652345
+field min 348.29511162971
+field max 353362.58164207
+field sum 621233.11280212
+field sqrsum 178391814748.19
 attr source minimumSnir(packetSentToUpper)
 attr title "Min SNIR, histogram"
 bin	-inf	0
 bin	0	9
-bin	5000	1
-bin	10000	0
+bin	5000	2
+bin	10000	1
 bin	15000	0
 bin	20000	0
 bin	25000	0
@@ -7493,9 +7521,9 @@ bin	95000	0
 bin	100000	0
 bin	105000	0
 bin	110000	0
-bin	115000	1
+bin	115000	0
 bin	120000	0
-bin	125000	1
+bin	125000	0
 bin	130000	0
 bin	135000	0
 bin	140000	0
@@ -7516,10 +7544,10 @@ bin	210000	0
 bin	215000	0
 bin	220000	0
 bin	225000	0
-bin	230000	0
+bin	230000	1
 bin	235000	0
 bin	240000	0
-bin	245000	1
+bin	245000	0
 bin	250000	0
 bin	255000	0
 bin	260000	0
@@ -7534,8 +7562,34 @@ bin	300000	0
 bin	305000	0
 bin	310000	0
 bin	315000	0
+bin	320000	0
+bin	325000	0
+bin	330000	0
+bin	335000	0
+bin	340000	0
+bin	345000	0
+bin	350000	1
+bin	355000	0
+bin	360000	0
+bin	365000	0
+bin	370000	0
+bin	375000	0
+bin	380000	0
+bin	385000	0
+bin	390000	0
+bin	395000	0
+bin	400000	0
+bin	405000	0
+bin	410000	0
+bin	415000	0
+bin	420000	0
+bin	425000	0
+bin	430000	0
+bin	435000	0
+bin	440000	0
+bin	445000	0
 statistic GeneratedScenario.node[3].wlan[0].radio packetErrorRate:histogram
-field count 13
+field count 14
 field mean 0
 field stddev 0
 field min 0
@@ -7570,7 +7624,7 @@ bin	-0.08	0
 bin	-0.06	0
 bin	-0.04	0
 bin	-0.02	0
-bin	0	13
+bin	0	14
 bin	0.02	0
 bin	0.04	0
 bin	0.06	0
@@ -7807,23 +7861,26 @@ attr title "Symbol error rate, histogram"
 bin	-inf	0
 bin	0	0
 bin	1	0
-scalar GeneratedScenario.node[3].hybridManager totalSwitches 1
-scalar GeneratedScenario.node[3].hybridManager satTotalDuration 139
-scalar GeneratedScenario.node[3].hybridManager cellTotalDuration 41
-scalar GeneratedScenario.node[3].hybridManager satUsageRatio 0.77222222222222
-scalar GeneratedScenario.node[3].hybridManager cellUsageRatio 0.22777777777778
+scalar GeneratedScenario.node[3].hybridManager totalSwitches 2
+scalar GeneratedScenario.node[3].hybridManager satTotalDuration 130.5
+scalar GeneratedScenario.node[3].hybridManager cellTotalDuration 49.5
+scalar GeneratedScenario.node[3].hybridManager satUsageRatio 0.725
+scalar GeneratedScenario.node[3].hybridManager cellUsageRatio 0.275
+scalar GeneratedScenario.node[3].hybridManager timeToLoss:min -nan
+attr title "Predictive Time-To-Loss, min"
+attr unit s
 scalar GeneratedScenario.node[3].hybridManager batterySoC:last nan
 attr title "Battery State of Charge, last"
-scalar GeneratedScenario.node[3].hybridManager qosScore:mean 0.88962606332743
+scalar GeneratedScenario.node[3].hybridManager qosScore:mean -nan
 attr title "QoS Score, mean"
-scalar GeneratedScenario.node[3].hybridManager switchCount:last 1
+scalar GeneratedScenario.node[3].hybridManager switchCount:last 2
 attr title "Vertical Handover Count, last"
-scalar GeneratedScenario.node[3].hybridManager activeInterface:last 1
+scalar GeneratedScenario.node[3].hybridManager activeInterface:last 0
 attr title "Active Interface (0=5G, 1=Sat), last"
-scalar GeneratedScenario.node[3].mecClient mecTaskLatency:mean 0.028187509819757
+scalar GeneratedScenario.node[3].mecClient mecTaskLatency:mean 0.026632472320818
 attr title "MEC Task Latency (RTT + Compute), mean"
 attr unit s
-scalar GeneratedScenario.node[3].mecClient mecTaskLatency:max 0.031884001646424
+scalar GeneratedScenario.node[3].mecClient mecTaskLatency:max 0.031931053741602
 attr title "MEC Task Latency (RTT + Compute), max"
 attr unit s
 scalar GeneratedScenario.node[5].wlan[0].agent dropConfirm:count 0
@@ -7905,7 +7962,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[5].wlan[0].mac.dcf.channelAccess.contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[5].wlan[0].mac.dcf.channelAccess.contention stateChanged:count 194
+scalar GeneratedScenario.node[5].wlan[0].mac.dcf.channelAccess.contention stateChanged:count 190
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[5].wlan[0].mac.dcf.channelAccess channelOwnershipChanged:count 0
@@ -8250,13 +8307,13 @@ scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames 
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, max"
-scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.6852747618399e-05
+scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.6915247784379e-05
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[0].contention channelAccessGranted:count 36
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 338
+scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 334
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[0].txopProcedure txopEnded:count 36
@@ -8451,7 +8508,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[1].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 194
+scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 190
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[1].txopProcedure txopEnded:count 0
@@ -8596,7 +8653,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[2].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 194
+scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 190
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[2].txopProcedure txopEnded:count 0
@@ -8741,7 +8798,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[3].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 194
+scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 190
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[3].txopProcedure txopEnded:count 0
@@ -8821,7 +8878,7 @@ scalar GeneratedScenario.node[5].wlan[0].mac.hcf.originatorMacDataService packet
 attr title "packets fragmented, count"
 scalar GeneratedScenario.node[5].wlan[0].mac.hcf.recipientMacDataService packetDeaggregated:count 0
 attr title "packets deaggregated, count"
-scalar GeneratedScenario.node[5].wlan[0].mac.hcf.recipientMacDataService packetDefragmented:count 12
+scalar GeneratedScenario.node[5].wlan[0].mac.hcf.recipientMacDataService packetDefragmented:count 11
 attr title "packets defragmented, count"
 scalar GeneratedScenario.node[5].wlan[0].mac.hcf.recipientMacDataService packetDropDuplicateDetected:count 0
 attr interpolationmode none
@@ -8924,19 +8981,19 @@ scalar GeneratedScenario.node[5].wlan[0].mac.hcf packetReceivedFromPeerUnicast:s
 attr interpolationmode none
 attr source ieee80211Unicast(packetReceivedFromPeer)
 attr title "packets received: unicast, sum(packetBytes)"
-scalar GeneratedScenario.node[5].wlan[0].mac.hcf packetReceivedFromPeerMulticast:count 12
+scalar GeneratedScenario.node[5].wlan[0].mac.hcf packetReceivedFromPeerMulticast:count 11
 attr interpolationmode none
 attr source ieee80211Multicast(packetReceivedFromPeer)
 attr title "packets received: multicast, count"
-scalar GeneratedScenario.node[5].wlan[0].mac.hcf packetReceivedFromPeerMulticast:sum(packetBytes) 816
+scalar GeneratedScenario.node[5].wlan[0].mac.hcf packetReceivedFromPeerMulticast:sum(packetBytes) 748
 attr interpolationmode none
 attr source ieee80211Multicast(packetReceivedFromPeer)
 attr title "packets received: multicast, sum(packetBytes)"
-scalar GeneratedScenario.node[5].wlan[0].mac.hcf packetReceivedFromPeerBroadcast:count 12
+scalar GeneratedScenario.node[5].wlan[0].mac.hcf packetReceivedFromPeerBroadcast:count 11
 attr interpolationmode none
 attr source ieee80211Broadcast(packetReceivedFromPeer)
 attr title "packets received: broadcast, count"
-scalar GeneratedScenario.node[5].wlan[0].mac.hcf packetReceivedFromPeerBroadcast:sum(packetBytes) 816
+scalar GeneratedScenario.node[5].wlan[0].mac.hcf packetReceivedFromPeerBroadcast:sum(packetBytes) 748
 attr interpolationmode none
 attr source ieee80211Broadcast(packetReceivedFromPeer)
 attr title "packets received: broadcast, sum(packetBytes)"
@@ -8948,11 +9005,11 @@ scalar GeneratedScenario.node[5].wlan[0].mac.hcf packetReceivedFromPeerWithRetry
 attr interpolationmode none
 attr source ieee80211Retry(packetReceivedFromPeer)
 attr title "packets received: with retry, sum(packetBytes)"
-scalar GeneratedScenario.node[5].wlan[0].mac.hcf packetReceivedFromPeerWithoutRetry:count 12
+scalar GeneratedScenario.node[5].wlan[0].mac.hcf packetReceivedFromPeerWithoutRetry:count 11
 attr interpolationmode none
 attr source ieee80211NotRetry(packetReceivedFromPeer)
 attr title "packets received: without retry, count"
-scalar GeneratedScenario.node[5].wlan[0].mac.hcf packetReceivedFromPeerWithoutRetry:sum(packetBytes) 816
+scalar GeneratedScenario.node[5].wlan[0].mac.hcf packetReceivedFromPeerWithoutRetry:sum(packetBytes) 748
 attr interpolationmode none
 attr source ieee80211NotRetry(packetReceivedFromPeer)
 attr title "packets received: without retry, sum(packetBytes)"
@@ -9037,7 +9094,7 @@ attr title "packet drops: retry limit reached, sum(packetBytes)"
 scalar GeneratedScenario.node[5].wlan[0].mac.hcf linkBroken:count 0
 attr interpolationmode none
 attr title "link breaks, count"
-scalar GeneratedScenario.node[5].wlan[0].mac.rx ChannelLoad:timeavg 8.8664987405542e-06
+scalar GeneratedScenario.node[5].wlan[0].mac.rx ChannelLoad:timeavg 8.127623845508e-06
 scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[0].pendingQueue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -9111,7 +9168,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[0].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 194
+scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 190
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[0].txopProcedure txopEnded:count 0
@@ -9256,7 +9313,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[1].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 194
+scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 190
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[1].txopProcedure txopEnded:count 0
@@ -9401,7 +9458,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[2].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 194
+scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 190
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[2].txopProcedure txopEnded:count 0
@@ -9546,7 +9603,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[3].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 194
+scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 190
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[5].wlan[0].mac.hcf.edca.edcaf[3].txopProcedure txopEnded:count 0
@@ -9791,10 +9848,10 @@ attr title "packet drops: retry limit reached, sum(packetBytes)"
 scalar GeneratedScenario.node[5].wlan[0].mac.hcf linkBroken:count 0
 attr interpolationmode none
 attr title "link breaks, count"
-scalar GeneratedScenario.node[5].wlan[0].mac packetReceivedFromLower:count 12
+scalar GeneratedScenario.node[5].wlan[0].mac packetReceivedFromLower:count 11
 attr interpolationmode none
 attr title "packets received from lower layer, count"
-scalar GeneratedScenario.node[5].wlan[0].mac packetReceivedFromLower:sum(packetBytes) 816
+scalar GeneratedScenario.node[5].wlan[0].mac packetReceivedFromLower:sum(packetBytes) 748
 attr interpolationmode none
 attr title "packets received from lower layer, sum(packetBytes)"
 scalar GeneratedScenario.node[5].wlan[0].mac packetSentToLower:count 36
@@ -9809,10 +9866,10 @@ attr title "packets received from upper layer, count"
 scalar GeneratedScenario.node[5].wlan[0].mac packetReceivedFromUpper:sum(packetBytes) 1368
 attr interpolationmode none
 attr title "packets received from upper layer, sum(packetBytes)"
-scalar GeneratedScenario.node[5].wlan[0].mac packetSentToUpper:count 12
+scalar GeneratedScenario.node[5].wlan[0].mac packetSentToUpper:count 11
 attr interpolationmode none
 attr title "packets sent to upper layer, count"
-scalar GeneratedScenario.node[5].wlan[0].mac packetSentToUpper:sum(packetBytes) 456
+scalar GeneratedScenario.node[5].wlan[0].mac packetSentToUpper:sum(packetBytes) 418
 attr interpolationmode none
 attr title "packets sent to upper layer, sum(packetBytes)"
 scalar GeneratedScenario.node[5].wlan[0].mac packetDrop:count 0
@@ -9893,7 +9950,7 @@ scalar GeneratedScenario.node[5].wlan[0].radio radioMode:count 75
 attr interpolationmode sample-hold
 attr source radioModeChanged
 attr title "Radio mode, count"
-scalar GeneratedScenario.node[5].wlan[0].radio receptionState:count 97
+scalar GeneratedScenario.node[5].wlan[0].radio receptionState:count 95
 attr interpolationmode sample-hold
 attr source receptionStateChanged
 attr title "Radio reception state, count"
@@ -9902,108 +9959,99 @@ attr interpolationmode sample-hold
 attr source transmissionStateChanged
 attr title "Radio transmission state, count"
 statistic GeneratedScenario.node[5].wlan[0].radio minSnir:histogram
-field count 12
-field mean 36476.792185149
-field stddev 101649.64478496
-field min 320.02422939154
-field max 354013.27909136
-field sum 437721.50622179
-field sqrsum 129625829551.41
+field count 11
+field mean 26743.561021913
+field stddev 48600.731363896
+field min 487.17593440729
+field max 126715.25697276
+field sum 294179.17124104
+field sqrsum 31487709508.516
 attr source minimumSnir(packetSentToUpper)
 attr title "Min SNIR, histogram"
 bin	-inf	0
-bin	0	9
-bin	5000	1
+bin	0	7
+bin	2000	1
+bin	4000	0
+bin	6000	0
+bin	8000	0
 bin	10000	0
-bin	15000	0
+bin	12000	0
+bin	14000	0
+bin	16000	0
+bin	18000	0
 bin	20000	0
-bin	25000	0
+bin	22000	0
+bin	24000	0
+bin	26000	0
+bin	28000	0
 bin	30000	0
-bin	35000	0
-bin	40000	0
-bin	45000	0
+bin	32000	0
+bin	34000	0
+bin	36000	0
+bin	38000	0
+bin	40000	1
+bin	42000	0
+bin	44000	0
+bin	46000	0
+bin	48000	0
 bin	50000	0
-bin	55000	0
-bin	60000	1
-bin	65000	0
+bin	52000	0
+bin	54000	0
+bin	56000	0
+bin	58000	0
+bin	60000	0
+bin	62000	0
+bin	64000	0
+bin	66000	0
+bin	68000	0
 bin	70000	0
-bin	75000	0
+bin	72000	0
+bin	74000	0
+bin	76000	0
+bin	78000	0
 bin	80000	0
-bin	85000	0
+bin	82000	0
+bin	84000	0
+bin	86000	0
+bin	88000	0
 bin	90000	0
-bin	95000	0
+bin	92000	0
+bin	94000	0
+bin	96000	0
+bin	98000	0
 bin	100000	0
-bin	105000	0
+bin	102000	0
+bin	104000	0
+bin	106000	0
+bin	108000	0
 bin	110000	0
-bin	115000	0
+bin	112000	0
+bin	114000	0
+bin	116000	1
+bin	118000	0
 bin	120000	0
-bin	125000	0
+bin	122000	0
+bin	124000	0
+bin	126000	1
+bin	128000	0
 bin	130000	0
-bin	135000	0
+bin	132000	0
+bin	134000	0
+bin	136000	0
+bin	138000	0
 bin	140000	0
-bin	145000	0
+bin	142000	0
+bin	144000	0
+bin	146000	0
+bin	148000	0
 bin	150000	0
-bin	155000	0
+bin	152000	0
+bin	154000	0
+bin	156000	0
+bin	158000	0
 bin	160000	0
-bin	165000	0
-bin	170000	0
-bin	175000	0
-bin	180000	0
-bin	185000	0
-bin	190000	0
-bin	195000	0
-bin	200000	0
-bin	205000	0
-bin	210000	0
-bin	215000	0
-bin	220000	0
-bin	225000	0
-bin	230000	0
-bin	235000	0
-bin	240000	0
-bin	245000	0
-bin	250000	0
-bin	255000	0
-bin	260000	0
-bin	265000	0
-bin	270000	0
-bin	275000	0
-bin	280000	0
-bin	285000	0
-bin	290000	0
-bin	295000	0
-bin	300000	0
-bin	305000	0
-bin	310000	0
-bin	315000	0
-bin	320000	0
-bin	325000	0
-bin	330000	0
-bin	335000	0
-bin	340000	0
-bin	345000	0
-bin	350000	1
-bin	355000	0
-bin	360000	0
-bin	365000	0
-bin	370000	0
-bin	375000	0
-bin	380000	0
-bin	385000	0
-bin	390000	0
-bin	395000	0
-bin	400000	0
-bin	405000	0
-bin	410000	0
-bin	415000	0
-bin	420000	0
-bin	425000	0
-bin	430000	0
-bin	435000	0
-bin	440000	0
-bin	445000	0
 statistic GeneratedScenario.node[5].wlan[0].radio packetErrorRate:histogram
-field count 12
+field count 11
 field mean 0
 field stddev 0
 field min 0
@@ -10038,7 +10086,7 @@ bin	-0.08	0
 bin	-0.06	0
 bin	-0.04	0
 bin	-0.02	0
-bin	0	12
+bin	0	11
 bin	0.02	0
 bin	0.04	0
 bin	0.06	0
@@ -10275,23 +10323,26 @@ attr title "Symbol error rate, histogram"
 bin	-inf	0
 bin	0	0
 bin	1	0
-scalar GeneratedScenario.node[5].hybridManager totalSwitches 1
-scalar GeneratedScenario.node[5].hybridManager satTotalDuration 117.7
-scalar GeneratedScenario.node[5].hybridManager cellTotalDuration 62.3
-scalar GeneratedScenario.node[5].hybridManager satUsageRatio 0.65388888888889
-scalar GeneratedScenario.node[5].hybridManager cellUsageRatio 0.34611111111111
+scalar GeneratedScenario.node[5].hybridManager totalSwitches 2
+scalar GeneratedScenario.node[5].hybridManager satTotalDuration 109
+scalar GeneratedScenario.node[5].hybridManager cellTotalDuration 71
+scalar GeneratedScenario.node[5].hybridManager satUsageRatio 0.60555555555556
+scalar GeneratedScenario.node[5].hybridManager cellUsageRatio 0.39444444444444
+scalar GeneratedScenario.node[5].hybridManager timeToLoss:min -nan
+attr title "Predictive Time-To-Loss, min"
+attr unit s
 scalar GeneratedScenario.node[5].hybridManager batterySoC:last nan
 attr title "Battery State of Charge, last"
-scalar GeneratedScenario.node[5].hybridManager qosScore:mean 0.88396325597429
+scalar GeneratedScenario.node[5].hybridManager qosScore:mean -nan
 attr title "QoS Score, mean"
-scalar GeneratedScenario.node[5].hybridManager switchCount:last 1
+scalar GeneratedScenario.node[5].hybridManager switchCount:last 2
 attr title "Vertical Handover Count, last"
-scalar GeneratedScenario.node[5].hybridManager activeInterface:last 1
+scalar GeneratedScenario.node[5].hybridManager activeInterface:last 0
 attr title "Active Interface (0=5G, 1=Sat), last"
-scalar GeneratedScenario.node[5].mecClient mecTaskLatency:mean 0.029129857080273
+scalar GeneratedScenario.node[5].mecClient mecTaskLatency:mean 0.02770762414103
 attr title "MEC Task Latency (RTT + Compute), mean"
 attr unit s
-scalar GeneratedScenario.node[5].mecClient mecTaskLatency:max 0.03199733124394
+scalar GeneratedScenario.node[5].mecClient mecTaskLatency:max 0.031933197891805
 attr title "MEC Task Latency (RTT + Compute), max"
 attr unit s
 scalar GeneratedScenario.node[7].wlan[0].agent dropConfirm:count 0
@@ -10718,7 +10769,7 @@ scalar GeneratedScenario.node[7].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames 
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, max"
-scalar GeneratedScenario.node[7].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.6804240710655e-05
+scalar GeneratedScenario.node[7].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.692538028615e-05
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
@@ -12371,81 +12422,92 @@ attr source transmissionStateChanged
 attr title "Radio transmission state, count"
 statistic GeneratedScenario.node[7].wlan[0].radio minSnir:histogram
 field count 9
-field mean 8380.4747973985
-field stddev 16871.912672923
-field min 329.2150407774
-field max 51747.563892385
-field sum 75424.273176586
-field sqrsum 2909382718.4103
+field mean 37374.07157356
+field stddev 100152.34996877
+field min 442.1938076864
+field max 303922.78802385
+field sum 336366.64416204
+field sqrsum 92815336668.007
 attr source minimumSnir(packetSentToUpper)
 attr title "Min SNIR, histogram"
 bin	-inf	0
-bin	0	4
-bin	1000	1
-bin	2000	2
-bin	3000	0
-bin	4000	0
-bin	5000	0
-bin	6000	0
-bin	7000	0
-bin	8000	0
-bin	9000	0
+bin	0	6
+bin	5000	1
 bin	10000	0
-bin	11000	0
-bin	12000	0
-bin	13000	0
-bin	14000	1
-bin	15000	0
-bin	16000	0
-bin	17000	0
-bin	18000	0
-bin	19000	0
+bin	15000	1
 bin	20000	0
-bin	21000	0
-bin	22000	0
-bin	23000	0
-bin	24000	0
 bin	25000	0
-bin	26000	0
-bin	27000	0
-bin	28000	0
-bin	29000	0
 bin	30000	0
-bin	31000	0
-bin	32000	0
-bin	33000	0
-bin	34000	0
 bin	35000	0
-bin	36000	0
-bin	37000	0
-bin	38000	0
-bin	39000	0
 bin	40000	0
-bin	41000	0
-bin	42000	0
-bin	43000	0
-bin	44000	0
 bin	45000	0
-bin	46000	0
-bin	47000	0
-bin	48000	0
-bin	49000	0
 bin	50000	0
-bin	51000	1
-bin	52000	0
-bin	53000	0
-bin	54000	0
 bin	55000	0
-bin	56000	0
-bin	57000	0
-bin	58000	0
-bin	59000	0
 bin	60000	0
-bin	61000	0
-bin	62000	0
-bin	63000	0
-bin	64000	0
 bin	65000	0
+bin	70000	0
+bin	75000	0
+bin	80000	0
+bin	85000	0
+bin	90000	0
+bin	95000	0
+bin	100000	0
+bin	105000	0
+bin	110000	0
+bin	115000	0
+bin	120000	0
+bin	125000	0
+bin	130000	0
+bin	135000	0
+bin	140000	0
+bin	145000	0
+bin	150000	0
+bin	155000	0
+bin	160000	0
+bin	165000	0
+bin	170000	0
+bin	175000	0
+bin	180000	0
+bin	185000	0
+bin	190000	0
+bin	195000	0
+bin	200000	0
+bin	205000	0
+bin	210000	0
+bin	215000	0
+bin	220000	0
+bin	225000	0
+bin	230000	0
+bin	235000	0
+bin	240000	0
+bin	245000	0
+bin	250000	0
+bin	255000	0
+bin	260000	0
+bin	265000	0
+bin	270000	0
+bin	275000	0
+bin	280000	0
+bin	285000	0
+bin	290000	0
+bin	295000	0
+bin	300000	1
+bin	305000	0
+bin	310000	0
+bin	315000	0
+bin	320000	0
+bin	325000	0
+bin	330000	0
+bin	335000	0
+bin	340000	0
+bin	345000	0
+bin	350000	0
+bin	355000	0
+bin	360000	0
+bin	365000	0
+bin	370000	0
+bin	375000	0
+bin	380000	0
 statistic GeneratedScenario.node[7].wlan[0].radio packetErrorRate:histogram
 field count 9
 field mean 0
@@ -12719,23 +12781,26 @@ attr title "Symbol error rate, histogram"
 bin	-inf	0
 bin	0	0
 bin	1	0
-scalar GeneratedScenario.node[7].hybridManager totalSwitches 1
-scalar GeneratedScenario.node[7].hybridManager satTotalDuration 87.9
-scalar GeneratedScenario.node[7].hybridManager cellTotalDuration 92.1
-scalar GeneratedScenario.node[7].hybridManager satUsageRatio 0.48833333333333
-scalar GeneratedScenario.node[7].hybridManager cellUsageRatio 0.51166666666667
+scalar GeneratedScenario.node[7].hybridManager totalSwitches 2
+scalar GeneratedScenario.node[7].hybridManager satTotalDuration 79
+scalar GeneratedScenario.node[7].hybridManager cellTotalDuration 101
+scalar GeneratedScenario.node[7].hybridManager satUsageRatio 0.43888888888889
+scalar GeneratedScenario.node[7].hybridManager cellUsageRatio 0.56111111111111
+scalar GeneratedScenario.node[7].hybridManager timeToLoss:min -nan
+attr title "Predictive Time-To-Loss, min"
+attr unit s
 scalar GeneratedScenario.node[7].hybridManager batterySoC:last nan
 attr title "Battery State of Charge, last"
-scalar GeneratedScenario.node[7].hybridManager qosScore:mean 0.88059201431063
+scalar GeneratedScenario.node[7].hybridManager qosScore:mean -nan
 attr title "QoS Score, mean"
-scalar GeneratedScenario.node[7].hybridManager switchCount:last 1
+scalar GeneratedScenario.node[7].hybridManager switchCount:last 2
 attr title "Vertical Handover Count, last"
-scalar GeneratedScenario.node[7].hybridManager activeInterface:last 1
+scalar GeneratedScenario.node[7].hybridManager activeInterface:last 0
 attr title "Active Interface (0=5G, 1=Sat), last"
-scalar GeneratedScenario.node[7].mecClient mecTaskLatency:mean 0.029366529703016
+scalar GeneratedScenario.node[7].mecClient mecTaskLatency:mean 0.026484454035192
 attr title "MEC Task Latency (RTT + Compute), mean"
 attr unit s
-scalar GeneratedScenario.node[7].mecClient mecTaskLatency:max 0.031982631566236
+scalar GeneratedScenario.node[7].mecClient mecTaskLatency:max 0.03194980116724
 attr title "MEC Task Latency (RTT + Compute), max"
 attr unit s
 scalar GeneratedScenario.node[9].wlan[0].agent dropConfirm:count 0
@@ -13162,7 +13227,7 @@ scalar GeneratedScenario.node[9].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames 
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, max"
-scalar GeneratedScenario.node[9].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.7203586696732e-05
+scalar GeneratedScenario.node[9].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.7041076778409e-05
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
@@ -14815,96 +14880,101 @@ attr source transmissionStateChanged
 attr title "Radio transmission state, count"
 statistic GeneratedScenario.node[9].wlan[0].radio minSnir:histogram
 field count 6
-field mean 3579.5646242039
-field stddev 4925.9016669473
-field min 341.27063634227
-field max 12843.250735632
-field sum 21477.387745224
-field sqrsum 198202233.55529
+field mean 6805.4762354586
+field stddev 13265.95855675
+field min 342.54345517369
+field max 33789.657638202
+field sum 40832.857412752
+field sqrsum 1157815322.8954
 attr source minimumSnir(packetSentToUpper)
 attr title "Min SNIR, histogram"
 bin	-inf	0
-bin	0	0
-bin	200	2
-bin	400	0
-bin	600	0
-bin	800	1
+bin	0	2
+bin	500	1
 bin	1000	0
-bin	1200	0
-bin	1400	1
-bin	1600	0
-bin	1800	0
-bin	2000	0
-bin	2200	0
-bin	2400	0
-bin	2600	0
-bin	2800	0
-bin	3000	0
-bin	3200	0
-bin	3400	0
-bin	3600	0
-bin	3800	0
+bin	1500	0
+bin	2000	1
+bin	2500	0
+bin	3000	1
+bin	3500	0
 bin	4000	0
-bin	4200	0
-bin	4400	0
-bin	4600	0
-bin	4800	0
+bin	4500	0
 bin	5000	0
-bin	5200	0
-bin	5400	1
-bin	5600	0
-bin	5800	0
+bin	5500	0
 bin	6000	0
-bin	6200	0
-bin	6400	0
-bin	6600	0
-bin	6800	0
+bin	6500	0
 bin	7000	0
-bin	7200	0
-bin	7400	0
-bin	7600	0
-bin	7800	0
+bin	7500	0
 bin	8000	0
-bin	8200	0
-bin	8400	0
-bin	8600	0
-bin	8800	0
+bin	8500	0
 bin	9000	0
-bin	9200	0
-bin	9400	0
-bin	9600	0
-bin	9800	0
+bin	9500	0
 bin	10000	0
-bin	10200	0
-bin	10400	0
-bin	10600	0
-bin	10800	0
+bin	10500	0
 bin	11000	0
-bin	11200	0
-bin	11400	0
-bin	11600	0
-bin	11800	0
+bin	11500	0
 bin	12000	0
-bin	12200	0
-bin	12400	0
-bin	12600	0
-bin	12800	1
+bin	12500	0
 bin	13000	0
-bin	13200	0
-bin	13400	0
-bin	13600	0
-bin	13800	0
+bin	13500	0
 bin	14000	0
-bin	14200	0
-bin	14400	0
-bin	14600	0
-bin	14800	0
+bin	14500	0
 bin	15000	0
-bin	15200	0
-bin	15400	0
-bin	15600	0
-bin	15800	0
+bin	15500	0
 bin	16000	0
+bin	16500	0
+bin	17000	0
+bin	17500	0
+bin	18000	0
+bin	18500	0
+bin	19000	0
+bin	19500	0
+bin	20000	0
+bin	20500	0
+bin	21000	0
+bin	21500	0
+bin	22000	0
+bin	22500	0
+bin	23000	0
+bin	23500	0
+bin	24000	0
+bin	24500	0
+bin	25000	0
+bin	25500	0
+bin	26000	0
+bin	26500	0
+bin	27000	0
+bin	27500	0
+bin	28000	0
+bin	28500	0
+bin	29000	0
+bin	29500	0
+bin	30000	0
+bin	30500	0
+bin	31000	0
+bin	31500	0
+bin	32000	0
+bin	32500	0
+bin	33000	0
+bin	33500	1
+bin	34000	0
+bin	34500	0
+bin	35000	0
+bin	35500	0
+bin	36000	0
+bin	36500	0
+bin	37000	0
+bin	37500	0
+bin	38000	0
+bin	38500	0
+bin	39000	0
+bin	39500	0
+bin	40000	0
+bin	40500	0
+bin	41000	0
+bin	41500	0
+bin	42000	0
+bin	42500	0
 statistic GeneratedScenario.node[9].wlan[0].radio packetErrorRate:histogram
 field count 6
 field mean 0
@@ -15178,23 +15248,26 @@ attr title "Symbol error rate, histogram"
 bin	-inf	0
 bin	0	0
 bin	1	0
-scalar GeneratedScenario.node[9].hybridManager totalSwitches 1
-scalar GeneratedScenario.node[9].hybridManager satTotalDuration 58
-scalar GeneratedScenario.node[9].hybridManager cellTotalDuration 122
-scalar GeneratedScenario.node[9].hybridManager satUsageRatio 0.32222222222222
-scalar GeneratedScenario.node[9].hybridManager cellUsageRatio 0.67777777777778
+scalar GeneratedScenario.node[9].hybridManager totalSwitches 2
+scalar GeneratedScenario.node[9].hybridManager satTotalDuration 49.5
+scalar GeneratedScenario.node[9].hybridManager cellTotalDuration 130.5
+scalar GeneratedScenario.node[9].hybridManager satUsageRatio 0.275
+scalar GeneratedScenario.node[9].hybridManager cellUsageRatio 0.725
+scalar GeneratedScenario.node[9].hybridManager timeToLoss:min -nan
+attr title "Predictive Time-To-Loss, min"
+attr unit s
 scalar GeneratedScenario.node[9].hybridManager batterySoC:last nan
 attr title "Battery State of Charge, last"
-scalar GeneratedScenario.node[9].hybridManager qosScore:mean 0.87707877352625
+scalar GeneratedScenario.node[9].hybridManager qosScore:mean -nan
 attr title "QoS Score, mean"
-scalar GeneratedScenario.node[9].hybridManager switchCount:last 1
+scalar GeneratedScenario.node[9].hybridManager switchCount:last 2
 attr title "Vertical Handover Count, last"
-scalar GeneratedScenario.node[9].hybridManager activeInterface:last 1
+scalar GeneratedScenario.node[9].hybridManager activeInterface:last 0
 attr title "Active Interface (0=5G, 1=Sat), last"
-scalar GeneratedScenario.node[9].mecClient mecTaskLatency:mean 0.028779395821033
+scalar GeneratedScenario.node[9].mecClient mecTaskLatency:mean 0.026089215850941
 attr title "MEC Task Latency (RTT + Compute), mean"
 attr unit s
-scalar GeneratedScenario.node[9].mecClient mecTaskLatency:max 0.031994463048643
+scalar GeneratedScenario.node[9].mecClient mecTaskLatency:max 0.031793512012111
 attr title "MEC Task Latency (RTT + Compute), max"
 attr unit s
 scalar GeneratedScenario.node[11].wlan[0].agent dropConfirm:count 0
@@ -15621,7 +15694,7 @@ scalar GeneratedScenario.node[11].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, max"
-scalar GeneratedScenario.node[11].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.78599339009e-05
+scalar GeneratedScenario.node[11].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.7473508097452e-05
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
@@ -17274,83 +17347,98 @@ attr source transmissionStateChanged
 attr title "Radio transmission state, count"
 statistic GeneratedScenario.node[11].wlan[0].radio minSnir:histogram
 field count 3
-field mean 18211.452180284
-field stddev 30519.140872679
-field min 527.13083896209
-field max 53451.84278458
-field sum 54634.356540851
-field sqrsum 2857806890.7571
+field mean 109007.9284086
+field stddev 187789.43801879
+field min 552.40754741453
+field max 325848.48977277
+field sum 327023.78522581
+field sqrsum 106177931430.63
 attr source minimumSnir(packetSentToUpper)
 attr title "Min SNIR, histogram"
 bin	-inf	0
 bin	0	2
-bin	1000	0
-bin	2000	0
-bin	3000	0
-bin	4000	0
 bin	5000	0
-bin	6000	0
-bin	7000	0
-bin	8000	0
-bin	9000	0
 bin	10000	0
-bin	11000	0
-bin	12000	0
-bin	13000	0
-bin	14000	0
 bin	15000	0
-bin	16000	0
-bin	17000	0
-bin	18000	0
-bin	19000	0
 bin	20000	0
-bin	21000	0
-bin	22000	0
-bin	23000	0
-bin	24000	0
 bin	25000	0
-bin	26000	0
-bin	27000	0
-bin	28000	0
-bin	29000	0
 bin	30000	0
-bin	31000	0
-bin	32000	0
-bin	33000	0
-bin	34000	0
 bin	35000	0
-bin	36000	0
-bin	37000	0
-bin	38000	0
-bin	39000	0
 bin	40000	0
-bin	41000	0
-bin	42000	0
-bin	43000	0
-bin	44000	0
 bin	45000	0
-bin	46000	0
-bin	47000	0
-bin	48000	0
-bin	49000	0
 bin	50000	0
-bin	51000	0
-bin	52000	0
-bin	53000	1
-bin	54000	0
 bin	55000	0
-bin	56000	0
-bin	57000	0
-bin	58000	0
-bin	59000	0
 bin	60000	0
-bin	61000	0
-bin	62000	0
-bin	63000	0
-bin	64000	0
 bin	65000	0
-bin	66000	0
-bin	67000	0
+bin	70000	0
+bin	75000	0
+bin	80000	0
+bin	85000	0
+bin	90000	0
+bin	95000	0
+bin	100000	0
+bin	105000	0
+bin	110000	0
+bin	115000	0
+bin	120000	0
+bin	125000	0
+bin	130000	0
+bin	135000	0
+bin	140000	0
+bin	145000	0
+bin	150000	0
+bin	155000	0
+bin	160000	0
+bin	165000	0
+bin	170000	0
+bin	175000	0
+bin	180000	0
+bin	185000	0
+bin	190000	0
+bin	195000	0
+bin	200000	0
+bin	205000	0
+bin	210000	0
+bin	215000	0
+bin	220000	0
+bin	225000	0
+bin	230000	0
+bin	235000	0
+bin	240000	0
+bin	245000	0
+bin	250000	0
+bin	255000	0
+bin	260000	0
+bin	265000	0
+bin	270000	0
+bin	275000	0
+bin	280000	0
+bin	285000	0
+bin	290000	0
+bin	295000	0
+bin	300000	0
+bin	305000	0
+bin	310000	0
+bin	315000	0
+bin	320000	0
+bin	325000	1
+bin	330000	0
+bin	335000	0
+bin	340000	0
+bin	345000	0
+bin	350000	0
+bin	355000	0
+bin	360000	0
+bin	365000	0
+bin	370000	0
+bin	375000	0
+bin	380000	0
+bin	385000	0
+bin	390000	0
+bin	395000	0
+bin	400000	0
+bin	405000	0
+bin	410000	0
 statistic GeneratedScenario.node[11].wlan[0].radio packetErrorRate:histogram
 field count 3
 field mean 0
@@ -17624,23 +17712,26 @@ attr title "Symbol error rate, histogram"
 bin	-inf	0
 bin	0	0
 bin	1	0
-scalar GeneratedScenario.node[11].hybridManager totalSwitches 1
-scalar GeneratedScenario.node[11].hybridManager satTotalDuration 28.2
-scalar GeneratedScenario.node[11].hybridManager cellTotalDuration 151.8
-scalar GeneratedScenario.node[11].hybridManager satUsageRatio 0.15666666666667
-scalar GeneratedScenario.node[11].hybridManager cellUsageRatio 0.84333333333333
+scalar GeneratedScenario.node[11].hybridManager totalSwitches 2
+scalar GeneratedScenario.node[11].hybridManager satTotalDuration 19.5
+scalar GeneratedScenario.node[11].hybridManager cellTotalDuration 160.5
+scalar GeneratedScenario.node[11].hybridManager satUsageRatio 0.10833333333333
+scalar GeneratedScenario.node[11].hybridManager cellUsageRatio 0.89166666666667
+scalar GeneratedScenario.node[11].hybridManager timeToLoss:min -nan
+attr title "Predictive Time-To-Loss, min"
+attr unit s
 scalar GeneratedScenario.node[11].hybridManager batterySoC:last nan
 attr title "Battery State of Charge, last"
-scalar GeneratedScenario.node[11].hybridManager qosScore:mean 0.86104307735493
+scalar GeneratedScenario.node[11].hybridManager qosScore:mean -nan
 attr title "QoS Score, mean"
-scalar GeneratedScenario.node[11].hybridManager switchCount:last 1
+scalar GeneratedScenario.node[11].hybridManager switchCount:last 2
 attr title "Vertical Handover Count, last"
-scalar GeneratedScenario.node[11].hybridManager activeInterface:last 1
+scalar GeneratedScenario.node[11].hybridManager activeInterface:last 0
 attr title "Active Interface (0=5G, 1=Sat), last"
-scalar GeneratedScenario.node[11].mecClient mecTaskLatency:mean 0.028306010012022
+scalar GeneratedScenario.node[11].mecClient mecTaskLatency:mean 0.022065179806203
 attr title "MEC Task Latency (RTT + Compute), mean"
 attr unit s
-scalar GeneratedScenario.node[11].mecClient mecTaskLatency:max 0.031828194883885
+scalar GeneratedScenario.node[11].mecClient mecTaskLatency:max 0.031614801151911
 attr title "MEC Task Latency (RTT + Compute), max"
 attr unit s
 scalar GeneratedScenario.node[2].wlan[0].agent dropConfirm:count 0
@@ -17722,7 +17813,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[2].wlan[0].mac.dcf.channelAccess.contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.dcf.channelAccess.contention stateChanged:count 280
+scalar GeneratedScenario.node[2].wlan[0].mac.dcf.channelAccess.contention stateChanged:count 284
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[2].wlan[0].mac.dcf.channelAccess channelOwnershipChanged:count 0
@@ -17901,14 +17992,14 @@ attr title "packet drops: retry limit reached, sum(packetBytes)"
 scalar GeneratedScenario.node[2].wlan[0].mac.dcf linkBroken:count 0
 attr interpolationmode none
 attr title "link breaks, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].pendingQueue packetPopped:count 50
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].pendingQueue packetPopped:count 51
 attr interpolationmode none
 attr title "packet popped, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].pendingQueue packetPopped:sum(packetBytes) 3400
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].pendingQueue packetPopped:sum(packetBytes) 3468
 attr interpolationmode none
 attr title "packet popped, sum(packetBytes)"
 statistic GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].pendingQueue queueingTime:histogram
-field count 50
+field count 51
 field mean 0
 field stddev 0
 field min 0
@@ -17945,7 +18036,7 @@ bin	-0.08	0
 bin	-0.06	0
 bin	-0.04	0
 bin	-0.02	0
-bin	0	50
+bin	0	51
 bin	0.02	0
 bin	0.04	0
 bin	0.06	0
@@ -17979,10 +18070,10 @@ scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].pendingQueue queu
 attr interpolationmode sample-hold
 attr source "count(packetPushed) - count(packetPopped) - count(packetRemoved) - count(packetDropped)"
 attr title "queue length, timeavg"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].pendingQueue packetPushed:count 50
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].pendingQueue packetPushed:count 51
 attr interpolationmode none
 attr title "packet pushed, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].pendingQueue packetPushed:sum(packetBytes) 3400
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].pendingQueue packetPushed:sum(packetBytes) 3468
 attr interpolationmode none
 attr title "packet pushed, sum(packetBytes)"
 scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].pendingQueue packetDropQueueOverflow:count 0
@@ -18000,18 +18091,18 @@ scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].pendingQueue pack
 attr interpolationmode none
 attr title "packets removed, sum(packetBytes)"
 statistic GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueingTime:histogram
-field count 50
+field count 51
 field mean 8.8e-05
 field stddev 0
 field min 8.8e-05
 field max 8.8e-05
-field sum 0.0044
-field sqrsum 3.872e-07
+field sum 0.004488
+field sqrsum 3.94944e-07
 attr interpolationmode none
 attr source queueingTime(packetDequeued)
 attr title "queueing times, histogram"
 bin	-inf	0
-bin	0	50
+bin	0	51
 bin	0.01	0
 bin	0.02	0
 bin	0.03	0
@@ -18067,32 +18158,32 @@ scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames 
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, max"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.6251889517038e-05
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.6732965692313e-05
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].contention channelAccessGranted:count 50
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].contention channelAccessGranted:count 51
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 480
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 488
 attr interpolationmode none
 attr title "contention state changed, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].txopProcedure txopEnded:count 50
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].txopProcedure txopEnded:count 51
 attr interpolationmode none
 attr source txopEnded
 attr title "txops ended, count"
 statistic GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].txopProcedure txopDuration:histogram
-field count 50
+field count 51
 field mean 8.8e-05
 field stddev 0
 field min 8.8e-05
 field max 8.8e-05
-field sum 0.0044
-field sqrsum 3.872e-07
+field sum 0.004488
+field sqrsum 3.94944e-07
 attr interpolationmode none
 attr source txopDuration(txopEnded)
 attr title "txop duration, histogram"
 bin	-inf	0
-bin	0	50
+bin	0	51
 bin	0.01	0
 bin	0.02	0
 bin	0.03	0
@@ -18146,13 +18237,13 @@ bin	0.5	0
 bin	0.51	0
 scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].recoveryProcedure retryLimitReached:count 0
 attr title "retry limit reached, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0] channelOwnershipChanged:count 100
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0] channelOwnershipChanged:count 102
 attr interpolationmode sample-hold
 attr title "channel ownership, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0] packetSentToPeer:count 50
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0] packetSentToPeer:count 51
 attr interpolationmode none
 attr title "packets sent, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0] packetSentToPeer:sum(packetBytes) 3400
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0] packetSentToPeer:sum(packetBytes) 3468
 attr interpolationmode none
 attr title "packets sent, sum(packetBytes)"
 scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0] packetSentToPeerUnicast:count 0
@@ -18163,19 +18254,19 @@ scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0] packetSentToPeerU
 attr interpolationmode none
 attr source ieee80211Unicast(packetSentToPeer)
 attr title "packets sent: unicast, sum(packetBytes)"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0] packetSentToPeerMulticast:count 50
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0] packetSentToPeerMulticast:count 51
 attr interpolationmode none
 attr source ieee80211Multicast(packetSentToPeer)
 attr title "packets sent: multicast, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0] packetSentToPeerMulticast:sum(packetBytes) 3400
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0] packetSentToPeerMulticast:sum(packetBytes) 3468
 attr interpolationmode none
 attr source ieee80211Multicast(packetSentToPeer)
 attr title "packets sent: multicast, sum(packetBytes)"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0] packetSentToPeerBroadcast:count 50
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0] packetSentToPeerBroadcast:count 51
 attr interpolationmode none
 attr source ieee80211Broadcast(packetSentToPeer)
 attr title "packets sent: broadcast , count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0] packetSentToPeerBroadcast:sum(packetBytes) 3400
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0] packetSentToPeerBroadcast:sum(packetBytes) 3468
 attr interpolationmode none
 attr source ieee80211Broadcast(packetSentToPeer)
 attr title "packets sent: broadcast , sum(packetBytes)"
@@ -18187,11 +18278,11 @@ scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0] packetSentToPeerW
 attr interpolationmode none
 attr source ieee80211Retry(packetSentToPeer)
 attr title "packets sent: with retry, sum(packetBytes)"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0] packetSentToPeerWithoutRetry:count 50
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0] packetSentToPeerWithoutRetry:count 51
 attr interpolationmode none
 attr source ieee80211NotRetry(packetSentToPeer)
 attr title "packets sent: without retry, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0] packetSentToPeerWithoutRetry:sum(packetBytes) 3400
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0] packetSentToPeerWithoutRetry:sum(packetBytes) 3468
 attr interpolationmode none
 attr source ieee80211NotRetry(packetSentToPeer)
 attr title "packets sent: without retry, sum(packetBytes)"
@@ -18268,7 +18359,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[1].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 280
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 284
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[1].txopProcedure txopEnded:count 0
@@ -18413,7 +18504,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[2].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 280
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 284
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[2].txopProcedure txopEnded:count 0
@@ -18558,7 +18649,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[3].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 280
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 284
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[3].txopProcedure txopEnded:count 0
@@ -18654,20 +18745,20 @@ scalar GeneratedScenario.node[2].wlan[0].mac.hcf blockAckAgreementAdded:count 0
 attr title "added block ack agreements, count"
 scalar GeneratedScenario.node[2].wlan[0].mac.hcf edcaCollisionDetected:count 0
 attr title "EDCA collisions detected, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf frameSequenceFinished:count 50
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf frameSequenceFinished:count 51
 attr title "finished frame sequences, count"
 statistic GeneratedScenario.node[2].wlan[0].mac.hcf frameSequenceDuration:histogram
-field count 50
+field count 51
 field mean 8.8e-05
 field stddev 0
 field min 8.8e-05
 field max 8.8e-05
-field sum 0.0044
-field sqrsum 3.872e-07
+field sum 0.004488
+field sqrsum 3.94944e-07
 attr source frameSequenceDuration(frameSequenceFinished)
 attr title "frame sequence durations, histogram"
 bin	-inf	0
-bin	0	50
+bin	0	51
 bin	0.01	0
 bin	0.02	0
 bin	0.03	0
@@ -18720,18 +18811,18 @@ bin	0.49	0
 bin	0.5	0
 bin	0.51	0
 statistic GeneratedScenario.node[2].wlan[0].mac.hcf frameSequenceNumPackets:histogram
-field count 50
+field count 51
 field mean 1
 field stddev 0
 field min 1
 field max 1
-field sum 50
-field sqrsum 50
+field sum 51
+field sqrsum 51
 attr source frameSequenceNumPackets(frameSequenceFinished)
 attr title "frame sequences: number of packets, histogram"
 bin	-inf	0
 bin	0	0
-bin	1	50
+bin	1	51
 bin	2	0
 scalar GeneratedScenario.node[2].wlan[0].mac.hcf packetReceivedFromPeerUnicast:count 0
 attr interpolationmode none
@@ -18773,10 +18864,10 @@ scalar GeneratedScenario.node[2].wlan[0].mac.hcf packetReceivedFromPeerWithoutRe
 attr interpolationmode none
 attr source ieee80211NotRetry(packetReceivedFromPeer)
 attr title "packets received: without retry, sum(packetBytes)"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf packetSentToPeer:count 50
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf packetSentToPeer:count 51
 attr interpolationmode none
 attr title "packets sent, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf packetSentToPeer:sum(packetBytes) 3400
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf packetSentToPeer:sum(packetBytes) 3468
 attr interpolationmode none
 attr title "packets sent, sum(packetBytes)"
 scalar GeneratedScenario.node[2].wlan[0].mac.hcf packetSentToPeerUnicast:count 0
@@ -18787,19 +18878,19 @@ scalar GeneratedScenario.node[2].wlan[0].mac.hcf packetSentToPeerUnicast:sum(pac
 attr interpolationmode none
 attr source ieee80211Unicast(packetSentToPeer)
 attr title "packets sent: unicast, sum(packetBytes)"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf packetSentToPeerMulticast:count 50
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf packetSentToPeerMulticast:count 51
 attr interpolationmode none
 attr source ieee80211Multicast(packetSentToPeer)
 attr title "packets sent: multicast, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf packetSentToPeerMulticast:sum(packetBytes) 3400
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf packetSentToPeerMulticast:sum(packetBytes) 3468
 attr interpolationmode none
 attr source ieee80211Multicast(packetSentToPeer)
 attr title "packets sent: multicast, sum(packetBytes)"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf packetSentToPeerBroadcast:count 50
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf packetSentToPeerBroadcast:count 51
 attr interpolationmode none
 attr source ieee80211Broadcast(packetSentToPeer)
 attr title "packets sent: broadcast , count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf packetSentToPeerBroadcast:sum(packetBytes) 3400
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf packetSentToPeerBroadcast:sum(packetBytes) 3468
 attr interpolationmode none
 attr source ieee80211Broadcast(packetSentToPeer)
 attr title "packets sent: broadcast , sum(packetBytes)"
@@ -18811,11 +18902,11 @@ scalar GeneratedScenario.node[2].wlan[0].mac.hcf packetSentToPeerWithRetry:sum(p
 attr interpolationmode none
 attr source ieee80211Retry(packetSentToPeer)
 attr title "packets sent: with retry, sum(packetBytes)"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf packetSentToPeerWithoutRetry:count 50
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf packetSentToPeerWithoutRetry:count 51
 attr interpolationmode none
 attr source ieee80211NotRetry(packetSentToPeer)
 attr title "packets sent: without retry, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf packetSentToPeerWithoutRetry:sum(packetBytes) 3400
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf packetSentToPeerWithoutRetry:sum(packetBytes) 3468
 attr interpolationmode none
 attr source ieee80211NotRetry(packetSentToPeer)
 attr title "packets sent: without retry, sum(packetBytes)"
@@ -18928,7 +19019,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 280
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 284
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[0].txopProcedure txopEnded:count 0
@@ -19073,7 +19164,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[1].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 280
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 284
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[1].txopProcedure txopEnded:count 0
@@ -19218,7 +19309,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[2].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 280
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 284
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[2].txopProcedure txopEnded:count 0
@@ -19363,7 +19454,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[3].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 280
+scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 284
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[2].wlan[0].mac.hcf.edca.edcaf[3].txopProcedure txopEnded:count 0
@@ -19614,16 +19705,16 @@ attr title "packets received from lower layer, count"
 scalar GeneratedScenario.node[2].wlan[0].mac packetReceivedFromLower:sum(packetBytes) 1360
 attr interpolationmode none
 attr title "packets received from lower layer, sum(packetBytes)"
-scalar GeneratedScenario.node[2].wlan[0].mac packetSentToLower:count 50
+scalar GeneratedScenario.node[2].wlan[0].mac packetSentToLower:count 51
 attr interpolationmode none
 attr title "packets sent to lower layer, count"
-scalar GeneratedScenario.node[2].wlan[0].mac packetSentToLower:sum(packetBytes) 3400
+scalar GeneratedScenario.node[2].wlan[0].mac packetSentToLower:sum(packetBytes) 3468
 attr interpolationmode none
 attr title "packets sent to lower layer, sum(packetBytes)"
-scalar GeneratedScenario.node[2].wlan[0].mac packetReceivedFromUpper:count 50
+scalar GeneratedScenario.node[2].wlan[0].mac packetReceivedFromUpper:count 51
 attr interpolationmode none
 attr title "packets received from upper layer, count"
-scalar GeneratedScenario.node[2].wlan[0].mac packetReceivedFromUpper:sum(packetBytes) 1900
+scalar GeneratedScenario.node[2].wlan[0].mac packetReceivedFromUpper:sum(packetBytes) 1938
 attr interpolationmode none
 attr title "packets received from upper layer, sum(packetBytes)"
 scalar GeneratedScenario.node[2].wlan[0].mac packetSentToUpper:count 20
@@ -19705,100 +19796,88 @@ attr title "Radio channel, histogram"
 bin	-inf	0
 bin	0	0
 bin	1	0
-scalar GeneratedScenario.node[2].wlan[0].radio radioMode:count 100
+scalar GeneratedScenario.node[2].wlan[0].radio radioMode:count 102
 attr interpolationmode sample-hold
 attr source radioModeChanged
 attr title "Radio mode, count"
-scalar GeneratedScenario.node[2].wlan[0].radio receptionState:count 140
+scalar GeneratedScenario.node[2].wlan[0].radio receptionState:count 142
 attr interpolationmode sample-hold
 attr source receptionStateChanged
 attr title "Radio reception state, count"
-scalar GeneratedScenario.node[2].wlan[0].radio transmissionState:count 200
+scalar GeneratedScenario.node[2].wlan[0].radio transmissionState:count 204
 attr interpolationmode sample-hold
 attr source transmissionStateChanged
 attr title "Radio transmission state, count"
 statistic GeneratedScenario.node[2].wlan[0].radio minSnir:histogram
 field count 20
-field mean 10621.233874949
-field stddev 25480.745139071
-field min 350.6461752113
-field max 110949.73038376
-field sum 212424.67749897
-field sqrsum 14592311264.53
+field mean 23069.768377457
+field stddev 55777.929917395
+field min 389.77614769857
+field max 230574.32548189
+field sum 461395.36754915
+field sqrsum 69756656111.317
 attr source minimumSnir(packetSentToUpper)
 attr title "Min SNIR, histogram"
 bin	-inf	0
-bin	0	12
-bin	2000	1
-bin	4000	3
-bin	6000	0
-bin	8000	0
-bin	10000	0
-bin	12000	0
-bin	14000	0
-bin	16000	1
-bin	18000	1
+bin	0	13
+bin	5000	2
+bin	10000	1
+bin	15000	1
 bin	20000	0
-bin	22000	0
-bin	24000	0
-bin	26000	0
-bin	28000	0
+bin	25000	0
 bin	30000	0
-bin	32000	0
-bin	34000	0
-bin	36000	0
-bin	38000	1
+bin	35000	0
 bin	40000	0
-bin	42000	0
-bin	44000	0
-bin	46000	0
-bin	48000	0
+bin	45000	0
 bin	50000	0
-bin	52000	0
-bin	54000	0
-bin	56000	0
-bin	58000	0
+bin	55000	0
 bin	60000	0
-bin	62000	0
-bin	64000	0
-bin	66000	0
-bin	68000	0
+bin	65000	0
 bin	70000	0
-bin	72000	0
-bin	74000	0
-bin	76000	0
-bin	78000	0
+bin	75000	1
 bin	80000	0
-bin	82000	0
-bin	84000	0
-bin	86000	0
-bin	88000	0
+bin	85000	0
 bin	90000	0
-bin	92000	0
-bin	94000	0
-bin	96000	0
-bin	98000	0
+bin	95000	1
 bin	100000	0
-bin	102000	0
-bin	104000	0
-bin	106000	0
-bin	108000	0
-bin	110000	1
-bin	112000	0
-bin	114000	0
-bin	116000	0
-bin	118000	0
+bin	105000	0
+bin	110000	0
+bin	115000	0
 bin	120000	0
-bin	122000	0
-bin	124000	0
-bin	126000	0
-bin	128000	0
+bin	125000	0
 bin	130000	0
-bin	132000	0
-bin	134000	0
-bin	136000	0
-bin	138000	0
+bin	135000	0
 bin	140000	0
+bin	145000	0
+bin	150000	0
+bin	155000	0
+bin	160000	0
+bin	165000	0
+bin	170000	0
+bin	175000	0
+bin	180000	0
+bin	185000	0
+bin	190000	0
+bin	195000	0
+bin	200000	0
+bin	205000	0
+bin	210000	0
+bin	215000	0
+bin	220000	0
+bin	225000	0
+bin	230000	1
+bin	235000	0
+bin	240000	0
+bin	245000	0
+bin	250000	0
+bin	255000	0
+bin	260000	0
+bin	265000	0
+bin	270000	0
+bin	275000	0
+bin	280000	0
+bin	285000	0
+bin	290000	0
 statistic GeneratedScenario.node[2].wlan[0].radio packetErrorRate:histogram
 field count 20
 field mean 0
@@ -20072,23 +20151,26 @@ attr title "Symbol error rate, histogram"
 bin	-inf	0
 bin	0	0
 bin	1	0
-scalar GeneratedScenario.node[2].hybridManager totalSwitches 1
-scalar GeneratedScenario.node[2].hybridManager satTotalDuration 138.9
-scalar GeneratedScenario.node[2].hybridManager cellTotalDuration 41.1
-scalar GeneratedScenario.node[2].hybridManager satUsageRatio 0.77166666666667
-scalar GeneratedScenario.node[2].hybridManager cellUsageRatio 0.22833333333333
+scalar GeneratedScenario.node[2].hybridManager totalSwitches 2
+scalar GeneratedScenario.node[2].hybridManager satTotalDuration 130
+scalar GeneratedScenario.node[2].hybridManager cellTotalDuration 50
+scalar GeneratedScenario.node[2].hybridManager satUsageRatio 0.72222222222222
+scalar GeneratedScenario.node[2].hybridManager cellUsageRatio 0.27777777777778
+scalar GeneratedScenario.node[2].hybridManager timeToLoss:min -nan
+attr title "Predictive Time-To-Loss, min"
+attr unit s
 scalar GeneratedScenario.node[2].hybridManager batterySoC:last nan
 attr title "Battery State of Charge, last"
-scalar GeneratedScenario.node[2].hybridManager qosScore:mean 0.89924232667251
+scalar GeneratedScenario.node[2].hybridManager qosScore:mean -nan
 attr title "QoS Score, mean"
-scalar GeneratedScenario.node[2].hybridManager switchCount:last 1
+scalar GeneratedScenario.node[2].hybridManager switchCount:last 2
 attr title "Vertical Handover Count, last"
-scalar GeneratedScenario.node[2].hybridManager activeInterface:last 1
+scalar GeneratedScenario.node[2].hybridManager activeInterface:last 0
 attr title "Active Interface (0=5G, 1=Sat), last"
-scalar GeneratedScenario.node[2].mecClient mecTaskLatency:mean 0.025337161816904
+scalar GeneratedScenario.node[2].mecClient mecTaskLatency:mean 0.024068036626455
 attr title "MEC Task Latency (RTT + Compute), mean"
 attr unit s
-scalar GeneratedScenario.node[2].mecClient mecTaskLatency:max 0.031857663437724
+scalar GeneratedScenario.node[2].mecClient mecTaskLatency:max 0.031981268495321
 attr title "MEC Task Latency (RTT + Compute), max"
 attr unit s
 scalar GeneratedScenario.node[4].wlan[0].agent dropConfirm:count 0
@@ -20170,7 +20252,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[4].wlan[0].mac.dcf.channelAccess.contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[4].wlan[0].mac.dcf.channelAccess.contention stateChanged:count 238
+scalar GeneratedScenario.node[4].wlan[0].mac.dcf.channelAccess.contention stateChanged:count 234
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[4].wlan[0].mac.dcf.channelAccess channelOwnershipChanged:count 0
@@ -20515,13 +20597,13 @@ scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames 
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, max"
-scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.6759975249286e-05
+scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.6633640014583e-05
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[0].contention channelAccessGranted:count 43
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 410
+scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 406
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[0].txopProcedure txopEnded:count 43
@@ -20716,7 +20798,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[1].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 238
+scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 234
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[1].txopProcedure txopEnded:count 0
@@ -20861,7 +20943,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[2].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 238
+scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 234
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[2].txopProcedure txopEnded:count 0
@@ -21006,7 +21088,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[3].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 238
+scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 234
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[3].txopProcedure txopEnded:count 0
@@ -21086,7 +21168,7 @@ scalar GeneratedScenario.node[4].wlan[0].mac.hcf.originatorMacDataService packet
 attr title "packets fragmented, count"
 scalar GeneratedScenario.node[4].wlan[0].mac.hcf.recipientMacDataService packetDeaggregated:count 0
 attr title "packets deaggregated, count"
-scalar GeneratedScenario.node[4].wlan[0].mac.hcf.recipientMacDataService packetDefragmented:count 16
+scalar GeneratedScenario.node[4].wlan[0].mac.hcf.recipientMacDataService packetDefragmented:count 15
 attr title "packets defragmented, count"
 scalar GeneratedScenario.node[4].wlan[0].mac.hcf.recipientMacDataService packetDropDuplicateDetected:count 0
 attr interpolationmode none
@@ -21189,19 +21271,19 @@ scalar GeneratedScenario.node[4].wlan[0].mac.hcf packetReceivedFromPeerUnicast:s
 attr interpolationmode none
 attr source ieee80211Unicast(packetReceivedFromPeer)
 attr title "packets received: unicast, sum(packetBytes)"
-scalar GeneratedScenario.node[4].wlan[0].mac.hcf packetReceivedFromPeerMulticast:count 16
+scalar GeneratedScenario.node[4].wlan[0].mac.hcf packetReceivedFromPeerMulticast:count 15
 attr interpolationmode none
 attr source ieee80211Multicast(packetReceivedFromPeer)
 attr title "packets received: multicast, count"
-scalar GeneratedScenario.node[4].wlan[0].mac.hcf packetReceivedFromPeerMulticast:sum(packetBytes) 1088
+scalar GeneratedScenario.node[4].wlan[0].mac.hcf packetReceivedFromPeerMulticast:sum(packetBytes) 1020
 attr interpolationmode none
 attr source ieee80211Multicast(packetReceivedFromPeer)
 attr title "packets received: multicast, sum(packetBytes)"
-scalar GeneratedScenario.node[4].wlan[0].mac.hcf packetReceivedFromPeerBroadcast:count 16
+scalar GeneratedScenario.node[4].wlan[0].mac.hcf packetReceivedFromPeerBroadcast:count 15
 attr interpolationmode none
 attr source ieee80211Broadcast(packetReceivedFromPeer)
 attr title "packets received: broadcast, count"
-scalar GeneratedScenario.node[4].wlan[0].mac.hcf packetReceivedFromPeerBroadcast:sum(packetBytes) 1088
+scalar GeneratedScenario.node[4].wlan[0].mac.hcf packetReceivedFromPeerBroadcast:sum(packetBytes) 1020
 attr interpolationmode none
 attr source ieee80211Broadcast(packetReceivedFromPeer)
 attr title "packets received: broadcast, sum(packetBytes)"
@@ -21213,11 +21295,11 @@ scalar GeneratedScenario.node[4].wlan[0].mac.hcf packetReceivedFromPeerWithRetry
 attr interpolationmode none
 attr source ieee80211Retry(packetReceivedFromPeer)
 attr title "packets received: with retry, sum(packetBytes)"
-scalar GeneratedScenario.node[4].wlan[0].mac.hcf packetReceivedFromPeerWithoutRetry:count 16
+scalar GeneratedScenario.node[4].wlan[0].mac.hcf packetReceivedFromPeerWithoutRetry:count 15
 attr interpolationmode none
 attr source ieee80211NotRetry(packetReceivedFromPeer)
 attr title "packets received: without retry, count"
-scalar GeneratedScenario.node[4].wlan[0].mac.hcf packetReceivedFromPeerWithoutRetry:sum(packetBytes) 1088
+scalar GeneratedScenario.node[4].wlan[0].mac.hcf packetReceivedFromPeerWithoutRetry:sum(packetBytes) 1020
 attr interpolationmode none
 attr source ieee80211NotRetry(packetReceivedFromPeer)
 attr title "packets received: without retry, sum(packetBytes)"
@@ -21302,7 +21384,7 @@ attr title "packet drops: retry limit reached, sum(packetBytes)"
 scalar GeneratedScenario.node[4].wlan[0].mac.hcf linkBroken:count 0
 attr interpolationmode none
 attr title "link breaks, count"
-scalar GeneratedScenario.node[4].wlan[0].mac.rx ChannelLoad:timeavg 9.8461538461538e-06
+scalar GeneratedScenario.node[4].wlan[0].mac.rx ChannelLoad:timeavg 9.2307692307692e-06
 scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[0].pendingQueue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -21376,7 +21458,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[0].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 238
+scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 234
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[0].txopProcedure txopEnded:count 0
@@ -21521,7 +21603,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[1].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 238
+scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 234
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[1].txopProcedure txopEnded:count 0
@@ -21666,7 +21748,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[2].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 238
+scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 234
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[2].txopProcedure txopEnded:count 0
@@ -21811,7 +21893,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[3].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 238
+scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 234
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[4].wlan[0].mac.hcf.edca.edcaf[3].txopProcedure txopEnded:count 0
@@ -22056,10 +22138,10 @@ attr title "packet drops: retry limit reached, sum(packetBytes)"
 scalar GeneratedScenario.node[4].wlan[0].mac.hcf linkBroken:count 0
 attr interpolationmode none
 attr title "link breaks, count"
-scalar GeneratedScenario.node[4].wlan[0].mac packetReceivedFromLower:count 16
+scalar GeneratedScenario.node[4].wlan[0].mac packetReceivedFromLower:count 15
 attr interpolationmode none
 attr title "packets received from lower layer, count"
-scalar GeneratedScenario.node[4].wlan[0].mac packetReceivedFromLower:sum(packetBytes) 1088
+scalar GeneratedScenario.node[4].wlan[0].mac packetReceivedFromLower:sum(packetBytes) 1020
 attr interpolationmode none
 attr title "packets received from lower layer, sum(packetBytes)"
 scalar GeneratedScenario.node[4].wlan[0].mac packetSentToLower:count 43
@@ -22074,10 +22156,10 @@ attr title "packets received from upper layer, count"
 scalar GeneratedScenario.node[4].wlan[0].mac packetReceivedFromUpper:sum(packetBytes) 1634
 attr interpolationmode none
 attr title "packets received from upper layer, sum(packetBytes)"
-scalar GeneratedScenario.node[4].wlan[0].mac packetSentToUpper:count 16
+scalar GeneratedScenario.node[4].wlan[0].mac packetSentToUpper:count 15
 attr interpolationmode none
 attr title "packets sent to upper layer, count"
-scalar GeneratedScenario.node[4].wlan[0].mac packetSentToUpper:sum(packetBytes) 608
+scalar GeneratedScenario.node[4].wlan[0].mac packetSentToUpper:sum(packetBytes) 570
 attr interpolationmode none
 attr title "packets sent to upper layer, sum(packetBytes)"
 scalar GeneratedScenario.node[4].wlan[0].mac packetDrop:count 0
@@ -22158,7 +22240,7 @@ scalar GeneratedScenario.node[4].wlan[0].radio radioMode:count 89
 attr interpolationmode sample-hold
 attr source radioModeChanged
 attr title "Radio mode, count"
-scalar GeneratedScenario.node[4].wlan[0].radio receptionState:count 119
+scalar GeneratedScenario.node[4].wlan[0].radio receptionState:count 117
 attr interpolationmode sample-hold
 attr source receptionStateChanged
 attr title "Radio reception state, count"
@@ -22167,24 +22249,24 @@ attr interpolationmode sample-hold
 attr source transmissionStateChanged
 attr title "Radio transmission state, count"
 statistic GeneratedScenario.node[4].wlan[0].radio minSnir:histogram
-field count 16
-field mean 5631.0350857798
-field stddev 11020.66663301
-field min 326.53614514079
-field max 42424.276369641
-field sum 90096.561372477
-field sqrsum 2329163293.7355
+field count 15
+field mean 6513.713254367
+field stddev 15976.684980859
+field min 357.76949469385
+field max 63826.114974695
+field sum 97705.698815505
+field sqrsum 4209989387.0883
 attr source minimumSnir(packetSentToUpper)
 attr title "Min SNIR, histogram"
 bin	-inf	0
 bin	0	4
-bin	1000	4
+bin	1000	3
 bin	2000	3
 bin	3000	1
 bin	4000	2
 bin	5000	0
 bin	6000	0
-bin	7000	0
+bin	7000	1
 bin	8000	0
 bin	9000	0
 bin	10000	0
@@ -22198,7 +22280,7 @@ bin	17000	0
 bin	18000	0
 bin	19000	0
 bin	20000	0
-bin	21000	1
+bin	21000	0
 bin	22000	0
 bin	23000	0
 bin	24000	0
@@ -22219,7 +22301,7 @@ bin	38000	0
 bin	39000	0
 bin	40000	0
 bin	41000	0
-bin	42000	1
+bin	42000	0
 bin	43000	0
 bin	44000	0
 bin	45000	0
@@ -22231,8 +22313,35 @@ bin	50000	0
 bin	51000	0
 bin	52000	0
 bin	53000	0
+bin	54000	0
+bin	55000	0
+bin	56000	0
+bin	57000	0
+bin	58000	0
+bin	59000	0
+bin	60000	0
+bin	61000	0
+bin	62000	0
+bin	63000	1
+bin	64000	0
+bin	65000	0
+bin	66000	0
+bin	67000	0
+bin	68000	0
+bin	69000	0
+bin	70000	0
+bin	71000	0
+bin	72000	0
+bin	73000	0
+bin	74000	0
+bin	75000	0
+bin	76000	0
+bin	77000	0
+bin	78000	0
+bin	79000	0
+bin	80000	0
 statistic GeneratedScenario.node[4].wlan[0].radio packetErrorRate:histogram
-field count 16
+field count 15
 field mean 0
 field stddev 0
 field min 0
@@ -22267,7 +22376,7 @@ bin	-0.08	0
 bin	-0.06	0
 bin	-0.04	0
 bin	-0.02	0
-bin	0	16
+bin	0	15
 bin	0.02	0
 bin	0.04	0
 bin	0.06	0
@@ -22504,23 +22613,26 @@ attr title "Symbol error rate, histogram"
 bin	-inf	0
 bin	0	0
 bin	1	0
-scalar GeneratedScenario.node[4].hybridManager totalSwitches 1
-scalar GeneratedScenario.node[4].hybridManager satTotalDuration 138.6
-scalar GeneratedScenario.node[4].hybridManager cellTotalDuration 41.4
-scalar GeneratedScenario.node[4].hybridManager satUsageRatio 0.77
-scalar GeneratedScenario.node[4].hybridManager cellUsageRatio 0.23
+scalar GeneratedScenario.node[4].hybridManager totalSwitches 2
+scalar GeneratedScenario.node[4].hybridManager satTotalDuration 130
+scalar GeneratedScenario.node[4].hybridManager cellTotalDuration 50
+scalar GeneratedScenario.node[4].hybridManager satUsageRatio 0.72222222222222
+scalar GeneratedScenario.node[4].hybridManager cellUsageRatio 0.27777777777778
+scalar GeneratedScenario.node[4].hybridManager timeToLoss:min -nan
+attr title "Predictive Time-To-Loss, min"
+attr unit s
 scalar GeneratedScenario.node[4].hybridManager batterySoC:last nan
 attr title "Battery State of Charge, last"
-scalar GeneratedScenario.node[4].hybridManager qosScore:mean 0.88540240277233
+scalar GeneratedScenario.node[4].hybridManager qosScore:mean -nan
 attr title "QoS Score, mean"
-scalar GeneratedScenario.node[4].hybridManager switchCount:last 1
+scalar GeneratedScenario.node[4].hybridManager switchCount:last 2
 attr title "Vertical Handover Count, last"
-scalar GeneratedScenario.node[4].hybridManager activeInterface:last 1
+scalar GeneratedScenario.node[4].hybridManager activeInterface:last 0
 attr title "Active Interface (0=5G, 1=Sat), last"
-scalar GeneratedScenario.node[4].mecClient mecTaskLatency:mean 0.028765078452412
+scalar GeneratedScenario.node[4].mecClient mecTaskLatency:mean 0.027482749930822
 attr title "MEC Task Latency (RTT + Compute), mean"
 attr unit s
-scalar GeneratedScenario.node[4].mecClient mecTaskLatency:max 0.031971651515225
+scalar GeneratedScenario.node[4].mecClient mecTaskLatency:max 0.031988702450646
 attr title "MEC Task Latency (RTT + Compute), max"
 attr unit s
 scalar GeneratedScenario.node[6].wlan[0].agent dropConfirm:count 0
@@ -22602,7 +22714,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[6].wlan[0].mac.dcf.channelAccess.contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[6].wlan[0].mac.dcf.channelAccess.contention stateChanged:count 194
+scalar GeneratedScenario.node[6].wlan[0].mac.dcf.channelAccess.contention stateChanged:count 190
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[6].wlan[0].mac.dcf.channelAccess channelOwnershipChanged:count 0
@@ -22947,13 +23059,13 @@ scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames 
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, max"
-scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.7346514836883e-05
+scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.7302497713157e-05
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[0].contention channelAccessGranted:count 33
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 326
+scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 322
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[0].txopProcedure txopEnded:count 33
@@ -23148,7 +23260,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[1].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 194
+scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 190
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[1].txopProcedure txopEnded:count 0
@@ -23293,7 +23405,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[2].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 194
+scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 190
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[2].txopProcedure txopEnded:count 0
@@ -23438,7 +23550,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[3].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 194
+scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 190
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[3].txopProcedure txopEnded:count 0
@@ -23518,7 +23630,7 @@ scalar GeneratedScenario.node[6].wlan[0].mac.hcf.originatorMacDataService packet
 attr title "packets fragmented, count"
 scalar GeneratedScenario.node[6].wlan[0].mac.hcf.recipientMacDataService packetDeaggregated:count 0
 attr title "packets deaggregated, count"
-scalar GeneratedScenario.node[6].wlan[0].mac.hcf.recipientMacDataService packetDefragmented:count 15
+scalar GeneratedScenario.node[6].wlan[0].mac.hcf.recipientMacDataService packetDefragmented:count 14
 attr title "packets defragmented, count"
 scalar GeneratedScenario.node[6].wlan[0].mac.hcf.recipientMacDataService packetDropDuplicateDetected:count 0
 attr interpolationmode none
@@ -23621,19 +23733,19 @@ scalar GeneratedScenario.node[6].wlan[0].mac.hcf packetReceivedFromPeerUnicast:s
 attr interpolationmode none
 attr source ieee80211Unicast(packetReceivedFromPeer)
 attr title "packets received: unicast, sum(packetBytes)"
-scalar GeneratedScenario.node[6].wlan[0].mac.hcf packetReceivedFromPeerMulticast:count 15
+scalar GeneratedScenario.node[6].wlan[0].mac.hcf packetReceivedFromPeerMulticast:count 14
 attr interpolationmode none
 attr source ieee80211Multicast(packetReceivedFromPeer)
 attr title "packets received: multicast, count"
-scalar GeneratedScenario.node[6].wlan[0].mac.hcf packetReceivedFromPeerMulticast:sum(packetBytes) 1020
+scalar GeneratedScenario.node[6].wlan[0].mac.hcf packetReceivedFromPeerMulticast:sum(packetBytes) 952
 attr interpolationmode none
 attr source ieee80211Multicast(packetReceivedFromPeer)
 attr title "packets received: multicast, sum(packetBytes)"
-scalar GeneratedScenario.node[6].wlan[0].mac.hcf packetReceivedFromPeerBroadcast:count 15
+scalar GeneratedScenario.node[6].wlan[0].mac.hcf packetReceivedFromPeerBroadcast:count 14
 attr interpolationmode none
 attr source ieee80211Broadcast(packetReceivedFromPeer)
 attr title "packets received: broadcast, count"
-scalar GeneratedScenario.node[6].wlan[0].mac.hcf packetReceivedFromPeerBroadcast:sum(packetBytes) 1020
+scalar GeneratedScenario.node[6].wlan[0].mac.hcf packetReceivedFromPeerBroadcast:sum(packetBytes) 952
 attr interpolationmode none
 attr source ieee80211Broadcast(packetReceivedFromPeer)
 attr title "packets received: broadcast, sum(packetBytes)"
@@ -23645,11 +23757,11 @@ scalar GeneratedScenario.node[6].wlan[0].mac.hcf packetReceivedFromPeerWithRetry
 attr interpolationmode none
 attr source ieee80211Retry(packetReceivedFromPeer)
 attr title "packets received: with retry, sum(packetBytes)"
-scalar GeneratedScenario.node[6].wlan[0].mac.hcf packetReceivedFromPeerWithoutRetry:count 15
+scalar GeneratedScenario.node[6].wlan[0].mac.hcf packetReceivedFromPeerWithoutRetry:count 14
 attr interpolationmode none
 attr source ieee80211NotRetry(packetReceivedFromPeer)
 attr title "packets received: without retry, count"
-scalar GeneratedScenario.node[6].wlan[0].mac.hcf packetReceivedFromPeerWithoutRetry:sum(packetBytes) 1020
+scalar GeneratedScenario.node[6].wlan[0].mac.hcf packetReceivedFromPeerWithoutRetry:sum(packetBytes) 952
 attr interpolationmode none
 attr source ieee80211NotRetry(packetReceivedFromPeer)
 attr title "packets received: without retry, sum(packetBytes)"
@@ -23734,7 +23846,7 @@ attr title "packet drops: retry limit reached, sum(packetBytes)"
 scalar GeneratedScenario.node[6].wlan[0].mac.hcf linkBroken:count 0
 attr interpolationmode none
 attr title "link breaks, count"
-scalar GeneratedScenario.node[6].wlan[0].mac.rx ChannelLoad:timeavg 1.2313432835821e-05
+scalar GeneratedScenario.node[6].wlan[0].mac.rx ChannelLoad:timeavg 1.1492537313433e-05
 scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[0].pendingQueue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -23808,7 +23920,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[0].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 194
+scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 190
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[0].txopProcedure txopEnded:count 0
@@ -23953,7 +24065,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[1].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 194
+scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 190
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[1].txopProcedure txopEnded:count 0
@@ -24098,7 +24210,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[2].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 194
+scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 190
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[2].txopProcedure txopEnded:count 0
@@ -24243,7 +24355,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[3].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 194
+scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 190
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[6].wlan[0].mac.hcf.edca.edcaf[3].txopProcedure txopEnded:count 0
@@ -24488,10 +24600,10 @@ attr title "packet drops: retry limit reached, sum(packetBytes)"
 scalar GeneratedScenario.node[6].wlan[0].mac.hcf linkBroken:count 0
 attr interpolationmode none
 attr title "link breaks, count"
-scalar GeneratedScenario.node[6].wlan[0].mac packetReceivedFromLower:count 15
+scalar GeneratedScenario.node[6].wlan[0].mac packetReceivedFromLower:count 14
 attr interpolationmode none
 attr title "packets received from lower layer, count"
-scalar GeneratedScenario.node[6].wlan[0].mac packetReceivedFromLower:sum(packetBytes) 1020
+scalar GeneratedScenario.node[6].wlan[0].mac packetReceivedFromLower:sum(packetBytes) 952
 attr interpolationmode none
 attr title "packets received from lower layer, sum(packetBytes)"
 scalar GeneratedScenario.node[6].wlan[0].mac packetSentToLower:count 33
@@ -24506,10 +24618,10 @@ attr title "packets received from upper layer, count"
 scalar GeneratedScenario.node[6].wlan[0].mac packetReceivedFromUpper:sum(packetBytes) 1254
 attr interpolationmode none
 attr title "packets received from upper layer, sum(packetBytes)"
-scalar GeneratedScenario.node[6].wlan[0].mac packetSentToUpper:count 15
+scalar GeneratedScenario.node[6].wlan[0].mac packetSentToUpper:count 14
 attr interpolationmode none
 attr title "packets sent to upper layer, count"
-scalar GeneratedScenario.node[6].wlan[0].mac packetSentToUpper:sum(packetBytes) 570
+scalar GeneratedScenario.node[6].wlan[0].mac packetSentToUpper:sum(packetBytes) 532
 attr interpolationmode none
 attr title "packets sent to upper layer, sum(packetBytes)"
 scalar GeneratedScenario.node[6].wlan[0].mac packetDrop:count 0
@@ -24590,7 +24702,7 @@ scalar GeneratedScenario.node[6].wlan[0].radio radioMode:count 69
 attr interpolationmode sample-hold
 attr source radioModeChanged
 attr title "Radio mode, count"
-scalar GeneratedScenario.node[6].wlan[0].radio receptionState:count 97
+scalar GeneratedScenario.node[6].wlan[0].radio receptionState:count 95
 attr interpolationmode sample-hold
 attr source receptionStateChanged
 attr title "Radio reception state, count"
@@ -24599,103 +24711,72 @@ attr interpolationmode sample-hold
 attr source transmissionStateChanged
 attr title "Radio transmission state, count"
 statistic GeneratedScenario.node[6].wlan[0].radio minSnir:histogram
-field count 15
-field mean 40859.627971457
-field stddev 102685.75133768
-field min 344.14357009134
-field max 332187.93498686
-field sum 612894.41957186
-field sqrsum 172663727358.47
+field count 14
+field mean 7369.4073591088
+field stddev 13736.737258641
+field min 346.48438347475
+field max 42023.621753641
+field sum 103171.70302752
+field sqrsum 3213387664.211
 attr source minimumSnir(packetSentToUpper)
 attr title "Min SNIR, histogram"
 bin	-inf	0
-bin	0	11
+bin	0	5
+bin	1000	4
+bin	2000	0
+bin	3000	1
+bin	4000	0
 bin	5000	1
-bin	10000	1
+bin	6000	1
+bin	7000	0
+bin	8000	0
+bin	9000	0
+bin	10000	0
+bin	11000	0
+bin	12000	0
+bin	13000	0
+bin	14000	0
 bin	15000	0
+bin	16000	0
+bin	17000	0
+bin	18000	0
+bin	19000	0
 bin	20000	0
+bin	21000	0
+bin	22000	0
+bin	23000	0
+bin	24000	0
 bin	25000	0
+bin	26000	0
+bin	27000	0
+bin	28000	0
+bin	29000	0
 bin	30000	0
+bin	31000	0
+bin	32000	0
+bin	33000	0
+bin	34000	0
 bin	35000	0
+bin	36000	1
+bin	37000	0
+bin	38000	0
+bin	39000	0
 bin	40000	0
+bin	41000	0
+bin	42000	1
+bin	43000	0
+bin	44000	0
 bin	45000	0
+bin	46000	0
+bin	47000	0
+bin	48000	0
+bin	49000	0
 bin	50000	0
-bin	55000	0
-bin	60000	0
-bin	65000	0
-bin	70000	0
-bin	75000	0
-bin	80000	0
-bin	85000	0
-bin	90000	0
-bin	95000	0
-bin	100000	0
-bin	105000	0
-bin	110000	0
-bin	115000	0
-bin	120000	0
-bin	125000	0
-bin	130000	0
-bin	135000	0
-bin	140000	0
-bin	145000	0
-bin	150000	0
-bin	155000	0
-bin	160000	0
-bin	165000	0
-bin	170000	0
-bin	175000	0
-bin	180000	0
-bin	185000	0
-bin	190000	0
-bin	195000	0
-bin	200000	0
-bin	205000	0
-bin	210000	0
-bin	215000	0
-bin	220000	0
-bin	225000	0
-bin	230000	0
-bin	235000	0
-bin	240000	0
-bin	245000	1
-bin	250000	0
-bin	255000	0
-bin	260000	0
-bin	265000	0
-bin	270000	0
-bin	275000	0
-bin	280000	0
-bin	285000	0
-bin	290000	0
-bin	295000	0
-bin	300000	0
-bin	305000	0
-bin	310000	0
-bin	315000	0
-bin	320000	0
-bin	325000	0
-bin	330000	1
-bin	335000	0
-bin	340000	0
-bin	345000	0
-bin	350000	0
-bin	355000	0
-bin	360000	0
-bin	365000	0
-bin	370000	0
-bin	375000	0
-bin	380000	0
-bin	385000	0
-bin	390000	0
-bin	395000	0
-bin	400000	0
-bin	405000	0
-bin	410000	0
-bin	415000	0
-bin	420000	0
+bin	51000	0
+bin	52000	0
+bin	53000	0
 statistic GeneratedScenario.node[6].wlan[0].radio packetErrorRate:histogram
-field count 15
+field count 14
 field mean 0
 field stddev 0
 field min 0
@@ -24730,7 +24811,7 @@ bin	-0.08	0
 bin	-0.06	0
 bin	-0.04	0
 bin	-0.02	0
-bin	0	15
+bin	0	14
 bin	0.02	0
 bin	0.04	0
 bin	0.06	0
@@ -24967,23 +25048,26 @@ attr title "Symbol error rate, histogram"
 bin	-inf	0
 bin	0	0
 bin	1	0
-scalar GeneratedScenario.node[6].hybridManager totalSwitches 1
-scalar GeneratedScenario.node[6].hybridManager satTotalDuration 105.8
-scalar GeneratedScenario.node[6].hybridManager cellTotalDuration 74.2
-scalar GeneratedScenario.node[6].hybridManager satUsageRatio 0.58777777777778
-scalar GeneratedScenario.node[6].hybridManager cellUsageRatio 0.41222222222222
+scalar GeneratedScenario.node[6].hybridManager totalSwitches 2
+scalar GeneratedScenario.node[6].hybridManager satTotalDuration 97
+scalar GeneratedScenario.node[6].hybridManager cellTotalDuration 83
+scalar GeneratedScenario.node[6].hybridManager satUsageRatio 0.53888888888889
+scalar GeneratedScenario.node[6].hybridManager cellUsageRatio 0.46111111111111
+scalar GeneratedScenario.node[6].hybridManager timeToLoss:min -nan
+attr title "Predictive Time-To-Loss, min"
+attr unit s
 scalar GeneratedScenario.node[6].hybridManager batterySoC:last nan
 attr title "Battery State of Charge, last"
-scalar GeneratedScenario.node[6].hybridManager qosScore:mean 0.88258752845943
+scalar GeneratedScenario.node[6].hybridManager qosScore:mean -nan
 attr title "QoS Score, mean"
-scalar GeneratedScenario.node[6].hybridManager switchCount:last 1
+scalar GeneratedScenario.node[6].hybridManager switchCount:last 2
 attr title "Vertical Handover Count, last"
-scalar GeneratedScenario.node[6].hybridManager activeInterface:last 1
+scalar GeneratedScenario.node[6].hybridManager activeInterface:last 0
 attr title "Active Interface (0=5G, 1=Sat), last"
-scalar GeneratedScenario.node[6].mecClient mecTaskLatency:mean 0.029051316221191
+scalar GeneratedScenario.node[6].mecClient mecTaskLatency:mean 0.027269546123182
 attr title "MEC Task Latency (RTT + Compute), mean"
 attr unit s
-scalar GeneratedScenario.node[6].mecClient mecTaskLatency:max 0.031980788350804
+scalar GeneratedScenario.node[6].mecClient mecTaskLatency:max 0.031986277696444
 attr title "MEC Task Latency (RTT + Compute), max"
 attr unit s
 scalar GeneratedScenario.node[8].wlan[0].agent dropConfirm:count 0
@@ -25065,7 +25149,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[8].wlan[0].mac.dcf.channelAccess.contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[8].wlan[0].mac.dcf.channelAccess.contention stateChanged:count 130
+scalar GeneratedScenario.node[8].wlan[0].mac.dcf.channelAccess.contention stateChanged:count 138
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[8].wlan[0].mac.dcf.channelAccess channelOwnershipChanged:count 0
@@ -25410,13 +25494,13 @@ scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames 
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, max"
-scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.7409560131775e-05
+scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.7679788087203e-05
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[0].contention channelAccessGranted:count 22
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 218
+scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 226
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[0].txopProcedure txopEnded:count 22
@@ -25611,7 +25695,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[1].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 130
+scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 138
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[1].txopProcedure txopEnded:count 0
@@ -25756,7 +25840,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[2].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 130
+scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 138
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[2].txopProcedure txopEnded:count 0
@@ -25901,7 +25985,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[3].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 130
+scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 138
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[3].txopProcedure txopEnded:count 0
@@ -25981,7 +26065,7 @@ scalar GeneratedScenario.node[8].wlan[0].mac.hcf.originatorMacDataService packet
 attr title "packets fragmented, count"
 scalar GeneratedScenario.node[8].wlan[0].mac.hcf.recipientMacDataService packetDeaggregated:count 0
 attr title "packets deaggregated, count"
-scalar GeneratedScenario.node[8].wlan[0].mac.hcf.recipientMacDataService packetDefragmented:count 10
+scalar GeneratedScenario.node[8].wlan[0].mac.hcf.recipientMacDataService packetDefragmented:count 12
 attr title "packets defragmented, count"
 scalar GeneratedScenario.node[8].wlan[0].mac.hcf.recipientMacDataService packetDropDuplicateDetected:count 0
 attr interpolationmode none
@@ -26084,19 +26168,19 @@ scalar GeneratedScenario.node[8].wlan[0].mac.hcf packetReceivedFromPeerUnicast:s
 attr interpolationmode none
 attr source ieee80211Unicast(packetReceivedFromPeer)
 attr title "packets received: unicast, sum(packetBytes)"
-scalar GeneratedScenario.node[8].wlan[0].mac.hcf packetReceivedFromPeerMulticast:count 10
+scalar GeneratedScenario.node[8].wlan[0].mac.hcf packetReceivedFromPeerMulticast:count 12
 attr interpolationmode none
 attr source ieee80211Multicast(packetReceivedFromPeer)
 attr title "packets received: multicast, count"
-scalar GeneratedScenario.node[8].wlan[0].mac.hcf packetReceivedFromPeerMulticast:sum(packetBytes) 680
+scalar GeneratedScenario.node[8].wlan[0].mac.hcf packetReceivedFromPeerMulticast:sum(packetBytes) 816
 attr interpolationmode none
 attr source ieee80211Multicast(packetReceivedFromPeer)
 attr title "packets received: multicast, sum(packetBytes)"
-scalar GeneratedScenario.node[8].wlan[0].mac.hcf packetReceivedFromPeerBroadcast:count 10
+scalar GeneratedScenario.node[8].wlan[0].mac.hcf packetReceivedFromPeerBroadcast:count 12
 attr interpolationmode none
 attr source ieee80211Broadcast(packetReceivedFromPeer)
 attr title "packets received: broadcast, count"
-scalar GeneratedScenario.node[8].wlan[0].mac.hcf packetReceivedFromPeerBroadcast:sum(packetBytes) 680
+scalar GeneratedScenario.node[8].wlan[0].mac.hcf packetReceivedFromPeerBroadcast:sum(packetBytes) 816
 attr interpolationmode none
 attr source ieee80211Broadcast(packetReceivedFromPeer)
 attr title "packets received: broadcast, sum(packetBytes)"
@@ -26108,11 +26192,11 @@ scalar GeneratedScenario.node[8].wlan[0].mac.hcf packetReceivedFromPeerWithRetry
 attr interpolationmode none
 attr source ieee80211Retry(packetReceivedFromPeer)
 attr title "packets received: with retry, sum(packetBytes)"
-scalar GeneratedScenario.node[8].wlan[0].mac.hcf packetReceivedFromPeerWithoutRetry:count 10
+scalar GeneratedScenario.node[8].wlan[0].mac.hcf packetReceivedFromPeerWithoutRetry:count 12
 attr interpolationmode none
 attr source ieee80211NotRetry(packetReceivedFromPeer)
 attr title "packets received: without retry, count"
-scalar GeneratedScenario.node[8].wlan[0].mac.hcf packetReceivedFromPeerWithoutRetry:sum(packetBytes) 680
+scalar GeneratedScenario.node[8].wlan[0].mac.hcf packetReceivedFromPeerWithoutRetry:sum(packetBytes) 816
 attr interpolationmode none
 attr source ieee80211NotRetry(packetReceivedFromPeer)
 attr title "packets received: without retry, sum(packetBytes)"
@@ -26197,7 +26281,7 @@ attr title "packet drops: retry limit reached, sum(packetBytes)"
 scalar GeneratedScenario.node[8].wlan[0].mac.hcf linkBroken:count 0
 attr interpolationmode none
 attr title "link breaks, count"
-scalar GeneratedScenario.node[8].wlan[0].mac.rx ChannelLoad:timeavg 1.2324929971989e-05
+scalar GeneratedScenario.node[8].wlan[0].mac.rx ChannelLoad:timeavg 1.4789915966387e-05
 scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[0].pendingQueue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -26271,7 +26355,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[0].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 130
+scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[0].contention stateChanged:count 138
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[0].txopProcedure txopEnded:count 0
@@ -26416,7 +26500,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[1].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 130
+scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[1].contention stateChanged:count 138
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[1].txopProcedure txopEnded:count 0
@@ -26561,7 +26645,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[2].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 130
+scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[2].contention stateChanged:count 138
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[2].txopProcedure txopEnded:count 0
@@ -26706,7 +26790,7 @@ attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
 scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[3].contention channelAccessGranted:count 0
 attr title "channel access granted, count"
-scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 130
+scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[3].contention stateChanged:count 138
 attr interpolationmode none
 attr title "contention state changed, count"
 scalar GeneratedScenario.node[8].wlan[0].mac.hcf.edca.edcaf[3].txopProcedure txopEnded:count 0
@@ -26951,10 +27035,10 @@ attr title "packet drops: retry limit reached, sum(packetBytes)"
 scalar GeneratedScenario.node[8].wlan[0].mac.hcf linkBroken:count 0
 attr interpolationmode none
 attr title "link breaks, count"
-scalar GeneratedScenario.node[8].wlan[0].mac packetReceivedFromLower:count 10
+scalar GeneratedScenario.node[8].wlan[0].mac packetReceivedFromLower:count 12
 attr interpolationmode none
 attr title "packets received from lower layer, count"
-scalar GeneratedScenario.node[8].wlan[0].mac packetReceivedFromLower:sum(packetBytes) 680
+scalar GeneratedScenario.node[8].wlan[0].mac packetReceivedFromLower:sum(packetBytes) 816
 attr interpolationmode none
 attr title "packets received from lower layer, sum(packetBytes)"
 scalar GeneratedScenario.node[8].wlan[0].mac packetSentToLower:count 22
@@ -26969,10 +27053,10 @@ attr title "packets received from upper layer, count"
 scalar GeneratedScenario.node[8].wlan[0].mac packetReceivedFromUpper:sum(packetBytes) 836
 attr interpolationmode none
 attr title "packets received from upper layer, sum(packetBytes)"
-scalar GeneratedScenario.node[8].wlan[0].mac packetSentToUpper:count 10
+scalar GeneratedScenario.node[8].wlan[0].mac packetSentToUpper:count 12
 attr interpolationmode none
 attr title "packets sent to upper layer, count"
-scalar GeneratedScenario.node[8].wlan[0].mac packetSentToUpper:sum(packetBytes) 380
+scalar GeneratedScenario.node[8].wlan[0].mac packetSentToUpper:sum(packetBytes) 456
 attr interpolationmode none
 attr title "packets sent to upper layer, sum(packetBytes)"
 scalar GeneratedScenario.node[8].wlan[0].mac packetDrop:count 0
@@ -27053,7 +27137,7 @@ scalar GeneratedScenario.node[8].wlan[0].radio radioMode:count 47
 attr interpolationmode sample-hold
 attr source radioModeChanged
 attr title "Radio mode, count"
-scalar GeneratedScenario.node[8].wlan[0].radio receptionState:count 65
+scalar GeneratedScenario.node[8].wlan[0].radio receptionState:count 69
 attr interpolationmode sample-hold
 attr source receptionStateChanged
 attr title "Radio reception state, count"
@@ -27062,24 +27146,24 @@ attr interpolationmode sample-hold
 attr source transmissionStateChanged
 attr title "Radio transmission state, count"
 statistic GeneratedScenario.node[8].wlan[0].radio minSnir:histogram
-field count 10
-field mean 13393.087629974
-field stddev 33154.409728437
-field min 438.48343938763
+field count 12
+field mean 13744.063796921
+field stddev 31426.82748806
+field min 351.52863113392
 field max 107029.85580298
-field sum 133930.87629974
-field sqrsum 11686681922.611
+field sum 164928.76556305
+field sqrsum 13130891821.453
 attr source minimumSnir(packetSentToUpper)
 attr title "Min SNIR, histogram"
 bin	-inf	0
-bin	0	4
-bin	2000	4
+bin	0	8
+bin	2000	0
 bin	4000	0
-bin	6000	0
+bin	6000	2
 bin	8000	0
 bin	10000	0
 bin	12000	0
-bin	14000	1
+bin	14000	0
 bin	16000	0
 bin	18000	0
 bin	20000	0
@@ -27091,7 +27175,7 @@ bin	30000	0
 bin	32000	0
 bin	34000	0
 bin	36000	0
-bin	38000	0
+bin	38000	1
 bin	40000	0
 bin	42000	0
 bin	44000	0
@@ -27141,7 +27225,7 @@ bin	130000	0
 bin	132000	0
 bin	134000	0
 statistic GeneratedScenario.node[8].wlan[0].radio packetErrorRate:histogram
-field count 10
+field count 12
 field mean 0
 field stddev 0
 field min 0
@@ -27176,7 +27260,7 @@ bin	-0.08	0
 bin	-0.06	0
 bin	-0.04	0
 bin	-0.02	0
-bin	0	10
+bin	0	12
 bin	0.02	0
 bin	0.04	0
 bin	0.06	0
@@ -27413,23 +27497,26 @@ attr title "Symbol error rate, histogram"
 bin	-inf	0
 bin	0	0
 bin	1	0
-scalar GeneratedScenario.node[8].hybridManager totalSwitches 1
-scalar GeneratedScenario.node[8].hybridManager satTotalDuration 70
-scalar GeneratedScenario.node[8].hybridManager cellTotalDuration 110
-scalar GeneratedScenario.node[8].hybridManager satUsageRatio 0.38888888888889
-scalar GeneratedScenario.node[8].hybridManager cellUsageRatio 0.61111111111111
+scalar GeneratedScenario.node[8].hybridManager totalSwitches 2
+scalar GeneratedScenario.node[8].hybridManager satTotalDuration 61.5
+scalar GeneratedScenario.node[8].hybridManager cellTotalDuration 118.5
+scalar GeneratedScenario.node[8].hybridManager satUsageRatio 0.34166666666667
+scalar GeneratedScenario.node[8].hybridManager cellUsageRatio 0.65833333333333
+scalar GeneratedScenario.node[8].hybridManager timeToLoss:min -nan
+attr title "Predictive Time-To-Loss, min"
+attr unit s
 scalar GeneratedScenario.node[8].hybridManager batterySoC:last nan
 attr title "Battery State of Charge, last"
-scalar GeneratedScenario.node[8].hybridManager qosScore:mean 0.87755370523973
+scalar GeneratedScenario.node[8].hybridManager qosScore:mean -nan
 attr title "QoS Score, mean"
-scalar GeneratedScenario.node[8].hybridManager switchCount:last 1
+scalar GeneratedScenario.node[8].hybridManager switchCount:last 2
 attr title "Vertical Handover Count, last"
-scalar GeneratedScenario.node[8].hybridManager activeInterface:last 1
+scalar GeneratedScenario.node[8].hybridManager activeInterface:last 0
 attr title "Active Interface (0=5G, 1=Sat), last"
-scalar GeneratedScenario.node[8].mecClient mecTaskLatency:mean 0.02861398869695
+scalar GeneratedScenario.node[8].mecClient mecTaskLatency:mean 0.026673682295693
 attr title "MEC Task Latency (RTT + Compute), mean"
 attr unit s
-scalar GeneratedScenario.node[8].mecClient mecTaskLatency:max 0.031811551027233
+scalar GeneratedScenario.node[8].mecClient mecTaskLatency:max 0.031983184157172
 attr title "MEC Task Latency (RTT + Compute), max"
 attr unit s
 scalar GeneratedScenario.node[10].wlan[0].agent dropConfirm:count 0
@@ -27856,7 +27943,7 @@ scalar GeneratedScenario.node[10].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, max"
-scalar GeneratedScenario.node[10].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.8284973090851e-05
+scalar GeneratedScenario.node[10].wlan[0].mac.hcf.edca.edcaf[0].inProgressFrames queueLength:timeavg 2.8153537995206e-05
 attr interpolationmode sample-hold
 attr source "count(packetEnqueued) - count(packetDequeued)"
 attr title "queue length, timeavg"
@@ -29509,91 +29596,79 @@ attr source transmissionStateChanged
 attr title "Radio transmission state, count"
 statistic GeneratedScenario.node[10].wlan[0].radio minSnir:histogram
 field count 8
-field mean 3979.6904402309
-field stddev 4906.0613319777
-field min 336.41181836682
-field max 12028.125935129
-field sum 31837.523521847
-field sqrsum 295189552.55241
+field mean 33572.999080529
+field stddev 87040.696375815
+field min 327.9004521846
+field max 248770.92132373
+field sum 268583.99264423
+field sqrsum 62049749917.197
 attr source minimumSnir(packetSentToUpper)
 attr title "Min SNIR, histogram"
 bin	-inf	0
-bin	0	0
-bin	200	2
-bin	400	0
-bin	600	0
-bin	800	2
-bin	1000	0
-bin	1200	0
-bin	1400	0
-bin	1600	0
-bin	1800	1
-bin	2000	0
-bin	2200	0
-bin	2400	0
-bin	2600	0
-bin	2800	0
-bin	3000	0
-bin	3200	0
-bin	3400	0
-bin	3600	0
-bin	3800	1
-bin	4000	0
-bin	4200	0
-bin	4400	0
-bin	4600	0
-bin	4800	0
+bin	0	6
 bin	5000	0
-bin	5200	0
-bin	5400	0
-bin	5600	0
-bin	5800	0
-bin	6000	0
-bin	6200	0
-bin	6400	0
-bin	6600	0
-bin	6800	0
-bin	7000	0
-bin	7200	0
-bin	7400	0
-bin	7600	0
-bin	7800	0
-bin	8000	0
-bin	8200	0
-bin	8400	0
-bin	8600	0
-bin	8800	0
-bin	9000	0
-bin	9200	0
-bin	9400	0
-bin	9600	0
-bin	9800	0
-bin	10000	0
-bin	10200	0
-bin	10400	0
-bin	10600	0
-bin	10800	0
-bin	11000	0
-bin	11200	1
-bin	11400	0
-bin	11600	0
-bin	11800	0
-bin	12000	1
-bin	12200	0
-bin	12400	0
-bin	12600	0
-bin	12800	0
-bin	13000	0
-bin	13200	0
-bin	13400	0
-bin	13600	0
-bin	13800	0
-bin	14000	0
-bin	14200	0
-bin	14400	0
-bin	14600	0
-bin	14800	0
+bin	10000	1
 bin	15000	0
+bin	20000	0
+bin	25000	0
+bin	30000	0
+bin	35000	0
+bin	40000	0
+bin	45000	0
+bin	50000	0
+bin	55000	0
+bin	60000	0
+bin	65000	0
+bin	70000	0
+bin	75000	0
+bin	80000	0
+bin	85000	0
+bin	90000	0
+bin	95000	0
+bin	100000	0
+bin	105000	0
+bin	110000	0
+bin	115000	0
+bin	120000	0
+bin	125000	0
+bin	130000	0
+bin	135000	0
+bin	140000	0
+bin	145000	0
+bin	150000	0
+bin	155000	0
+bin	160000	0
+bin	165000	0
+bin	170000	0
+bin	175000	0
+bin	180000	0
+bin	185000	0
+bin	190000	0
+bin	195000	0
+bin	200000	0
+bin	205000	0
+bin	210000	0
+bin	215000	0
+bin	220000	0
+bin	225000	0
+bin	230000	0
+bin	235000	0
+bin	240000	0
+bin	245000	1
+bin	250000	0
+bin	255000	0
+bin	260000	0
+bin	265000	0
+bin	270000	0
+bin	275000	0
+bin	280000	0
+bin	285000	0
+bin	290000	0
+bin	295000	0
+bin	300000	0
+bin	305000	0
+bin	310000	0
+bin	315000	0
 statistic GeneratedScenario.node[10].wlan[0].radio packetErrorRate:histogram
 field count 8
 field mean 0
@@ -29867,23 +29942,26 @@ attr title "Symbol error rate, histogram"
 bin	-inf	0
 bin	0	0
 bin	1	0
-scalar GeneratedScenario.node[10].hybridManager totalSwitches 1
-scalar GeneratedScenario.node[10].hybridManager satTotalDuration 34.2
-scalar GeneratedScenario.node[10].hybridManager cellTotalDuration 145.8
-scalar GeneratedScenario.node[10].hybridManager satUsageRatio 0.19
-scalar GeneratedScenario.node[10].hybridManager cellUsageRatio 0.81
+scalar GeneratedScenario.node[10].hybridManager totalSwitches 2
+scalar GeneratedScenario.node[10].hybridManager satTotalDuration 25.5
+scalar GeneratedScenario.node[10].hybridManager cellTotalDuration 154.5
+scalar GeneratedScenario.node[10].hybridManager satUsageRatio 0.14166666666667
+scalar GeneratedScenario.node[10].hybridManager cellUsageRatio 0.85833333333333
+scalar GeneratedScenario.node[10].hybridManager timeToLoss:min -nan
+attr title "Predictive Time-To-Loss, min"
+attr unit s
 scalar GeneratedScenario.node[10].hybridManager batterySoC:last nan
 attr title "Battery State of Charge, last"
-scalar GeneratedScenario.node[10].hybridManager qosScore:mean 0.86604860816288
+scalar GeneratedScenario.node[10].hybridManager qosScore:mean -nan
 attr title "QoS Score, mean"
-scalar GeneratedScenario.node[10].hybridManager switchCount:last 1
+scalar GeneratedScenario.node[10].hybridManager switchCount:last 2
 attr title "Vertical Handover Count, last"
-scalar GeneratedScenario.node[10].hybridManager activeInterface:last 1
+scalar GeneratedScenario.node[10].hybridManager activeInterface:last 0
 attr title "Active Interface (0=5G, 1=Sat), last"
-scalar GeneratedScenario.node[10].mecClient mecTaskLatency:mean 0.029036690888973
+scalar GeneratedScenario.node[10].mecClient mecTaskLatency:mean 0.022933657703685
 attr title "MEC Task Latency (RTT + Compute), mean"
 attr unit s
-scalar GeneratedScenario.node[10].mecClient mecTaskLatency:max 0.031882805094821
+scalar GeneratedScenario.node[10].mecClient mecTaskLatency:max 0.031795373972738
 attr title "MEC Task Latency (RTT + Compute), max"
 attr unit s
 scalar GeneratedScenario.constellationManager totalSatellites 72
@@ -29891,6 +29969,22 @@ scalar GeneratedScenario.constellationManager totalGroundStations 0
 scalar GeneratedScenario.constellationManager totalISLLinks 33
 scalar GeneratedScenario.constellationManager totalHandovers 0
 scalar GeneratedScenario.constellationManager totalISLHandoffs 0
+scalar GeneratedScenario.constellationManager islMeshOutage:count 0
+attr title "ISL Mesh Outage Count, count"
+scalar GeneratedScenario.constellationManager islRouteLatency:mean -nan
+attr interpolationmode sample-hold
+attr title "ISL E2E Mesh Route Latency, mean"
+attr unit ms
+scalar GeneratedScenario.constellationManager islRouteLatency:max -nan
+attr interpolationmode sample-hold
+attr title "ISL E2E Mesh Route Latency, max"
+attr unit ms
+scalar GeneratedScenario.constellationManager islHopCount:mean -nan
+attr interpolationmode sample-hold
+attr title "ISL Route Hop Count, mean"
+scalar GeneratedScenario.constellationManager islHopCount:max -nan
+attr interpolationmode sample-hold
+attr title "ISL Route Hop Count, max"
 scalar GeneratedScenario.radioMedium.propagation "Arrival computation count" 0
 scalar GeneratedScenario.radioMedium "transmission count" 0
 scalar GeneratedScenario.radioMedium "signal send count" 0
@@ -29929,14 +30023,14 @@ scalar GeneratedScenario.nrRadioMedium "reception decision cache hit" -nan
 attr unit %
 scalar GeneratedScenario.nrRadioMedium "reception result cache hit" -nan
 attr unit %
-scalar GeneratedScenario.wlanRadioMedium.propagation "Arrival computation count" 3069
-scalar GeneratedScenario.wlanRadioMedium "transmission count" 401
-scalar GeneratedScenario.wlanRadioMedium "signal send count" 3069
-scalar GeneratedScenario.wlanRadioMedium "reception computation count" 3069
-scalar GeneratedScenario.wlanRadioMedium "interference computation count" 9620
+scalar GeneratedScenario.wlanRadioMedium.propagation "Arrival computation count" 3081
+scalar GeneratedScenario.wlanRadioMedium "transmission count" 402
+scalar GeneratedScenario.wlanRadioMedium "signal send count" 3081
+scalar GeneratedScenario.wlanRadioMedium "reception computation count" 3081
+scalar GeneratedScenario.wlanRadioMedium "interference computation count" 9657
 scalar GeneratedScenario.wlanRadioMedium "reception decision computation count" 183
-scalar GeneratedScenario.wlanRadioMedium "listening decision computation count" 6368
-scalar GeneratedScenario.wlanRadioMedium "reception cache hit" 76.070175438596
+scalar GeneratedScenario.wlanRadioMedium "listening decision computation count" 6393
+scalar GeneratedScenario.wlanRadioMedium "reception cache hit" 76.066185038453
 attr unit %
 scalar GeneratedScenario.wlanRadioMedium "interference cache hit" 66.666666666667
 attr unit %

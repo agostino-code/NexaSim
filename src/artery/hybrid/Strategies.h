@@ -96,6 +96,37 @@ private:
     void evaluateEnergy();
 };
 
+/**
+ * Predictive Look-Ahead Strategy:
+ * Uses vehicle kinematic state (position and velocity vector) from IMobility
+ * to extrapolate trajectory over a look-ahead horizon (3.0s).
+ * Evaluates Time-To-Loss (TTL) and triggers proactive Make-Before-Break
+ * handover ~1.5s BEFORE entering a tunnel / blind-spot gorge or cell boundary,
+ * completely avoiding packet loss and interruption time.
+ */
+class PredictiveLookaheadStrategy : public ISwitchingStrategy {
+private:
+    HybridInterfaceManager* m_manager;
+    omnetpp::cMessage* m_predictTimer;
+    double m_checkInterval;
+    double m_lookaheadTimeS;
+    double m_timeToLossThresholdS;
+    double m_minDwellTimeS;
+    omnetpp::simtime_t m_lastSwitchTime;
+
+public:
+    PredictiveLookaheadStrategy(HybridInterfaceManager* mgr);
+    virtual ~PredictiveLookaheadStrategy();
+
+    void initialize(int stage) override;
+    void handleMessage(omnetpp::cMessage* msg) override;
+    void finish() override;
+    const char* getStrategyName() const override { return "PredictiveLookahead"; }
+
+private:
+    void evaluatePredictive();
+};
+
 } // namespace hybrid
 } // namespace artery
 

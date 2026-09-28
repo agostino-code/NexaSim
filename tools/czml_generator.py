@@ -14,6 +14,8 @@ Generates full 3D interactive geospatial CesiumJS scenes (CZML):
 """
 
 import os
+from dotenv import load_dotenv
+load_dotenv()
 import sys
 import json
 import math
@@ -22,6 +24,8 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Any, Optional, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 # Earth constants
 R_EARTH_KM = 6378.137
@@ -66,6 +70,136 @@ def compute_satellite_position(
     z_ecef = z1
 
     return ecef_to_geodetic(x_ecef, y_ecef, z_ecef)
+
+def load_real_vehicle_trajectories(
+    scenario_dir: Path,
+    time_samples: List[float],
+    start_dt: datetime,
+    duration: float,
+    ue_count: int,
+    center_lat: float,
+    center_lon: float
+) -> Dict[int, List[Any]]:
+    """
+    Loads real georeferenced trajectories for vehicles:
+    1. If trace_fcd.xml exists (post-simulation), parses exact microscopic WGS84 GPS traces.
+    2. If route_geo.json exists (pre-simulation / real road), interpolates vehicle convoy along the road.
+    3. Returns dict of v_idx -> [iso_time, lon, lat, alt, ...]
+    """
+    trajectories = {v: [] for v in range(ue_count)}
+
+    # 1. Try microscopic SUMO FCD trace first
+    fcd_candidates = [
+        scenario_dir / 'trace_fcd.xml',
+        scenario_dir / 'results' / 'trace_fcd.xml',
+        scenario_dir.parent / 'trace_fcd.xml'
+    ]
+    fcd_path = next((p for p in fcd_candidates if p.exists() and p.stat().st_size > 100), None)
+
+    if fcd_path:
+        try:
+            import xml.etree.ElementTree as ET
+            tree = ET.parse(fcd_path)
+            root = tree.getroot()
+            time_map = {}
+            for ts in root.findall('timestep'):
+                t_sec = float(ts.get('time', 0.0))
+                for veh in ts.findall('vehicle'):
+                    vid = veh.get('id', '')
+                    if vid.startswith('veh_'):
+                        try:
+                            v_idx = int(vid.replace('veh_', ''))
+                        except ValueError:
+                            continue
+                        if v_idx < ue_count:
+                            lon = float(veh.get('x', 0.0))
+                            lat = float(veh.get('y', 0.0))
+                            alt = float(veh.get('z', 0.0))
+                            if v_idx not in time_map:
+                                time_map[v_idx] = {}
+                            time_map[v_idx][t_sec] = (lon, lat, alt)
+
+            if time_map:
+                for v_idx in range(ue_count):
+                    v_points = time_map.get(v_idx, {})
+                    if not v_points:
+                        continue
+                    sorted_times = sorted(v_points.keys())
+                    for t in time_samples:
+                        sample_dt = start_dt + timedelta(seconds=t)
+                        sample_iso = sample_dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+                        # Find closest recorded time
+                        closest_t = min(sorted_times, key=lambda st: abs(st - t))
+                        lon, lat, alt = v_points[closest_t]
+                        trajectories[v_idx].extend([sample_iso, lon, lat, alt])
+
+                if any(len(trajectories[v]) > 0 for v in trajectories):
+                    print(f"[CZML Generator] Loaded {len(trajectories)} real vehicle trajectories from FCD trace: {fcd_path.name}")
+                    return trajectories
+        except Exception as e:
+            print(f"[CZML Generator] Warning parsing FCD trace: {e}")
+
+    # 2. Try pre-run real road coordinates from route_geo.json
+    geo_candidates = [
+        scenario_dir / 'route_geo.json',
+        scenario_dir / 'results' / 'route_geo.json',
+        scenario_dir.parent / 'route_geo.json'
+    ]
+    geo_path = next((p for p in geo_candidates if p.exists()), None)
+
+    if geo_path:
+        try:
+            with open(geo_path, 'r', encoding='utf-8') as f:
+                geo_data = json.load(f)
+            coords = geo_data.get('coordinates', [])
+            if len(coords) >= 2:
+                # Compute cumulative segment lengths
+                cum_dist = [0.0]
+                total_len = 0.0
+                for i in range(len(coords) - 1):
+                    lat1, lon1 = coords[i]
+                    lat2, lon2 = coords[i+1]
+                    d_lat = (lat2 - lat1) * 111139.0
+                    d_lon = (lon2 - lon1) * 111139.0 * math.cos(math.radians((lat1 + lat2) / 2))
+                    seg_len = math.hypot(d_lat, d_lon)
+                    total_len += seg_len
+                    cum_dist.append(total_len)
+
+                # Determine convoy speed to cover road within duration
+                speed_ms = max(8.0, total_len / max(10.0, duration * 0.90))
+
+                for v_idx in range(ue_count):
+                    headway_offset_m = v_idx * 30.0  # 30m inter-vehicle distance
+                    samples = []
+                    for t in time_samples:
+                        sample_dt = start_dt + timedelta(seconds=t)
+                        sample_iso = sample_dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+                        dist = max(0.0, min(total_len, speed_ms * t - headway_offset_m))
+
+                        # Find matching segment
+                        seg_idx = 0
+                        while seg_idx < len(cum_dist) - 2 and cum_dist[seg_idx + 1] < dist:
+                            seg_idx += 1
+
+                        s_start = cum_dist[seg_idx]
+                        s_end = cum_dist[seg_idx + 1]
+                        seg_len = max(0.001, s_end - s_start)
+                        fraction = max(0.0, min(1.0, (dist - s_start) / seg_len))
+
+                        latA, lonA = coords[seg_idx]
+                        latB, lonB = coords[seg_idx + 1]
+                        v_lat = latA + fraction * (latB - latA)
+                        v_lon = lonA + fraction * (lonB - lonA)
+                        samples.extend([sample_iso, v_lon, v_lat, 0.0])
+
+                    trajectories[v_idx] = samples
+
+                print(f"[CZML Generator] Interpolated {ue_count} vehicles along real road ({len(coords)} waypoints) from {geo_path.name}")
+                return trajectories
+        except Exception as e:
+            print(f"[CZML Generator] Warning loading route_geo.json: {e}")
+
+    return trajectories
 
 def generate_czml_scene(
     scenario_config: Dict[str, Any],
@@ -260,9 +394,10 @@ def generate_czml_scene(
             },
             "point": {
                 "color": { "rgba": [16, 185, 129, 255] },
-                "pixelSize": 10,
+                "pixelSize": 11,
                 "outlineColor": { "rgba": [255, 255, 255, 255] },
-                "outlineWidth": 2
+                "outlineWidth": 2,
+                "heightReference": "CLAMP_TO_GROUND"
             },
             "label": {
                 "text": f"5G: {g_name}",
@@ -270,7 +405,8 @@ def generate_czml_scene(
                 "fillColor": { "rgba": [16, 185, 129, 255] },
                 "outlineColor": { "rgba": [15, 23, 42, 255] },
                 "outlineWidth": 2,
-                "pixelOffset": { "cartesian2": [0, -18] }
+                "pixelOffset": { "cartesian2": [0, -18] },
+                "heightReference": "CLAMP_TO_GROUND"
             },
             "cylinder": {
                 "length": height * 2 + 10,
@@ -305,7 +441,8 @@ def generate_czml_scene(
                 "color": { "rgba": [245, 158, 11, 255] },
                 "pixelSize": 11,
                 "outlineColor": { "rgba": [255, 255, 255, 255] },
-                "outlineWidth": 2
+                "outlineWidth": 2,
+                "heightReference": "CLAMP_TO_GROUND"
             },
             "label": {
                 "text": f"Gateway: {gs_name}",
@@ -313,7 +450,8 @@ def generate_czml_scene(
                 "fillColor": { "rgba": [245, 158, 11, 255] },
                 "outlineColor": { "rgba": [15, 23, 42, 255] },
                 "outlineWidth": 2,
-                "pixelOffset": { "cartesian2": [0, 18] }
+                "pixelOffset": { "cartesian2": [0, 18] },
+                "heightReference": "CLAMP_TO_GROUND"
             }
         })
 
@@ -326,21 +464,34 @@ def generate_czml_scene(
     ue_cfg = terr_cfg.get('ue', {})
     ue_count = int(ue_cfg.get('count', 4))
 
+    # Load real georeferenced road trajectories from route_geo.json or trace_fcd.xml
+    scenario_dir = output_czml.parent
+    if (scenario_dir.parent / 'route_geo.json').exists():
+        scenario_dir = scenario_dir.parent
+    real_veh_samples = load_real_vehicle_trajectories(
+        scenario_dir=scenario_dir,
+        time_samples=time_samples,
+        start_dt=start_dt,
+        duration=duration,
+        ue_count=ue_count,
+        center_lat=center_lat,
+        center_lon=center_lon
+    )
+
     for v_idx in range(min(ue_count, 6)):
         v_id = f"veh_{v_idx}"
         v_name = f"Vehicle {v_idx}" if v_idx > 0 else "Vehicle 0 (Convoy Leader)"
 
-        veh_samples = []
-        for t in time_samples:
-            sample_dt = start_dt + timedelta(seconds=t)
-            sample_iso = sample_dt.strftime('%Y-%m-%dT%H:%M:%SZ')
-            # Simulated realistic 3D mountain path curve
-            lat_offset = (t / duration) * 0.035 + v_idx * 0.001
-            lon_offset = math.sin((t / duration) * math.pi * 3) * 0.018
-            v_lat = center_lat + lat_offset
-            v_lon = center_lon + lon_offset
-            v_alt = center_alt + math.cos((t / duration) * math.pi * 2) * 250.0
-            veh_samples.extend([sample_iso, v_lon, v_lat, v_alt])
+        veh_samples = real_veh_samples.get(v_idx, [])
+        if not veh_samples:
+            for t in time_samples:
+                sample_dt = start_dt + timedelta(seconds=t)
+                sample_iso = sample_dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+                lat_offset = (t / duration) * 0.025 + v_idx * 0.0008
+                lon_offset = (t / duration) * 0.015
+                v_lat = center_lat + lat_offset
+                v_lon = center_lon + lon_offset
+                veh_samples.extend([sample_iso, v_lon, v_lat, 0.0])
 
         czml.append({
             "id": v_id,
@@ -352,9 +503,10 @@ def generate_czml_scene(
             },
             "point": {
                 "color": { "rgba": [236, 72, 153, 255] },
-                "pixelSize": 9,
+                "pixelSize": 12,
                 "outlineColor": { "rgba": [255, 255, 255, 255] },
-                "outlineWidth": 2
+                "outlineWidth": 2.5,
+                "heightReference": "CLAMP_TO_GROUND"
             },
             "path": {
                 "material": {
@@ -370,7 +522,9 @@ def generate_czml_scene(
                 "fillColor": { "rgba": [248, 250, 252, 255] },
                 "outlineColor": { "rgba": [15, 23, 42, 255] },
                 "outlineWidth": 2,
-                "pixelOffset": { "cartesian2": [0, -16] }
+                "verticalOrigin": "BOTTOM",
+                "pixelOffset": { "cartesian2": [0, -18] },
+                "heightReference": "CLAMP_TO_GROUND"
             }
         })
 
@@ -402,8 +556,16 @@ def generate_czml_scene(
 
     return czml
 
-def generate_globe_html(czml_path: Path, output_html: Path, scenario_name: str) -> Path:
+def generate_globe_html(
+    czml_path: Path,
+    output_html: Path,
+    scenario_name: str,
+    center_lat: float = 46.5286,
+    center_lon: float = 10.4531
+) -> Path:
     """Creates a photorealistic CesiumJS 3D Earth Globe viewer HTML page."""
+    cesium_token = '__CESIUM_ION_TOKEN__'
+    carto_param = '?key=__CARTO_API_KEY__'
     with open(czml_path, 'r', encoding='utf-8') as f:
         czml_data = json.load(f)
 
@@ -556,18 +718,17 @@ def generate_globe_html(czml_path: Path, output_html: Path, scenario_name: str) 
         </div>
 
         <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Camera View Presets</div>
-        <div class="cam-controls">
-            <button class="hud-btn" onclick="viewGlobal()">🌍 Global LEO</button>
+        <div class="cam-controls" style="grid-template-columns: repeat(3, 1fr);">
+            <button class="hud-btn" onclick="viewTactical()">🎯 Tactical</button>
             <button class="hud-btn" onclick="viewVehicle()">🏎️ Chase Cam</button>
-            <button class="hud-btn" onclick="viewRegional()">🏔️ Regional 3D</button>
-            <button class="hud-btn" onclick="togglePlay()">⏯️ Play / Pause</button>
+            <button class="hud-btn" onclick="viewConstellation()">🛰️ Orbit LEO</button>
         </div>
 
         <select class="basemap-select" onchange="switchBasemap(this.value)">
-            <option value="esri">🗺️ ESRI World Satellite Imagery (HD)</option>
+            <option value="default">🗺️ Cesium Ion World Satellite</option>
+            <option value="esri">🗺️ ESRI World Satellite HD</option>
             <option value="osm">🗺️ OpenStreetMap Standard</option>
             <option value="carto">🗺️ CartoDB Dark Canvas</option>
-            <option value="offline">🗺️ Natural Earth (Offline Fallback)</option>
         </select>
 
         <div class="legend">
@@ -579,98 +740,161 @@ def generate_globe_html(czml_path: Path, output_html: Path, scenario_name: str) 
     </div>
 
     <script>
-        // High-Resolution ESRI World Imagery Base Provider
-        const esriProvider = new Cesium.ArcGisMapServerImageryProvider({{
-            url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
-            enablePickFeatures: false
-        }});
+        const token = '{cesium_token}';
+        if (token) {{
+            Cesium.Ion.defaultAccessToken = token;
+        }}
 
-        const viewer = new Cesium.Viewer('cesiumContainer', {{
-            imageryProvider: esriProvider,
-            terrainProvider: new Cesium.EllipsoidTerrainProvider(),
-            baseLayerPicker: false,
-            geocoder: false,
-            homeButton: false,
-            infoBox: true,
-            sceneModePicker: true,
-            navigationHelpButton: false,
-            animation: true,
-            timeline: true
-        }});
+        let viewer;
+        try {{
+            viewer = new Cesium.Viewer('cesiumContainer', {{
+                terrainProvider: token ? Cesium.createWorldTerrain() : new Cesium.EllipsoidTerrainProvider(),
+                baseLayerPicker: false,
+                geocoder: false,
+                homeButton: false,
+                infoBox: true,
+                sceneModePicker: true,
+                navigationHelpButton: false,
+                animation: true,
+                timeline: true
+            }});
+        }} catch (err) {{
+            console.warn("Falling back to ellipsoid terrain:", err);
+            viewer = new Cesium.Viewer('cesiumContainer', {{
+                terrainProvider: new Cesium.EllipsoidTerrainProvider(),
+                baseLayerPicker: false,
+                geocoder: false,
+                homeButton: false,
+                infoBox: true,
+                sceneModePicker: true,
+                navigationHelpButton: false,
+                animation: true,
+                timeline: true
+            }});
+        }}
 
         viewer.scene.globe.enableLighting = true;
         viewer.scene.globe.depthTestAgainstTerrain = true;
 
         const czmlPayload = {json.dumps(czml_data)};
-        let dataSourcePromise = viewer.dataSources.add(Cesium.CzmlDataSource.load(czmlPayload));
-
-        dataSourcePromise.then(function(dataSource) {{
-            viewer.clock.multiplier = 3;
-            viewRegional();
-        }});
+        let dataSourcePromise;
+        try {{
+            dataSourcePromise = viewer.dataSources.add(Cesium.CzmlDataSource.load(czmlPayload));
+            dataSourcePromise.then(function(dataSource) {{
+                viewer.clock.multiplier = 3;
+                if (typeof window.viewTactical === 'function') {{
+                    window.viewTactical();
+                }}
+            }}).catch(function(e) {{
+                console.error("CZML Load Error:", e);
+            }});
+        }} catch (err) {{
+            console.error("Failed to load CZML payload:", err);
+        }}
 
         // Live Telemetry Tick Updater
         viewer.clock.onTick.addEventListener(function(clock) {{
-            const sec = Cesium.JulianDate.secondsDifference(clock.currentTime, clock.startTime);
-            const isSat = (sec >= 40.0 && sec <= 170.0);
+            try {{
+                const sec = Cesium.JulianDate.secondsDifference(clock.currentTime, clock.startTime);
+                const isSat = (sec >= 40.0 && sec <= 170.0);
 
-            document.getElementById('telemRat').textContent = isSat ? 'Satellite LEO' : '5G-NR Terrestrial';
-            document.getElementById('telemRat').style.color = isSat ? '#38bdf8' : '#10b981';
-            document.getElementById('telemLatency').textContent = (isSat ? (24.0 + Math.sin(sec)*2.5) : (5.2 + Math.cos(sec)*0.8)).toFixed(1) + ' ms';
-            document.getElementById('telemSpeed').textContent = (45.0 + Math.sin(sec*0.2)*4.0).toFixed(1) + ' km/h';
+                const rEl = document.getElementById('telemRat');
+                if (rEl) {{
+                    rEl.textContent = isSat ? 'Satellite LEO' : '5G-NR Terrestrial';
+                    rEl.style.color = isSat ? '#38bdf8' : '#10b981';
+                }}
+                const lEl = document.getElementById('telemLatency');
+                if (lEl) lEl.textContent = (isSat ? (24.0 + Math.sin(sec)*2.5) : (5.2 + Math.cos(sec)*0.8)).toFixed(1) + ' ms';
+                const sEl = document.getElementById('telemSpeed');
+                if (sEl) sEl.textContent = (45.0 + Math.sin(sec*0.2)*4.0).toFixed(1) + ' km/h';
+            }} catch(tickErr) {{}}
         }});
 
-        function switchBasemap(type) {{
+        window.switchBasemap = function(type) {{
+            if (!viewer) return;
             viewer.imageryLayers.removeAll();
-            if (type === 'esri') {{
-                viewer.imageryLayers.addImageryProvider(esriProvider);
-            }} else if (type === 'osm') {{
-                viewer.imageryLayers.addImageryProvider(new Cesium.OpenStreetMapImageryProvider({{
-                    url: 'https://a.tile.openstreetmap.org/'
-                }}));
-            }} else if (type === 'carto') {{
-                viewer.imageryLayers.addImageryProvider(new Cesium.UrlTemplateImageryProvider({{
-                    url: 'https://a.basemaps.cartocdn.com/dark_all/{{z}}/{{x}}/{{y}}.png'
-                }}));
-            }} else {{
-                viewer.imageryLayers.addImageryProvider(new Cesium.TileMapServiceImageryProvider({{
-                    url: Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
-                }}));
+            try {{
+                if (type === 'esri') {{
+                    const esri = new Cesium.UrlTemplateImageryProvider({{
+                        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{{z}}/{{y}}/{{x}}',
+                        maximumLevel: 19
+                    }});
+                    viewer.imageryLayers.addImageryProvider(esri);
+                }} else if (type === 'osm') {{
+                    const osm = new Cesium.UrlTemplateImageryProvider({{
+                        url: 'https://tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png'
+                    }});
+                    viewer.imageryLayers.addImageryProvider(osm);
+                }} else if (type === 'carto') {{
+                    const carto = new Cesium.UrlTemplateImageryProvider({{
+                        url: 'https://a.basemaps.cartocdn.com/rastertiles/dark_all/{{z}}/{{x}}/{{y}}.png{carto_param}'
+                    }});
+                    viewer.imageryLayers.addImageryProvider(carto);
+                }} else {{
+                    const defaultIon = new Cesium.IonImageryProvider({{ assetId: 2 }});
+                    viewer.imageryLayers.addImageryProvider(defaultIon);
+                }}
+            }} catch (err) {{
+                console.error("switchBasemap error:", err);
             }}
+        }};
+
+        // Check URL or postMessage to hide HUD panel in Dual Mode
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('hud') === '0' || urlParams.get('minimal') === '1') {{
+            const hud = document.querySelector('.hud-panel');
+            if (hud) hud.style.display = 'none';
         }}
 
-        function viewGlobal() {{
+        window.addEventListener('message', function(e) {{
+            if (e.data && typeof e.data.showHud === 'boolean') {{
+                const hud = document.querySelector('.hud-panel');
+                if (hud) hud.style.display = e.data.showHud ? 'block' : 'none';
+            }}
+        }});
+
+        // 1. Tactical Scenario View (close-range, perfectly aligned to scenario coordinates)
+        window.viewTactical = function() {{
+            if (!viewer) return;
             viewer.trackedEntity = undefined;
-            viewer.camera.flyTo({{
-                destination: Cesium.Cartesian3.fromDegrees(10.5, 46.5, 12000000.0),
-                orientation: {{ heading: 0.0, pitch: -Cesium.Math.PI_OVER_TWO, roll: 0.0 }}
+            const target = Cesium.Cartesian3.fromDegrees({center_lon}, {center_lat}, 0);
+            viewer.camera.flyToBoundingSphere(new Cesium.BoundingSphere(target, 2500), {{
+                offset: new Cesium.HeadingPitchRange(
+                    Cesium.Math.toRadians(20),
+                    Cesium.Math.toRadians(-32),
+                    5500
+                ),
+                duration: 1.5
             }});
-        }}
+        }};
 
-        function viewVehicle() {{
+        // 2. Chase Cam (locked tracking behind vehicle)
+        window.viewVehicle = function() {{
+            if (!viewer || !dataSourcePromise) return;
             dataSourcePromise.then(function(dataSource) {{
-                const entity = dataSource.entities.getById('veh_0');
+                const entity = dataSource.entities.getById('veh_0') ||
+                               dataSource.entities.values.find(e => e.id && e.id.startsWith('veh_'));
                 if (entity) {{
+                    entity.viewFrom = new Cesium.Cartesian3(-60.0, -35.0, 25.0);
                     viewer.trackedEntity = entity;
                 }}
             }});
-        }}
+        }};
 
-        function viewRegional() {{
+        // 3. Constellation & Orbital LEO View
+        window.viewConstellation = function() {{
+            if (!viewer) return;
             viewer.trackedEntity = undefined;
-            viewer.camera.flyTo({{
-                destination: Cesium.Cartesian3.fromDegrees(10.4531, 46.35, 65000.0),
-                orientation: {{
-                    heading: Cesium.Math.toRadians(0),
-                    pitch: Cesium.Math.toRadians(-35),
-                    roll: 0.0
-                }}
+            const target = Cesium.Cartesian3.fromDegrees({center_lon}, {center_lat}, 0);
+            viewer.camera.flyToBoundingSphere(new Cesium.BoundingSphere(target, 150000), {{
+                offset: new Cesium.HeadingPitchRange(
+                    Cesium.Math.toRadians(0),
+                    Cesium.Math.toRadians(-50),
+                    2200000
+                ),
+                duration: 2.0
             }});
-        }}
-
-        function togglePlay() {{
-            viewer.clock.shouldAnimate = !viewer.clock.shouldAnimate;
-        }}
+        }};
     </script>
 </body>
 </html>
@@ -706,7 +930,11 @@ def create_scenario_digital_twin(scenario_identifier: str, open_browser: bool = 
     print(f"[+] CZML Stream saved: {czml_path}")
 
     sc_name = config.get('scenario', {}).get('name', yaml_path.stem).replace('_', ' ').title()
-    generate_globe_html(czml_path, html_path, sc_name)
+    area = config.get('scenario', {}).get('area', {})
+    center_lat = float(area.get('center_lat', 46.5286))
+    center_lon = float(area.get('center_lon', 10.4531))
+
+    generate_globe_html(czml_path, html_path, sc_name, center_lat=center_lat, center_lon=center_lon)
     print(f"[+] 3D Digital Twin Viewer created: {html_path}")
 
     if open_browser:

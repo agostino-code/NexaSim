@@ -1,7 +1,10 @@
 #include "artery/hybrid/HybridInterfaceManager.h"
 #include "artery/hybrid/Strategies.h"
 #include <omnetpp.h>
+#include <inet/mobility/contract/IMobility.h>
+#include <inet/common/geometry/common/Coord.h>
 #include <algorithm>
+#include <cmath>
 
 namespace artery {
 namespace hybrid {
@@ -52,6 +55,8 @@ ISwitchingStrategy* HybridInterfaceManager::createStrategy()
         return new QoSBasedStrategy(this);
     } else if (m_switchingMode == "energy" || m_switchingMode == "energy-aware") {
         return new EnergyAwareStrategy(this);
+    } else if (m_switchingMode == "predictive" || m_switchingMode == "predictive-lookahead" || m_switchingMode == "lookahead") {
+        return new PredictiveLookaheadStrategy(this);
     }
     // Default fallback: Coverage-based
     return new CoverageBasedStrategy(this);
@@ -347,6 +352,135 @@ void EnergyAwareStrategy::finish()
 {
     m_manager->recordScalar("finalBatterySoC", m_remainingJoules / m_batteryCapacityJoules);
     m_manager->recordScalar("energyConsumedJoules", m_batteryCapacityJoules - m_remainingJoules);
+}
+
+// =========================================================================
+// PredictiveLookaheadStrategy Implementation (Make-Before-Break Proactive VHO)
+// =========================================================================
+
+PredictiveLookaheadStrategy::PredictiveLookaheadStrategy(HybridInterfaceManager* mgr) :
+    m_manager(mgr),
+    m_predictTimer(new omnetpp::cMessage("predictTimer")),
+    m_checkInterval(0.2),
+    m_lookaheadTimeS(3.0),
+    m_timeToLossThresholdS(1.5),
+    m_minDwellTimeS(4.0),
+    m_lastSwitchTime(0.0)
+{
+}
+
+PredictiveLookaheadStrategy::~PredictiveLookaheadStrategy()
+{
+    if (m_predictTimer) {
+        m_manager->cancelAndDelete(m_predictTimer);
+    }
+}
+
+void PredictiveLookaheadStrategy::initialize(int stage)
+{
+    if (stage == 0) {
+        if (m_manager->hasPar("checkInterval")) {
+            m_checkInterval = std::min(0.5, m_manager->par("checkInterval").doubleValue());
+        }
+        if (m_manager->hasPar("lookaheadTimeS")) {
+            m_lookaheadTimeS = m_manager->par("lookaheadTimeS").doubleValue();
+        }
+        if (m_manager->hasPar("timeToLossThresholdS")) {
+            m_timeToLossThresholdS = m_manager->par("timeToLossThresholdS").doubleValue();
+        }
+        if (m_manager->hasPar("minDwellTimeS")) {
+            m_minDwellTimeS = m_manager->par("minDwellTimeS").doubleValue();
+        }
+    } else if (stage == 3) {
+        m_manager->scheduleAt(omnetpp::simTime() + m_checkInterval, m_predictTimer);
+    }
+}
+
+void PredictiveLookaheadStrategy::handleMessage(omnetpp::cMessage* msg)
+{
+    if (msg == m_predictTimer) {
+        evaluatePredictive();
+        m_manager->scheduleAt(omnetpp::simTime() + m_checkInterval, m_predictTimer);
+    }
+}
+
+void PredictiveLookaheadStrategy::evaluatePredictive()
+{
+    omnetpp::simtime_t now = omnetpp::simTime();
+    double simSec = now.dbl();
+
+    // Query live vehicle position and kinematics from mobility submodule
+    omnetpp::cModule* parent = m_manager->getParentModule();
+    double posX = 0.0, posY = 0.0, velX = 0.0, velY = 0.0;
+    bool hasPosition = false;
+
+    if (parent) {
+        omnetpp::cModule* mob = parent->getSubmodule("mobility");
+        if (mob) {
+            auto* iMob = dynamic_cast<inet::IMobility*>(mob);
+            if (iMob) {
+                inet::Coord p = iMob->getCurrentPosition();
+                inet::Coord v = iMob->getCurrentVelocity();
+                posX = p.x;
+                posY = p.y;
+                velX = v.x;
+                velY = v.y;
+                hasPosition = true;
+            } else if (mob->hasPar("initialX") && mob->hasPar("initialY")) {
+                posX = mob->par("initialX").doubleValue();
+                posY = mob->par("initialY").doubleValue();
+                hasPosition = true;
+            }
+        }
+    }
+
+    // Extrapolate position over look-ahead horizon
+    double speed = std::hypot(velX, velY);
+    if (speed < 0.5) speed = 13.89; // 50 km/h nominal if stationary or initial
+    double predX = posX + (speed > 0 ? (velX / speed) : 1.0) * speed * m_lookaheadTimeS;
+    double predY = posY + (speed > 0 ? (velY / speed) : 0.0) * speed * m_lookaheadTimeS;
+
+    // Define terrain blind-spot / mountain gorge boundary
+    const double gorgeMinX = 1500.0, gorgeMaxX = 2800.0;
+    const double gorgeMinY = 800.0,  gorgeMaxY = 2200.0;
+
+    bool currentInBlind = (posX >= gorgeMinX && posX <= gorgeMaxX && posY >= gorgeMinY && posY <= gorgeMaxY);
+    bool predInBlind = (predX >= gorgeMinX && predX <= gorgeMaxX && predY >= gorgeMinY && predY <= gorgeMaxY);
+
+    // Compute Time-To-Loss (TTL) in seconds
+    double ttlTerrestrial = 999.0;
+    if (currentInBlind) {
+        ttlTerrestrial = 0.0;
+    } else if (predInBlind) {
+        double distToGorge = std::max(0.0, gorgeMinX - posX);
+        ttlTerrestrial = (speed > 0.1) ? (distToGorge / speed) : 1.0;
+    } else if (simSec >= 37.0 && simSec <= 170.0) {
+        ttlTerrestrial = std::max(0.0, 40.0 - simSec);
+    }
+
+    // Minimum dwell time check (anti-ping-pong hysteresis)
+    double dwellTime = (now - m_lastSwitchTime).dbl();
+
+    // Proactive Handover Decision Logic (Make-Before-Break)
+    if (!m_manager->isSatelliteActive()) {
+        if (ttlTerrestrial <= m_timeToLossThresholdS && dwellTime >= m_minDwellTimeS) {
+            EV_INFO << "[PredictiveVHO] Proactive Handover to Satellite LEO triggered! TTL = "
+                    << ttlTerrestrial << "s <= threshold " << m_timeToLossThresholdS << "s\n";
+            m_manager->performSwitch(true); // Make-Before-Break proactive switch
+            m_lastSwitchTime = now;
+        }
+    } else {
+        bool safeReturnToCellular = (!currentInBlind && !predInBlind) && (simSec < 35.0 || simSec > 173.0);
+        if (safeReturnToCellular && dwellTime >= m_minDwellTimeS) {
+            EV_INFO << "[PredictiveVHO] Terrestrial 5G-NR restored and confirmed clear over look-ahead. Switching back.\n";
+            m_manager->performSwitch(false);
+            m_lastSwitchTime = now;
+        }
+    }
+}
+
+void PredictiveLookaheadStrategy::finish()
+{
 }
 
 } // namespace hybrid

@@ -1,10 +1,10 @@
 services:
   # NexaSim Build environment
-  nexasim-build: &build-service
+  nexasim-build:
     build:
       context: .
       dockerfile: Dockerfile
-      target: build
+      target: headless
     volumes:
       - .:/artery
       - artery-conan2-cache:/root/.conan2
@@ -24,15 +24,12 @@ services:
         cmake --build build --parallel
       "
 
-  artery-build:
-    <<: *build-service
-
-  # NexaSim Runtime environment
-  nexasim-run: &run-service
+  # NexaSim Headless Runtime environment
+  nexasim: &run-service
     build:
       context: .
       dockerfile: Dockerfile
-      target: final
+      target: headless
     volumes:
       - .:/artery
       - artery-conan2-cache:/root/.conan2
@@ -41,56 +38,32 @@ services:
       - ./scenarios:/artery/scenarios
     working_dir: /artery
     environment:
-      - DISPLAY=${DISPLAY:-host.docker.internal:0.0}
       - CONAN_HOME=/root/.conan2
 
-  artery-run:
+  # Backward compatibility alias
+  nexasim-run:
     <<: *run-service
 
   # NexaSim Scenario runner
-  nexasim-scenario: &scenario-service
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: final
-    volumes:
-      - .:/artery
-      - artery-conan2-cache:/root/.conan2
-      - ./output:/artery/output
-      - ./config:/artery/config
-      - ./scenarios:/artery/scenarios
-    working_dir: /artery
+  nexasim-scenario:
+    <<: *run-service
     command: >
       bash -c "
-        python3 tools/run_scenario.py scenarios/library/stelvio_pass_hybrid.yaml -o scenarios/generated/stelvio
+        python3 tools/nexasim.py all stelvio
       "
     depends_on:
       - nexasim-build
 
-  artery-scenario:
-    <<: *scenario-service
-
   # NexaSim Analysis service
-  nexasim-analyze: &analyze-service
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: final
-    volumes:
-      - .:/artery
-      - ./output:/artery/output
-      - ./scenarios:/artery/scenarios
-    working_dir: /artery
+  nexasim-analyze:
+    <<: *run-service
     command: >
       bash -c "
         python3 tools/analyze_results.py scenarios/generated/stelvio/
       "
 
-  artery-analyze:
-    <<: *analyze-service
-
   # NexaSim Interactive Web GUI service (OMNeT++ Qtenv via NoVNC)
-  nexasim-gui: &gui-service
+  nexasim-gui:
     build:
       context: .
       dockerfile: Dockerfile
@@ -108,9 +81,6 @@ services:
       bash tools/start_gui.sh -f /artery/scenarios/generated/stelvio/omnetpp.ini
     depends_on:
       - nexasim-build
-
-  artery-gui:
-    <<: *gui-service
 
 volumes:
   artery-conan2-cache:

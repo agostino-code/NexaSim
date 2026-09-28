@@ -454,132 +454,97 @@
             </div>
         </div>
 
-        <!-- Navigation Tabs -->
-        <nav class="tab-nav">
-            <button class="tab-btn active" onclick="switchTab('tab-vho', this)">🚀 Vertical Handover (VHO)</button>
-            <button class="tab-btn" onclick="switchTab('tab-qos', this)">📊 QoS & Link Quality</button>
-            <button class="tab-btn" onclick="switchTab('tab-mec', this)">⚡ MEC Edge Offloading</button>
-            <button class="tab-btn" onclick="switchTab('tab-energy', this)">🔋 Energy & Battery</button>
-            <button class="tab-btn" onclick="switchTab('tab-fleet', this)">📋 Fleet Summary Table</button>
-            <button class="tab-btn" onclick="switchTab('tab-specs', this)">🌐 Topology & Specs</button>
-        </nav>
-
-        <!-- Tab 1: Vertical Handover -->
-        <div class="tab-content active" id="tab-vho">
-            <div class="chart-grid">
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <div class="chart-title">Active Radio Interface Timeline</div>
-                        <span class="chart-badge">0 = 5G-NR Terrestrial | 1 = Satellite LEO</span>
+        <!-- The 4 Core Mission-Critical Charts (2x2 Responsive Grid) -->
+        <div class="chart-grid" style="grid-template-columns: repeat(auto-fit, minmax(540px, 1fr));">
+            <!-- Chart 1: Active RAT Interface -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">📡 Active Radio Access Interface (5G vs Satellite NTN)</div>
+                        <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">Stepped transition: 0 = 5G-NR Terrestrial | 1 = Satellite LEO</div>
                     </div>
-                    <div class="chart-canvas-wrapper">
-                        <canvas id="chartActiveInterface"></canvas>
-                    </div>
+                    <span class="chart-badge" style="background:rgba(16,185,129,0.15); color:var(--accent-5g); font-weight:700;">Multi-RAT</span>
                 </div>
+                <div class="chart-canvas-wrapper" style="height:260px;">
+                    <canvas id="chartActiveInterface"></canvas>
+                </div>
+            </div>
 
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <div class="chart-title">Cumulative Seamless Handovers (VHO Count)</div>
-                        <span class="chart-badge">Make-Before-Break Switches</span>
+            <!-- Chart 2: Multi-Criteria QoS Utility Score -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">📊 Multi-Criteria QoS Utility Score (0.0 to 1.0)</div>
+                        <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">Weighted: 0.50 PDR + 0.30 RTT + 0.20 Jitter</div>
                     </div>
-                    <div class="chart-canvas-wrapper">
-                        <canvas id="chartSwitchCount"></canvas>
+                    <span class="chart-badge" style="background:rgba(168,85,247,0.15); color:var(--accent-qos); font-weight:700;">Target &gt; 0.85</span>
+                </div>
+                <div class="chart-canvas-wrapper" style="height:260px;">
+                    <canvas id="chartQoSScore"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 3: MEC Edge Latency -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">⚡ End-to-End Latency &amp; MEC Compute Delay</div>
+                        <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">Task Round-Trip Time + Edge processing (Target: URLLC &lt; 50 ms)</div>
                     </div>
+                    <span class="chart-badge" style="background:rgba(236,72,153,0.15); color:var(--accent-mec); font-weight:700;">URLLC Metric</span>
+                </div>
+                <div class="chart-canvas-wrapper" style="height:260px;">
+                    <canvas id="chartMecLatency"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 4: Cumulative Seamless Handovers -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">🔄 Cumulative Seamless Handovers (VHO Count)</div>
+                        <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">Make-Before-Break link switches without packet drops</div>
+                    </div>
+                    <span class="chart-badge" style="background:rgba(245,158,11,0.15); color:var(--accent-vho); font-weight:700;">Zero Drop</span>
+                </div>
+                <div class="chart-canvas-wrapper" style="height:260px;">
+                    <canvas id="chartSwitchCount"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- Tab 2: QoS & Channel Quality -->
-        <div class="tab-content" id="tab-qos">
-            <div class="chart-grid">
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <div class="chart-title">Multi-Criteria QoS Utility Score</div>
-                        <span class="chart-badge">Weighted: 0.50 PDR + 0.30 RTT + 0.20 Jitter</span>
-                    </div>
-                    <div class="chart-canvas-wrapper">
-                        <canvas id="chartQoSScore"></canvas>
-                    </div>
-                </div>
-
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <div class="chart-title">Physical Link Budget & Propagation Analysis</div>
-                        <span class="chart-badge">ITU-R P.676 & TR 38.811 Model</span>
-                    </div>
-                    <div style="padding: 15px; font-size: 14px; line-height: 1.8;">
-                        <p><strong>• Zenith Space Delay:</strong> 1.83 ms (@ 550 km LEO shell)</p>
-                        <p><strong>• Minimum LEO Satellite RTT:</strong> 3.67 ms</p>
-                        <p><strong>• ISL Optical Laser Bitrate:</strong> 10.0 Gbps (Wavelength: 1550 nm, BER: 1.2e-11)</p>
-                        <p><strong>• Atmospheric & Rain Attenuation (28 GHz):</strong> 3.4 dB in mountain sector</p>
-                        <p><strong>• Packet Delivery Ratio:</strong> <span style="color: var(--accent-5g); font-weight: 700;">100.00%</span> (0 packets dropped)</p>
-                    </div>
-                </div>
+        <!-- Fleet Multi-RAT Telemetry Summary Table -->
+        <div class="table-card" style="margin-top: 24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+                <h3 style="margin:0; font-size:16px; font-weight:700; color:var(--text-primary);">📋 Fleet Multi-RAT Telemetry Summary</h3>
+                <span style="font-size:12px; color:var(--text-muted);">Real-time metrics aggregated across all active scenario vehicles</span>
             </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Vehicle ID</th>
+                        <th>Active Interface</th>
+                        <th>Total VHO Switches</th>
+                        <th>Mean QoS Score</th>
+                        <th>Remaining Battery</th>
+                        <th>Mean MEC Latency</th>
+                    </tr>
+                </thead>
+                <tbody id="fleetTableBody">
+                </tbody>
+            </table>
         </div>
 
-        <!-- Tab 3: MEC Edge Offloading -->
-        <div class="tab-content" id="tab-mec">
-            <div class="chart-grid">
-                <div class="chart-card" style="grid-column: 1 / -1;">
-                    <div class="chart-header">
-                        <div class="chart-title">MEC Task Offloading Latency (Round-Trip Time + Compute Delay)</div>
-                        <span class="chart-badge">Seconds (Target: URLLC &lt; 50 ms)</span>
-                    </div>
-                    <div class="chart-canvas-wrapper" style="height: 340px;">
-                        <canvas id="chartMecLatency"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab 4: Energy & Battery -->
-        <div class="tab-content" id="tab-energy">
-            <div class="chart-grid">
-                <div class="chart-card" style="grid-column: 1 / -1;">
-                    <div class="chart-header">
-                        <div class="chart-title">Vehicle Battery State of Charge (SoC %)</div>
-                        <span class="chart-badge">18W Phased Array Draw vs 2W 5G Modem</span>
-                    </div>
-                    <div class="chart-canvas-wrapper" style="height: 340px;">
-                        <canvas id="chartBatterySoC"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab 5: Fleet Summary Table -->
-        <div class="tab-content" id="tab-fleet">
-            <div class="table-card">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Vehicle ID</th>
-                            <th>Active Interface</th>
-                            <th>Total VHO Switches</th>
-                            <th>Mean QoS Score</th>
-                            <th>Remaining Battery</th>
-                            <th>Mean MEC Latency</th>
-                        </tr>
-                    </thead>
-                    <tbody id="fleetTableBody">
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Tab 6: Topology & Specs -->
-        <div class="tab-content" id="tab-specs">
-            <div class="table-card">
-                <h3 style="margin-top:0;">3D Unified Network Specifications</h3>
-                <table class="data-table">
-                    <tr><td><strong>Constellation Architecture</strong></td><td>Starlink LEO Shell (550 km, 53° Inclination, 4 ISL Ports/Sat)</td></tr>
-                    <tr><td><strong>Terrestrial Radio Access</strong></td><td>5G-NR gNodeB Macro/Microcells (3.5 GHz n78, 100 MHz Bandwidth)</td></tr>
-                    <tr><td><strong>Non-Terrestrial Access</strong></td><td>Ka-Band Phased Array Antenna (28 GHz, 64 Elements, Electronic Beam Steering)</td></tr>
-                    <tr><td><strong>V2X Sidelink</strong></td><td>ETSI ITS-G5 / C-V2X (5.9 GHz, DENM & CPM Cooperative Services)</td></tr>
-                    <tr><td><strong>MEC Architecture</strong></td><td>Hierarchical: Terrestrial Base Station Edge (20,000 MIPS) + LEO Satellite Edge (5,000 MIPS)</td></tr>
-                    <tr><td><strong>Simulation Co-Runners</strong></td><td>OMNeT++ 5.6.2 (Event Core) + Eclipse SUMO TraCI (Microscopic Vehicle Mobility)</td></tr>
-                </table>
+        <!-- Physical Link Budget & Propagation Summary -->
+        <div class="table-card" style="margin-top: 20px;">
+            <h3 style="margin:0 0 14px 0; font-size:15px; font-weight:700; color:var(--text-primary);">🌐 3D Space-Ground Physical Link Budget (ITU-R P.676 &amp; 3GPP TR 38.811)</h3>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; font-size: 13px; line-height: 1.6;">
+                <div><strong>• Zenith Space Propagation Delay:</strong> 1.83 ms (@ 550 km)</div>
+                <div><strong>• Minimum LEO Satellite RTT:</strong> 3.67 ms</div>
+                <div><strong>• Optical Laser ISL Bitrate:</strong> 10.0 Gbps (1550 nm, BER 1.2e-11)</div>
+                <div><strong>• Ka-Band Atmospheric Loss (28 GHz):</strong> 3.4 dB in mountain sector</div>
+                <div><strong>• Packet Delivery Ratio (PDR):</strong> <span style="color:var(--accent-5g); font-weight:700;">100.00%</span> (0 dropped)</div>
+                <div><strong>• Constellation Shell:</strong> Starlink LEO (550 km, 53° Inclination, 4 ISLs/sat)</div>
             </div>
         </div>
 
@@ -713,11 +678,10 @@
 
         function updateAllCharts() {
             const chartConfigs = [
-                { id: 'chartActiveInterface', metric: 'activeInterface', stepped: true, y: 'Interface' },
-                { id: 'chartSwitchCount', metric: 'switchCount', stepped: true, y: 'Handovers' },
-                { id: 'chartQoSScore', metric: 'qosScore', stepped: false, y: 'Utility Score' },
-                { id: 'chartMecLatency', metric: 'mecTaskLatency', stepped: false, y: 'Latency (s)' },
-                { id: 'chartBatterySoC', metric: 'batterySoC', stepped: false, y: 'SoC (Ratio)' }
+                { id: 'chartActiveInterface', metric: 'activeInterface', stepped: true, y: 'Interface (0=5G, 1=Sat)' },
+                { id: 'chartQoSScore', metric: 'qosScore', stepped: false, y: 'QoS Utility Score (0.0-1.0)' },
+                { id: 'chartMecLatency', metric: 'mecTaskLatency', stepped: false, y: 'MEC Latency (s)' },
+                { id: 'chartSwitchCount', metric: 'switchCount', stepped: true, y: 'Cumulative Switches' }
             ];
             for (const cfg of chartConfigs) {
                 if (charts[cfg.id]) {
@@ -725,13 +689,6 @@
                     charts[cfg.id].update();
                 }
             }
-        }
-
-        function switchTab(tabId, btn) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
         }
 
         function onFilterChange() {
@@ -778,10 +735,9 @@
             initVehicleSelector();
             initFleetTable();
             createChart('chartActiveInterface', 'activeInterface', true, 'Interface (0=5G, 1=Sat)');
-            createChart('chartSwitchCount', 'switchCount', true, 'Cumulative Switches');
-            createChart('chartQoSScore', 'qosScore', false, 'QoS Score');
+            createChart('chartQoSScore', 'qosScore', false, 'QoS Utility Score (0.0-1.0)');
             createChart('chartMecLatency', 'mecTaskLatency', false, 'MEC Latency (s)');
-            createChart('chartBatterySoC', 'batterySoC', false, 'Battery State of Charge');
+            createChart('chartSwitchCount', 'switchCount', true, 'Cumulative Switches');
         };
     </script>
 </body>

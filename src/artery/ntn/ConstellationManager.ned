@@ -45,6 +45,13 @@ simple ConstellationManager
         
         // Visibility update interval (seconds)
         double visibilityUpdateInterval = default(1.0);
+
+        @signal[islHopCount](type=long);
+        @statistic[islHopCount](title="ISL Route Hop Count"; record=vector,mean,max; interpolationmode=sample-hold);
+        @signal[islRouteLatency](type=double);
+        @statistic[islRouteLatency](title="ISL E2E Mesh Route Latency"; unit=ms; record=vector,mean,max; interpolationmode=sample-hold);
+        @signal[islMeshOutage](type=long);
+        @statistic[islMeshOutage](title="ISL Mesh Outage Count"; record=count);
         
         // Ground stations (configured via YAML or individually)
         // See createGroundStationModules() for parameter mapping

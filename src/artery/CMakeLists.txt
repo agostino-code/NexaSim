@@ -20,13 +20,10 @@ set_target_properties(core PROPERTIES
 
 target_include_directories(core PUBLIC
     ${PROJECT_SOURCE_DIR}/src
-    ${Boost_INCLUDE_DIRS}
-    $<TARGET_PROPERTY:Vanetza::vanetza,INTERFACE_INCLUDE_DIRECTORIES>
-    $<TARGET_PROPERTY:INET::INET,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 target_link_libraries(core PUBLIC
-    ${Boost_LIBRARIES}
+    boost::boost
     OmnetPP::envir
     traci
     Vanetza::vanetza

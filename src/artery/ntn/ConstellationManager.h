@@ -67,6 +67,23 @@ public:
         double linkQuality = 1.0;  // 0-1
     };
 
+    struct ISLRouteResult {
+        bool routeFound = false;
+        int sourceSatId = -1;
+        int targetSatId = -1;
+        int gatewayIndex = -1;
+        std::vector<int> pathSats;  // [source, hop1, hop2, ..., target]
+        int hopCount = 0;
+        double totalLatencyMs = 0.0;
+        double bottleneckQuality = 1.0;
+    };
+
+    struct GraphEdge {
+        int targetSat;
+        double weightMs;
+        double linkQuality;
+    };
+
 protected:
     // Configuration
     std::string constellationConfigFile;
@@ -135,14 +152,20 @@ protected:
     std::map<std::string, int> satNameToIndex;
     std::map<std::string, int> gsNameToIndex;
     
-    // Statistics
+    // Statistics & Routing state
     long totalHandovers = 0;
     long totalISLHandoffs = 0;
+    std::vector<std::vector<GraphEdge>> m_islAdjacency;
+    std::vector<std::vector<ISLRouteResult>> m_cachedRoutes;
+
     omnetpp::simsignal_t satDeployedSignal;
     omnetpp::simsignal_t islEstablishedSignal;
     omnetpp::simsignal_t islBrokenSignal;
     omnetpp::simsignal_t handoverSignal;
     omnetpp::simsignal_t visibilitySignal;
+    omnetpp::simsignal_t m_sigIslHopCount;
+    omnetpp::simsignal_t m_sigIslRouteLatency;
+    omnetpp::simsignal_t m_sigIslMeshOutage;
 
     virtual void initialize(int stage) override;
     virtual void handleMessage(omnetpp::cMessage* msg) override;
@@ -198,6 +221,11 @@ public:
     std::vector<int> findVisibleSatellites(const inet::Coord& observerPos, double minElevationDeg = 10.0);
     inet::Coord getSatellitePosition(const SatelliteInfo& sat);
     inet::Coord getGroundStationPosition(const GroundStationInfo& gs);
+
+    // Multi-Hop ISL Mesh Routing (Dijkstra)
+    void computeISLMeshShortestPaths();
+    ISLRouteResult getShortestRouteToGateway(int servingSatId, int gatewayIndex);
+    ISLRouteResult getShortestRouteToAnyGateway(int servingSatId);
 
 protected:
     // Signals

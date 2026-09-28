@@ -21,6 +21,8 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 GENERATED_DIR = REPO_ROOT / 'scenarios' / 'generated'
 
 try:
@@ -53,7 +55,7 @@ def run_single_sweep_simulation(scenario_dir: Path, in_docker: bool) -> int:
         cmd = [
             'docker', 'compose', 'run', '--rm',
             '-w', f"/artery/{rel_dir}",
-            'nexasim-run', 'bash', '/artery/tools/opp_run.sh', '-f', f"/artery/{rel_dir}/omnetpp.ini", '-u', 'Cmdenv'
+            'nexasim', 'bash', '/artery/tools/opp_run.sh', '-f', f"/artery/{rel_dir}/omnetpp.ini", '-u', 'Cmdenv'
         ]
         env = os.environ.copy()
         env['MSYS_NO_PATHCONV'] = '1'

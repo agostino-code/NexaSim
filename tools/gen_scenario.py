@@ -624,6 +624,11 @@ output-scalar-file = "${{resultdir}}/${{configname}}-${{runnumber}}.sca"
 *.groundStation[*].mecServer.localPort = 5000
 
 # =========================================================================
+# Multi-RAT Vertical Handover Strategy Configuration
+# =========================================================================
+*.node[*].hybridManager.switchingMode = "{self.terrestrial.get('switching_mode', 'coverage-based')}"
+
+# =========================================================================
 # INET Canvas Visualizers (Matching squidslab/simu-scs-hybrid)
 # =========================================================================
 *.visualizer.dataLinkVisualizer.displayLinks = true
@@ -635,8 +640,8 @@ output-scalar-file = "${{resultdir}}/${{configname}}-${{runnumber}}.sca"
 *.visualizer.physicalLinkVisualizer.lineColor = "green"
 *.visualizer.physicalLinkVisualizer.fadeTime = 1s
 
-*.visualizer.mediumVisualizer.displaySignals = true
-*.visualizer.mediumVisualizer.signalColor = "gold"
+*.visualizer.mediumVisualizer.typename = ""
+*.visualizer.mediumVisualizer.displaySignals = false
 
 *.visualizer.mobilityVisualizer.displayVelocities = true
 *.visualizer.mobilityVisualizer.displayMovementTrails = true

@@ -10,91 +10,98 @@ namespace ntn {
 NTNChannelModel::PathLossResult NTNChannelModel::calculatePathLoss(
     const ChannelParams& params,
     double satelliteVelocityKmps,
-    double groundVelocityKmps) {
-    
+    double groundVelocityKmps,
+    omnetpp::cRNG* rng) {
+
     PathLossResult result;
-    
+
     // Slant range
     double slantRange = calculateSlantRange(params.altitudeKm, params.elevationDeg);
-    
+
     // Free space loss
     result.freeSpaceLossDb = calculateFSPL(slantRange, params.frequencyGhz);
-    
-    // LOS probability
+
+    // 3GPP TR 38.811 LOS probability
     result.losProbability = calculateLOSProbability(params.elevationDeg, params.env);
-    
-    // Atmospheric losses
+
+    // Atmospheric losses (ITU-R P.676-12)
     result.atmosphericLossDb = calculateGaseousAbsorption(params.elevationDeg, params.frequencyGhz);
-    
-    // Rain attenuation
+
+    // Rain attenuation (ITU-R P.838-3 / P.618-13)
     result.rainLossDb = calculateRainAttenuation(params.elevationDeg, params.frequencyGhz, params.rainRateMmPerH);
-    
-    // Cloud attenuation
-    result.cloudLossDb = calculateCloudAttenuation(params.elevationDeg, params.frequencyGhz, 
+
+    // Cloud attenuation (ITU-R P.840)
+    result.cloudLossDb = calculateCloudAttenuation(params.elevationDeg, params.frequencyGhz,
                                                     params.cloudLiquidWater, params.cloudTempC);
-    
+
     // Scintillation
     result.scintillationLossDb = calculateScintillation(params.elevationDeg, params.frequencyGhz, params.scintillationSigma);
-    
+
     // Polarization loss
     result.polarizationLossDb = params.polarizationLossDb;
-    
-    // Shadowing
-    result.shadowingDb = calculateShadowing(slantRange, params.env);
-    
+
+    // Shadowing per 3GPP TR 38.811 (reproducible with OMNeT++ RNG)
+    result.shadowingDb = calculateShadowing(slantRange, params.env, rng);
+
     // Doppler shift
     result.dopplerShiftHz = calculateDopplerShift(satelliteVelocityKmps, groundVelocityKmps,
                                                    params.frequencyGhz, params.elevationDeg, 0.0);
-    
-    // Total loss (statistical combination)
-    // For LOS: FSPL + atmospheric + rain + cloud + scintillation + polarization + shadowing
-    // For NLOS: additional diffraction loss
-    double losLoss = result.freeSpaceLossDb + result.atmosphericLossDb + result.rainLossDb +
-                     result.cloudLossDb + result.scintillationLossDb + result.polarizationLossDb +
-                     result.shadowingDb;
-    
-    double nlosLoss = losLoss + 20.0;  // Additional NLOS loss (simplified)
-    
-    result.totalLossDb = result.losProbability * losLoss + (1.0 - result.losProbability) * nlosLoss;
-    
+
+    // Discrete 3GPP LOS / NLOS state decision
+    bool isLOS = true;
+    if (rng) {
+        isLOS = (omnetpp::uniform(rng, 0.0, 1.0) < result.losProbability);
+    } else {
+        uint32_t hash = static_cast<uint32_t>(params.elevationDeg * 100.0) ^ static_cast<uint32_t>(slantRange * 10.0);
+        isLOS = ((hash % 1000) / 1000.0 < result.losProbability);
+    }
+
+    double baseLoss = result.freeSpaceLossDb + result.atmosphericLossDb + result.rainLossDb +
+                      result.cloudLossDb + result.scintillationLossDb + result.polarizationLossDb;
+
+    if (isLOS) {
+        result.totalLossDb = baseLoss + result.shadowingDb;
+    } else {
+        // NLOS diffraction penalty (3GPP TR 38.811 Table 6.6.2-1)
+        double nlosDiffractionDb = (params.env == Environment::URBAN || params.env == Environment::TROPICAL) ? 20.0 : 15.0;
+        result.totalLossDb = baseLoss + nlosDiffractionDb + result.shadowingDb * 1.2;
+    }
+
     return result;
 }
 
 double NTNChannelModel::calculateLOSProbability(double elevationDeg, Environment env) {
-    // 3GPP TR 38.811 Table 7.2-1: LOS probability models
-    // P_LOS = min(1, (a * theta + b) / (c * theta + d))  or similar
-    
-    double theta = elevationDeg;
-    double a, b, c, d;
-    
+    // 3GPP TR 38.811 Section 6.6.1 Table 6.6.1-1
+    double theta = std::max(1.0, std::min(89.5, elevationDeg));
+    double thetaRad = theta * M_PI / 180.0;
+    double pLos = 1.0;
+
     switch (env) {
-        case Environment::URBAN:
-            // Dense urban: lower LOS probability
-            a = 0.3; b = 0.1; c = 0.1; d = 1.0;
+        case Environment::RURAL:
+            pLos = exp(-1.0 / (tan(thetaRad) * 18.98));
             break;
         case Environment::SUBURBAN:
-            a = 0.4; b = 0.15; c = 0.08; d = 1.0;
+            pLos = std::min(1.0, (theta / 90.0) + exp(-1.0 / (tan(thetaRad) * 7.5)));
             break;
-        case Environment::RURAL:
-            a = 0.5; b = 0.2; c = 0.05; d = 1.0;
-            break;
-        case Environment::MARITIME:
-            a = 0.6; b = 0.25; c = 0.04; d = 1.0;
-            break;
-        case Environment::AERONAUTICAL:
-            a = 0.9; b = 0.05; c = 0.02; d = 1.0;
+        case Environment::URBAN:
+            pLos = std::min(1.0, (theta / 90.0) + exp(-1.0 / (tan(thetaRad) * 3.5)));
             break;
         case Environment::DESERT:
-            a = 0.7; b = 0.2; c = 0.03; d = 1.0;
+            pLos = std::min(1.0, (theta / 90.0) + exp(-1.0 / (tan(thetaRad) * 12.0)));
             break;
         case Environment::TROPICAL:
-            a = 0.35; b = 0.1; c = 0.07; d = 1.0;
+            pLos = std::min(1.0, (theta / 90.0) + exp(-1.0 / (tan(thetaRad) * 4.0)));
+            break;
+        case Environment::AERONAUTICAL:
+            pLos = (theta >= 5.0) ? 1.0 : (theta / 5.0);
+            break;
+        case Environment::MARITIME:
+            pLos = (theta >= 3.0) ? 1.0 : (theta / 3.0);
             break;
         default:
-            a = 0.4; b = 0.15; c = 0.08; d = 1.0;
+            pLos = std::min(1.0, (theta / 90.0) + exp(-1.0 / (tan(thetaRad) * 6.0)));
+            break;
     }
-    
-    double pLos = (a * theta + b) / (c * theta + d);
     return std::clamp(pLos, 0.0, 1.0);
 }
 
@@ -117,59 +124,51 @@ double NTNChannelModel::calculateSlantRange(double altitudeKm, double elevationD
 }
 
 double NTNChannelModel::calculateGaseousAbsorption(double elevationDeg, double frequencyGhz) {
-    // ITU-R P.676 simplified
-    // Oxygen and water vapor absorption
-    
-    // Zenith attenuation (dB)
+    // ITU-R P.676-12 Specific Gaseous Attenuation
     double freq = frequencyGhz;
-    
-    // Oxygen absorption (simplified from P.676)
-    double oxygenZenith = 0.0;
-    if (freq < 50) {
-        oxygenZenith = 0.001 * freq * freq;  // Approximate
+    double elevationRad = std::max(1.0, elevationDeg) * M_PI / 180.0;
+    double elevationFactor = 1.0 / std::max(0.08, sin(elevationRad));
+
+    // Dry air / Oxygen absorption
+    double gamma_o = 0.0;
+    if (freq < 50.0) {
+        gamma_o = (7.2e-3 / (freq * freq + 0.36) + 3.22e-4 / (pow(freq - 60.0, 2) + 2.25)) * freq * freq;
+    } else if (freq <= 70.0) {
+        gamma_o = 15.0 / (1.0 + pow((freq - 60.0) / 4.0, 2));
     } else {
-        // 60 GHz oxygen band
-        oxygenZenith = 15.0 / (1.0 + pow((freq - 60) / 5, 2));
+        gamma_o = 0.001 * freq;
     }
-    
-    // Water vapor absorption (simplified)
-    double vaporZenith = 0.0;
-    if (freq < 100) {
-        vaporZenith = 0.002 * freq * freq / (1.0 + freq * freq / 40000.0);
-    } else {
-        // 22 GHz and 183 GHz water vapor lines
-        vaporZenith = 0.5 * exp(-pow(freq - 22, 2) / 100) + 0.3 * exp(-pow(freq - 183, 2) / 1000);
-    }
-    
-    // Slant path factor
-    double elevationFactor = 1.0 / std::max(0.1, sin(elevationDeg * M_PI / 180.0));
-    
-    return (oxygenZenith + vaporZenith) * elevationFactor;
+    double h_o = 6.0; // km
+
+    // Water vapor absorption (22.235 GHz and 183.31 GHz lines)
+    double rho = 7.5; // g/m^3 standard surface water vapor density
+    double line22 = 0.0173 * rho * (freq * freq) / (pow(freq - 22.235, 2) + 9.0);
+    double line183 = 0.002 * rho * (freq * freq) / (pow(freq - 183.31, 2) + 25.0);
+    double continuum = 1.5e-6 * rho * pow(freq, 2.4);
+    double gamma_w = line22 + line183 + continuum;
+    double h_w = 2.2; // km
+
+    return (gamma_o * h_o + gamma_w * h_w) * elevationFactor;
 }
 
 double NTNChannelModel::calculateRainAttenuation(double elevationDeg, double frequencyGhz, double rainRate) {
-    // ITU-R P.618 / P.838 rain attenuation
-    
-    if (rainRate <= 0) return 0.0;
-    
-    // Specific attenuation coefficients (ITU-R P.838)
+    // ITU-R P.618-13 / P.838-3 rain attenuation
+    if (rainRate <= 0.0) return 0.0;
+
     auto [k, alpha] = getRainCoefficients(frequencyGhz);
-    
-    // Specific attenuation (dB/km)
-    double gamma = k * pow(rainRate, alpha);
-    
-    // Effective path length through rain
-    double rainHeight = 4.0;  // km (typical)
-    double rainPathLength = calculateRainPathLength(elevationDeg, rainHeight);
-    
-    // Horizontal reduction factor
-    double r = 1.0 / (1.0 + rainPathLength / (25.0 * pow(gamma, 0.5)));  // Simplified
-    
-    // Vertical adjustment factor
-    double v = 1.0;  // Simplified
-    
-    // Total rain attenuation
-    double attenuation = gamma * rainPathLength * r * v;
+    double gamma = k * pow(rainRate, alpha); // dB/km
+
+    double elevationRad = std::max(1.0, elevationDeg) * M_PI / 180.0;
+    double rainHeightKm = 3.5;
+    double slantPathKm = rainHeightKm / std::max(0.08, sin(elevationRad));
+    double d_h = slantPathKm * cos(elevationRad); // horizontal projection km
+
+    // ITU-R P.618-13 horizontal reduction factor r_001
+    double r_001 = 1.0 / (1.0 + 0.78 * sqrt(std::max(0.001, d_h * gamma / frequencyGhz)) - 0.38 * (1.0 - exp(-2.0 * d_h)));
+    r_001 = std::clamp(r_001, 0.25, 1.0);
+
+    return gamma * slantPathKm * r_001;
+}
     
     return attenuation;
 }
@@ -233,31 +232,43 @@ double NTNChannelModel::calculateDopplerShift(double satelliteVelocityKmps, doub
     return (vRel / c) * fc;
 }
 
-double NTNChannelModel::calculateShadowing(double distanceKm, Environment env) {
-    // Log-normal shadowing
-    // Standard deviation depends on environment
-    double sigma;
-    
+double NTNChannelModel::calculateShadowing(double distanceKm, Environment env, omnetpp::cRNG* rng) {
+    double sigma = 6.0;
+
     switch (env) {
         case Environment::URBAN: sigma = 8.0; break;
         case Environment::SUBURBAN: sigma = 6.0; break;
-        case Environment::RURAL: sigma = 5.0; break;
-        case Environment::MARITIME: sigma = 4.0; break;
-        case Environment::AERONAUTICAL: sigma = 3.0; break;
-        case Environment::DESERT: sigma = 4.5; break;
+        case Environment::RURAL: sigma = 4.0; break;
+        case Environment::MARITIME: sigma = 2.5; break;
+        case Environment::AERONAUTICAL: sigma = 1.5; break;
+        case Environment::DESERT: sigma = 3.5; break;
         case Environment::TROPICAL: sigma = 7.0; break;
-        default: sigma = 6.0;
+        default: sigma = 5.0; break;
     }
-    
-    // Correlation distance
-    double dCorr = 100.0;  // meters (typical)
-    
-    // Generate correlated shadowing (simplified: just return random value)
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    std::normal_distribution<> dist(0.0, sigma);
-    
-    return dist(gen);
+
+    if (rng) {
+        return omnetpp::normal(rng, 0.0, sigma);
+    }
+
+    // Deterministic pseudo-random Gaussian without static std::random_device
+    uint32_t seed = static_cast<uint32_t>(distanceKm * 1000.0) ^ 0x9e3779b9;
+    double u1 = std::max(1e-7, (seed % 100000) / 100000.0);
+    double u2 = ((seed >> 5) % 100000) / 100000.0;
+    double z0 = sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2);
+    return z0 * sigma;
+}
+
+NTNChannelModel::MarkovState NTNChannelModel::updateMarkovState(
+    MarkovState current, double elevationDeg, double distanceTraveledMeters, omnetpp::cRNG* rng) {
+    double pLos = calculateLOSProbability(elevationDeg, Environment::SUBURBAN);
+    double u = rng ? omnetpp::uniform(rng, 0.0, 1.0) : 0.5;
+    if (u < pLos) {
+        return MarkovState::STATE_GOOD_LOS;
+    } else if (u < pLos + (1.0 - pLos) * 0.75) {
+        return MarkovState::STATE_BAD_SHADOWED;
+    } else {
+        return MarkovState::STATE_DEEP_FADE;
+    }
 }
 
 NTNChannelModel::FrequencyBand NTNChannelModel::getFrequencyBand(double frequencyGhz) {
@@ -276,24 +287,24 @@ double NTNChannelModel::calculateRainPathLength(double elevationDeg, double rain
 }
 
 std::pair<double, double> NTNChannelModel::getRainCoefficients(double frequencyGhz) {
-    // ITU-R P.838-3 coefficients k and alpha
-    // k = a * f^b, alpha = c * f^d + e
-    // Simplified approximation for common bands
-    
+    // ITU-R P.838-3 specific rain attenuation coefficients
     double f = frequencyGhz;
-    
-    if (f < 10) {
-        // L/S/C band - minimal rain
+
+    if (f < 4.0) {
         return {0.0001, 1.0};
-    } else if (f < 20) {
-        // Ku band
-        return {0.0003 * f, 1.1};
-    } else if (f < 40) {
-        // Ka band
-        return {0.0002 * f, 1.15};
+    } else if (f >= 4.0 && f < 12.0) {
+        return {0.002 * (f - 3.0), 1.15};
+    } else if (f >= 12.0 && f < 20.0) {
+        return {0.035, 1.12};
+    } else if (f >= 20.0 && f <= 32.0) {
+        // Ka-band (28 GHz nominal): k_H=0.1872, k_V=0.1678 -> circular average k=0.1775, alpha=1.0142
+        return {0.1775, 1.0142};
+    } else if (f > 32.0 && f <= 50.0) {
+        // Q-band (40 GHz): k ~ 0.385, alpha ~ 0.945
+        return {0.385, 0.945};
     } else {
-        // Q/V band and above
-        return {0.00015 * f, 1.2};
+        // V/W-band
+        return {0.650, 0.880};
     }
 }
 

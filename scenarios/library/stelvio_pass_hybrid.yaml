@@ -107,8 +107,8 @@ scenario:
       - name: "gorge_shadow_zone"
         lat_min: 46.5300
         lat_max: 46.5370
-        lon_min: 46.4550
-        lon_max: 46.4700
+        lon_min: 10.4550
+        lon_max: 10.4700
         attenuation_db: 45.0  # Total 5G blackout due to rock walls
 
     channel_model: "RMa"      # Rural Macro / Mountainous channel model

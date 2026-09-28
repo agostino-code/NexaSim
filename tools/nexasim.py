@@ -24,6 +24,8 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 LIBRARY_DIR = REPO_ROOT / 'scenarios' / 'library'
 GENERATED_DIR = REPO_ROOT / 'scenarios' / 'generated'
 
@@ -252,13 +254,13 @@ def cmd_run(args):
             cmd = [
                 'docker', 'compose', 'run', '--rm', '-p', '6080:6080',
                 '-w', f"/artery/scenarios/generated/{short_name}",
-                'nexasim-run', 'bash', '/artery/tools/start_gui.sh', '-f', f"/artery/scenarios/generated/{short_name}/omnetpp.ini"
+                'nexasim-gui', 'bash', '/artery/tools/start_gui.sh', '-f', f"/artery/scenarios/generated/{short_name}/omnetpp.ini"
             ]
         else:
             cmd = [
                 'docker', 'compose', 'run', '--rm',
                 '-w', f"/artery/scenarios/generated/{short_name}",
-                'nexasim-run', 'bash', '/artery/tools/opp_run.sh', '-f', f"/artery/scenarios/generated/{short_name}/omnetpp.ini", '-u', 'Cmdenv'
+                'nexasim', 'bash', '/artery/tools/opp_run.sh', '-f', f"/artery/scenarios/generated/{short_name}/omnetpp.ini", '-u', 'Cmdenv'
             ]
         env = os.environ.copy()
         env['MSYS_NO_PATHCONV'] = '1'

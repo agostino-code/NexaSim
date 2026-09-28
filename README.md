@@ -2,12 +2,14 @@
 
 [![Horizon Europe - NexaSphere](https://img.shields.io/badge/Horizon%20Europe-NexaSphere-003399.svg)](https://cordis.europa.eu/)
 [![Conan 2.x](https://img.shields.io/badge/Conan-2.x%20Ready-blue.svg)](https://conan.io/)
-[![OMNeT++](https://img.shields.io/badge/OMNeT++-5.6.2-green.svg)](https://omnetpp.org/)
+[![OMNeT++](https://img.shields.io/badge/OMNeT++-5.7.1-green.svg)](https://omnetpp.org/)
+[![SUMO](https://img.shields.io/badge/SUMO-1.21.0-blue.svg)](https://eclipse.dev/sumo/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Async%20Core-009688.svg)](https://fastapi.tiangolo.com/)
 [![INET](https://img.shields.io/badge/INET-4.2.2-brightgreen.svg)](https://inet.omnetpp.org/)
 [![Simu5G](https://img.shields.io/badge/Simu5G-1.1.0-orange.svg)](http://simu5g.org/)
 [![space_veins](https://img.shields.io/badge/space__veins-0.3-purple.svg)](https://github.com/veins/space_veins)
 [![Vanetza](https://img.shields.io/badge/Vanetza-26.02-red.svg)](https://github.com/riebl/vanetza)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
+[![Docker](https://img.shields.io/badge/Docker-Multi--Stage-2496ED.svg)](https://www.docker.com/)
 
 **NexaSim** is a state-of-the-art **3D Unified Communication Network Simulator** developed for the European Union's **Horizon Europe NexaSphere** research and innovation project.
 
@@ -65,7 +67,7 @@ NexaSim eliminates internal legacy submodules (`extern/`) in favor of **Conan 2 
 |                     +-------------------------------+                             |
 |                                     |                                             |
 |                     +-------------------------------+                             |
-|                     |   OMNeT++ 5.6.2 / INET 4.2.2  |                             |
+|                     |   OMNeT++ 5.7.1 / INET 4.2.2  |                             |
 |                     +-------------------------------+                             |
 |                                     |                                             |
 |                     +-------------------------------+                             |
@@ -78,7 +80,7 @@ NexaSim eliminates internal legacy submodules (`extern/`) in favor of **Conan 2 
 
 ## Quick Start (Docker Environment)
 
-NexaSim runs inside an optimized Docker environment providing all dependencies and build toolchains.
+NexaSim runs inside an optimized **Multi-Stage Docker environment** providing isolated headless execution and interactive Web GUI modes.
 
 ### 1. Build the Simulator
 
@@ -87,15 +89,16 @@ NexaSim runs inside an optimized Docker environment providing all dependencies a
 docker compose run --rm nexasim-build
 ```
 
-*(Legacy alias `docker compose run --rm artery-build` is also supported).*
-
 ### 2. Run a 3D Integrated Scenario
 
 NexaSim comes with pre-packaged scenarios demonstrating TN-NTN multi-tier communications:
 
 ```bash
-# Execute Starlink + Berlin 5G-NR Dual-Connectivity scenario
+# Execute Starlink + Stelvio 5G-NR Dual-Connectivity scenario (Headless, ultra-fast)
 docker compose run --rm nexasim-scenario
+
+# Or execute with interactive 3D Web GUI (OMNeT++ Qtenv + SUMO GUI on http://localhost:6080/vnc.html)
+docker compose run --rm -p 6080:6080 nexasim-gui
 ```
 
 ### 3. Analyze Simulation Results
@@ -186,6 +189,43 @@ In alignment with the Horizon Europe NexaSphere technical objectives:
 * **Milestone 2**: Unified CLI & Procedural SUMO Traffic Generation *(Completed)*.
 * **Milestone 3**: Dynamic Multi-Tier VHO & Hierarchical MEC Edge Computing *(Completed)*.
 * **Milestone 4**: Multi-Run Benchmark Suite, 3D Digital Twin (CesiumJS) & Web Studio *(Completed)*.
+
+### NexaSim Studio — Web Control Center (Powered by FastAPI)
+
+The Studio is an aerospace-grade web control center that orchestrates the entire simulation pipeline from a browser, powered by an asynchronous **FastAPI** backend and **Uvicorn** ASGI server. Start it with:
+
+```bash
+./nexasim studio --port 8080
+```
+
+Then open `http://localhost:8080`. Interactive OpenAPI/Swagger documentation is available at `http://localhost:8080/docs`. The Cesium Ion token and CARTO API key are read from `.env` (isolated and `.gitignore`-ated — never committed).
+
+* **Async Worker Architecture**: Long-running simulations are dispatched via FastAPI `BackgroundTasks`, streaming logs in real time without blocking HTTP requests.
+* **Built-in Security**: Static assets and simulation artifacts are served via mounted Starlette `StaticFiles` with automatic Path Traversal protection. Input specifications are validated via Pydantic models.
+* **Layout** (CSS Grid): header with view-mode buttons, 340 px left sidebar (scenario catalog + actions + drawer toggle), main area (2D Leaflet map and/or 3D CesiumJS globe), and a collapsible lower drawer (45% height) hosting the executive dashboard.
+
+**View modes:**
+- **Single 2D** — Leaflet tactical map with CARTO Dark / ESRI Dark Gray / ESRI Satellite basemaps. Animated vehicle convoy markers with dynamic RAT handover (green = 5G-NR terrestrial, cyan = LEO NTN satellite when in a blind spot), gNodeB, ground station, and visible-satellite overlays.
+- **Single 3D** — CesiumJS globe with camera presets (Tactical, Chase Cam, Orbit LEO) calibrated on the scenario's real coordinates, basemap selection, and terrain-clamped vehicle markers (`heightReference: "CLAMP_TO_GROUND"`).
+- **Dual** — 2D and 3D side by side; the lower drawer closes automatically and the globe's HUD panel is hidden (via `?hud=0` query param + `postMessage`).
+
+**Lower drawer — Executive Dashboard** (Chart.js, 2x2 grid): Active Interface (area), QoS Utility Score (line), MEC Latency (bar), Cumulative Handovers (line), plus a Fleet Multi-RAT Telemetry Summary table and a Physical Link Budget section.
+
+**Sidebar controls:** scenario parameter sliders (rain rate, duration, VHO strategy), streaming execution console (`ev/sec`, simulated time, live logs), and one-click buttons to Generate, Run, Analyze, open the Dashboard, or launch the 3D globe.
+
+### 3D Digital Twin (`nexasim view-3d`)
+
+A separate command launches the photorealistic 3D geospatial twin built on **CesiumJS 1.119** with dynamically generated **CZML** packets (`tools/czml_generator.py`):
+
+```bash
+./nexasim view-3d stelvio
+```
+
+The globe renders: LEO constellation satellites with Keplerian/SGP4 orbital dynamics, optical ISL laser beams between adjacent satellites, volumetric 5G-NR coverage cones around gNodeB towers, dynamic magenta phased-array tracking beams from vehicle to satellite, and **terrain-clamped vehicle markers** (all vehicles sit exactly on the digital terrain, never floating above or sinking below it).
+
+**Camera presets** (all calibrated on the scenario's real coordinates, no hardcoded values): **Tactical** (regional overview at 5.5 km, -32° pitch), **Chase Cam** (tracks convoy leader `veh_0`), **Orbit LEO** (constellation-wide view at 2,200 km). **Basemap picker** offers Cesium World Terrain, ESRI World Imagery (via `UrlTemplateImageryProvider`, avoiding the deprecated `ArcGisMapServerImageryProvider` errors), and Cesium Black Marble. A try/catch fallback to `EllipsoidTerrainProvider` prevents crashes when no Cesium Ion token is available.
+
+**HUD toggling:** in Dual view the globe's HUD panel is hidden via `?hud=0` query param and `postMessage({ showHud: false })`, so the HUD never overlaps the 2D map.
 * **Milestone 5 (Upcoming)**: Multi-Hop Inter-Satellite Mesh Routing using Contact Graph Routing (CGR) and dynamic space Dijkstra.
 * **Milestone 6 (Upcoming)**: Reinforcement Learning (Deep Q-Network / PPO) for predictive make-before-break vertical handover.
 * **Milestone 7 (Upcoming)**: 3GPP Rel. 16/17 5G-NR V2X Sidelink (PC5) integration with Collective Perception Service (CPM).
