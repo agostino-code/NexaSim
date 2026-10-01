@@ -169,9 +169,6 @@ double NTNChannelModel::calculateRainAttenuation(double elevationDeg, double fre
 
     return gamma * slantPathKm * r_001;
 }
-    
-    return attenuation;
-}
 
 double NTNChannelModel::calculateCloudAttenuation(double elevationDeg, double frequencyGhz, 
                                                   double liquidWater, double temperature) {

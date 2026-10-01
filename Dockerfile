@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxerces-c-dev ninja-build curl python3-venv \
     clang-tidy pkg-config libzmq5-dev \
     libprotobuf-dev protobuf-compiler python3-pip \
-    && pip3 install --no-cache-dir --break-system-packages conan fastapi uvicorn python-dotenv pyyaml \
+    && pip3 install --no-cache-dir --break-system-packages conan fastapi uvicorn python-dotenv pyyaml pytest httpx2 \
     && rm -rf /var/lib/apt/lists/*
 
 # ==============================================================================

@@ -296,6 +296,27 @@ NexaSim include la CLI unificata `nexasim` (eseguibile da `./nexasim` o `python 
 ./nexasim all nexasphere_highway_platooning
 ```
 
+### 3.1 Build riproducibile e problemi di cache
+
+La build ufficiale deve essere eseguita nel container Docker tramite `nexasim-build`. Il servizio usa un unico albero CMake Release in `build/Release`; gli alberi duplicati, come `build/build/Release`, possono riutilizzare generatori Conan obsoleti e causare errori di path o link.
+
+Per ricreare l'ambiente di build:
+
+```bash
+docker compose run --rm nexasim-build
+```
+
+Le recipe Conan di INET e space_veins rigenerano i file C++ prodotti da `nedtool` prima della compilazione. Questa fase e necessaria quando la versione di OMNeT++ dell'immagine differisce da quella usata per gli header presenti negli archivi sorgente.
+
+Prima di eseguire una simulazione, verificare lo scenario e la generazione:
+
+```bash
+./nexasim validate stelvio
+./nexasim generate stelvio
+```
+
+Se la configurazione CMake continua a referenziare un vecchio package Conan, eliminare solo la directory generata `build/` e ripetere il servizio `nexasim-build`. Non modificare manualmente i file generati in `build/Release/generators/`.
+
 ---
 
 ## 4. Analisi dei Dati, Metriche KPI e Dashboard Interattivo

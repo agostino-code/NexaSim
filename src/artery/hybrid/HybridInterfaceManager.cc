@@ -21,10 +21,7 @@ HybridInterfaceManager::HybridInterfaceManager() :
 {
 }
 
-HybridInterfaceManager::~HybridInterfaceManager()
-{
-    delete m_strategy;
-}
+HybridInterfaceManager::~HybridInterfaceManager() = default;
 
 void HybridInterfaceManager::initialize(int stage)
 {
@@ -47,19 +44,19 @@ void HybridInterfaceManager::initialize(int stage)
     }
 }
 
-ISwitchingStrategy* HybridInterfaceManager::createStrategy()
+std::unique_ptr<ISwitchingStrategy> HybridInterfaceManager::createStrategy()
 {
     if (m_switchingMode == "coverage" || m_switchingMode == "coverage-based") {
-        return new CoverageBasedStrategy(this);
+        return std::make_unique<CoverageBasedStrategy>(this);
     } else if (m_switchingMode == "qos" || m_switchingMode == "qos-based") {
-        return new QoSBasedStrategy(this);
+        return std::make_unique<QoSBasedStrategy>(this);
     } else if (m_switchingMode == "energy" || m_switchingMode == "energy-aware") {
-        return new EnergyAwareStrategy(this);
+        return std::make_unique<EnergyAwareStrategy>(this);
     } else if (m_switchingMode == "predictive" || m_switchingMode == "predictive-lookahead" || m_switchingMode == "lookahead") {
-        return new PredictiveLookaheadStrategy(this);
+        return std::make_unique<PredictiveLookaheadStrategy>(this);
     }
     // Default fallback: Coverage-based
-    return new CoverageBasedStrategy(this);
+    return std::make_unique<CoverageBasedStrategy>(this);
 }
 
 void HybridInterfaceManager::handleMessage(omnetpp::cMessage* msg)
@@ -141,7 +138,11 @@ CoverageBasedStrategy::CoverageBasedStrategy(HybridInterfaceManager* mgr) :
     m_manager(mgr),
     m_evalTimer(new omnetpp::cMessage("coverageTimer")),
     m_checkInterval(1.0),
-    m_elevationMaskDeg(25.0)
+    m_elevationMaskDeg(25.0),
+    m_blindSpotMinX(1500.0),
+    m_blindSpotMaxX(2800.0),
+    m_blindSpotMinY(800.0),
+    m_blindSpotMaxY(2200.0)
 {
 }
 
@@ -157,6 +158,18 @@ void CoverageBasedStrategy::initialize(int stage)
     if (stage == 0) {
         m_checkInterval = m_manager->par("checkInterval").doubleValue();
         m_elevationMaskDeg = m_manager->par("elevationMaskDeg").doubleValue();
+        if (m_manager->hasPar("blindSpotMinX")) {
+            m_blindSpotMinX = m_manager->par("blindSpotMinX").doubleValue();
+        }
+        if (m_manager->hasPar("blindSpotMaxX")) {
+            m_blindSpotMaxX = m_manager->par("blindSpotMaxX").doubleValue();
+        }
+        if (m_manager->hasPar("blindSpotMinY")) {
+            m_blindSpotMinY = m_manager->par("blindSpotMinY").doubleValue();
+        }
+        if (m_manager->hasPar("blindSpotMaxY")) {
+            m_blindSpotMaxY = m_manager->par("blindSpotMaxY").doubleValue();
+        }
     } else if (stage == 3) {
         m_manager->scheduleAt(omnetpp::simTime() + m_checkInterval, m_evalTimer);
     }
@@ -174,16 +187,27 @@ void CoverageBasedStrategy::evaluate()
 {
     double simSec = omnetpp::simTime().dbl();
 
-    // Check spatial coordinates if mobility is available
+    // Check spatial coordinates dynamically from IMobility or initial position
     bool inBlindSpot = false;
     omnetpp::cModule* parent = m_manager->getParentModule();
     if (parent) {
         omnetpp::cModule* mob = parent->getSubmodule("mobility");
-        if (mob && mob->hasPar("initialX") && mob->hasPar("initialY")) {
-            // Evaluates whether node is in hairpin gorge / shadow zone
-            double x = mob->par("initialX").doubleValue();
-            double y = mob->par("initialY").doubleValue();
-            if (x >= 1500.0 && x <= 2800.0 && y >= 800.0 && y <= 2200.0) {
+        if (mob) {
+            double posX = 0.0, posY = 0.0;
+            bool hasPos = false;
+            auto* iMob = dynamic_cast<inet::IMobility*>(mob);
+            if (iMob) {
+                inet::Coord p = iMob->getCurrentPosition();
+                posX = p.x;
+                posY = p.y;
+                hasPos = true;
+            } else if (mob->hasPar("initialX") && mob->hasPar("initialY")) {
+                posX = mob->par("initialX").doubleValue();
+                posY = mob->par("initialY").doubleValue();
+                hasPos = true;
+            }
+            if (hasPos && posX >= m_blindSpotMinX && posX <= m_blindSpotMaxX &&
+                posY >= m_blindSpotMinY && posY <= m_blindSpotMaxY) {
                 inBlindSpot = true;
             }
         }
@@ -365,6 +389,10 @@ PredictiveLookaheadStrategy::PredictiveLookaheadStrategy(HybridInterfaceManager*
     m_lookaheadTimeS(3.0),
     m_timeToLossThresholdS(1.5),
     m_minDwellTimeS(4.0),
+    m_blindSpotMinX(1500.0),
+    m_blindSpotMaxX(2800.0),
+    m_blindSpotMinY(800.0),
+    m_blindSpotMaxY(2200.0),
     m_lastSwitchTime(0.0)
 {
 }
@@ -390,6 +418,18 @@ void PredictiveLookaheadStrategy::initialize(int stage)
         }
         if (m_manager->hasPar("minDwellTimeS")) {
             m_minDwellTimeS = m_manager->par("minDwellTimeS").doubleValue();
+        }
+        if (m_manager->hasPar("blindSpotMinX")) {
+            m_blindSpotMinX = m_manager->par("blindSpotMinX").doubleValue();
+        }
+        if (m_manager->hasPar("blindSpotMaxX")) {
+            m_blindSpotMaxX = m_manager->par("blindSpotMaxX").doubleValue();
+        }
+        if (m_manager->hasPar("blindSpotMinY")) {
+            m_blindSpotMinY = m_manager->par("blindSpotMinY").doubleValue();
+        }
+        if (m_manager->hasPar("blindSpotMaxY")) {
+            m_blindSpotMaxY = m_manager->par("blindSpotMaxY").doubleValue();
         }
     } else if (stage == 3) {
         m_manager->scheduleAt(omnetpp::simTime() + m_checkInterval, m_predictTimer);
@@ -440,19 +480,16 @@ void PredictiveLookaheadStrategy::evaluatePredictive()
     double predX = posX + (speed > 0 ? (velX / speed) : 1.0) * speed * m_lookaheadTimeS;
     double predY = posY + (speed > 0 ? (velY / speed) : 0.0) * speed * m_lookaheadTimeS;
 
-    // Define terrain blind-spot / mountain gorge boundary
-    const double gorgeMinX = 1500.0, gorgeMaxX = 2800.0;
-    const double gorgeMinY = 800.0,  gorgeMaxY = 2200.0;
-
-    bool currentInBlind = (posX >= gorgeMinX && posX <= gorgeMaxX && posY >= gorgeMinY && posY <= gorgeMaxY);
-    bool predInBlind = (predX >= gorgeMinX && predX <= gorgeMaxX && predY >= gorgeMinY && predY <= gorgeMaxY);
+    // Define terrain blind-spot / mountain gorge boundary from dynamic parameters
+    bool currentInBlind = (posX >= m_blindSpotMinX && posX <= m_blindSpotMaxX && posY >= m_blindSpotMinY && posY <= m_blindSpotMaxY);
+    bool predInBlind = (predX >= m_blindSpotMinX && predX <= m_blindSpotMaxX && predY >= m_blindSpotMinY && predY <= m_blindSpotMaxY);
 
     // Compute Time-To-Loss (TTL) in seconds
     double ttlTerrestrial = 999.0;
     if (currentInBlind) {
         ttlTerrestrial = 0.0;
     } else if (predInBlind) {
-        double distToGorge = std::max(0.0, gorgeMinX - posX);
+        double distToGorge = std::max(0.0, m_blindSpotMinX - posX);
         ttlTerrestrial = (speed > 0.1) ? (distToGorge / speed) : 1.0;
     } else if (simSec >= 37.0 && simSec <= 170.0) {
         ttlTerrestrial = std::max(0.0, 40.0 - simSec);
@@ -464,15 +501,12 @@ void PredictiveLookaheadStrategy::evaluatePredictive()
     // Proactive Handover Decision Logic (Make-Before-Break)
     if (!m_manager->isSatelliteActive()) {
         if (ttlTerrestrial <= m_timeToLossThresholdS && dwellTime >= m_minDwellTimeS) {
-            EV_INFO << "[PredictiveVHO] Proactive Handover to Satellite LEO triggered! TTL = "
-                    << ttlTerrestrial << "s <= threshold " << m_timeToLossThresholdS << "s\n";
             m_manager->performSwitch(true); // Make-Before-Break proactive switch
             m_lastSwitchTime = now;
         }
     } else {
         bool safeReturnToCellular = (!currentInBlind && !predInBlind) && (simSec < 35.0 || simSec > 173.0);
         if (safeReturnToCellular && dwellTime >= m_minDwellTimeS) {
-            EV_INFO << "[PredictiveVHO] Terrestrial 5G-NR restored and confirmed clear over look-ahead. Switching back.\n";
             m_manager->performSwitch(false);
             m_lastSwitchTime = now;
         }

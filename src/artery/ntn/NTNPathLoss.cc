@@ -97,6 +97,7 @@ double NTNPathLoss::computePathLoss(const inet::physicallayer::ITransmission *tr
     params.altitudeKm = std::max(txPos.z, rxPos.z) / 1000.0;
     params.rainRateMmPerH = rainRateMmPerH;
     params.cloudLiquidWater = cloudLiquidWater;
+    omnetpp::cRNG* rng = getRNG(0);
 
     NTNChannelModel::Environment env = NTNChannelModel::Environment::SUBURBAN;
     if (environmentType == "urban" || environmentType == "dense_urban") env = NTNChannelModel::Environment::URBAN;

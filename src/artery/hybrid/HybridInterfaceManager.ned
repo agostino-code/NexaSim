@@ -19,6 +19,13 @@ simple HybridInterfaceManager
         double lookaheadTimeS @unit(s) = default(3.0s);
         double timeToLossThresholdS @unit(s) = default(1.5s);
         double minDwellTimeS @unit(s) = default(4.0s);
+        double blindSpotMinX = default(1500.0);
+        double blindSpotMaxX = default(2800.0);
+        double blindSpotMinY = default(800.0);
+        double blindSpotMaxY = default(2200.0);
+        double blindSpotAttenuationDb = default(45.0);
+        double hysteresisMarginDb = default(3.0); // 3GPP Rel-17 NTN VHO Hysteresis in dB
+        double timeToTrigger @unit(s) = default(0.5s); // 3GPP Rel-17 NTN Time-To-Trigger (TTT)
 
         @signal[activeInterface](type=long);
         @signal[switchCount](type=long);

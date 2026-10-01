@@ -15,9 +15,12 @@ import os
 import sys
 import json
 import yaml
+import asyncio
 import argparse
 import threading
 import subprocess
+import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 from dotenv import load_dotenv
@@ -40,22 +43,32 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 LIBRARY_DIR = REPO_ROOT / 'scenarios' / 'library'
 GENERATED_DIR = REPO_ROOT / 'scenarios' / 'generated'
+STATIC_DIR = REPO_ROOT / 'tools' / 'static'
 
 # Application State
 SIM_STATE = {
     "running": False,
+    "run_id": None,
     "current_scenario": None,
+    "started_at": None,
     "logs": [],
     "exit_code": None
 }
 SIM_LOCK = threading.Lock()
+MAX_LOG_LINES = 2000
+
+def append_sim_log(message: str):
+    """Append a bounded simulation log entry; callers must hold SIM_LOCK."""
+    SIM_STATE["logs"].append(message)
+    if len(SIM_STATE["logs"]) > MAX_LOG_LINES:
+        del SIM_STATE["logs"][:-MAX_LOG_LINES]
 
 app = FastAPI(title="NexaSim Studio API", description="Control Center for NexaSim")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=[],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -66,7 +79,8 @@ class IdRequest(BaseModel):
 
 class SaveRequest(BaseModel):
     id: str
-    yaml: str
+    yaml: Optional[str] = None
+    data: Optional[Dict[str, Any]] = None
 
 # HTML rendering
 def render_studio_html() -> str:
@@ -104,6 +118,8 @@ async def get_scenarios():
             ues = terr_cfg.get('ue', {}).get('count', 0)
             gws = const_cfg.get('ground_stations', [])
             blind_spots = terr_cfg.get('blind_spots', [])
+            switching_mode = terr_cfg.get('switching_mode') or terr_cfg.get('integration', {}).get('handover', {}).get('mode', 'coverage-based')
+            rain_rate = terr_cfg.get('alpine_weather', {}).get('rain_rate_mm_hr', 15.0)
 
             from tools.nexasim import resolve_generated_dir
             gen_dir = resolve_generated_dir(yaml_file.stem)
@@ -121,6 +137,8 @@ async def get_scenarios():
                 "center": [area.get('center_lat', 46.5), area.get('center_lon', 10.5)],
                 "bbox": area.get('bbox', [10.4, 46.5, 10.5, 46.56]),
                 "elevation_mask_deg": area.get('elevation_mask_deg', 25.0),
+                "switching_mode": switching_mode,
+                "rain_rate": rain_rate,
                 "satellites": sats,
                 "gnbs": gnbs,
                 "ground_stations": gws,
@@ -162,7 +180,9 @@ async def get_status():
     with SIM_LOCK:
         return {
             "running": SIM_STATE["running"],
+            "run_id": SIM_STATE["run_id"],
             "scenario": SIM_STATE["current_scenario"],
+            "started_at": SIM_STATE["started_at"],
             "logs": SIM_STATE["logs"][-200:],
             "exit_code": SIM_STATE["exit_code"]
         }
@@ -190,6 +210,43 @@ async def get_results(name: str):
         "globe_url": f"/results/{short_name}/results/globe.html" if has_globe else None
     }
 
+@app.get("/api/telemetry")
+async def get_telemetry(name: str):
+    """Return dashboard telemetry from recorded vectors or scalar KPI data."""
+    from tools.dashboard import parse_vector_file
+    from tools.nexasim import resolve_generated_dir
+
+    target_dir = resolve_generated_dir(name)
+    results_dir = target_dir / 'results'
+    vector_files = sorted(results_dir.glob('*.vec')) if results_dir.exists() else []
+
+    if vector_files:
+        structured = parse_vector_file(vector_files[0])
+        series = next(iter(structured.values()), {})
+        timestamps = series.get('activeInterface', {}).get('x', [])
+        if timestamps:
+            return {
+                "timestamps": timestamps,
+                "throughput_mbps": series.get('datarateSelected', {}).get('y', [0.0] * len(timestamps)),
+                "rtt_ms": series.get('mecTaskLatency', {}).get('y', [0.0] * len(timestamps)),
+                "handover_events": series.get('switchCount', {}).get('y', [0] * len(timestamps)),
+                "active_interface": series.get('activeInterface', {}).get('y', [0] * len(timestamps)),
+            }
+
+    kpi_file = results_dir / 'kpi_summary.json'
+    kpis = {}
+    if kpi_file.exists():
+        with open(kpi_file, 'r', encoding='utf-8') as f:
+            kpis = json.load(f)
+
+    return {
+        "timestamps": [0.0],
+        "throughput_mbps": [float(kpis.get('throughput_mbps', 0.0) or 0.0)],
+        "rtt_ms": [float(kpis.get('avg_latency_ms', 0.0) or 0.0)],
+        "handover_events": [int(kpis.get('total_vho_switches', 0) or 0)],
+        "active_interface": [1 if (kpis.get('sat_usage_pct', 0) or 0) > 50 else 0],
+    }
+
 @app.get("/api/route")
 async def get_route(name: str):
     from tools.nexasim import resolve_generated_dir
@@ -211,8 +268,27 @@ async def post_save(req: SaveRequest):
     if LIBRARY_DIR.resolve() not in target_file.parents:
         raise HTTPException(status_code=403, detail="Invalid scenario ID")
 
+    content_to_write = ""
+    if req.yaml is not None:
+        try:
+            parsed = yaml.safe_load(req.yaml)
+            from tools.schema import ScenarioDocument
+            ScenarioDocument(**parsed)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid scenario payload: {str(e)}")
+        content_to_write = req.yaml
+    elif req.data is not None:
+        try:
+            from tools.schema import ScenarioDocument
+            ScenarioDocument(**req.data)
+            content_to_write = yaml.dump(req.data, sort_keys=False, default_flow_style=False)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid scenario payload: {str(e)}")
+    else:
+        raise HTTPException(status_code=400, detail="Either 'yaml' or 'data' field is required")
+
     with open(target_file, 'w', encoding='utf-8') as f:
-        f.write(req.yaml)
+        f.write(content_to_write)
     return {"status": "saved", "path": str(target_file)}
 
 @app.post("/api/generate")
@@ -233,79 +309,101 @@ async def post_generate(req: IdRequest):
 @app.post("/api/view3d")
 async def post_view3d(req: IdRequest):
     from tools.czml_generator import create_scenario_digital_twin
-    czml_path, html_path = create_scenario_digital_twin(req.id, open_browser=False)
+    czml_path, html_path = await asyncio.to_thread(create_scenario_digital_twin, req.id, open_browser=False)
     return {"status": "ready", "html": str(html_path)}
 
 @app.post("/api/run")
 async def post_run(req: IdRequest, background_tasks: BackgroundTasks):
+    from tools.nexasim import resolve_scenario_yaml
+    if not resolve_scenario_yaml(req.id):
+        raise HTTPException(status_code=404, detail="Scenario not found")
+
     with SIM_LOCK:
         if SIM_STATE["running"]:
             raise HTTPException(status_code=409, detail="Simulation already running")
 
         SIM_STATE["running"] = True
+        SIM_STATE["run_id"] = uuid.uuid4().hex
         SIM_STATE["current_scenario"] = req.id
+        SIM_STATE["started_at"] = datetime.now(timezone.utc).isoformat()
         SIM_STATE["logs"] = []
         SIM_STATE["exit_code"] = None
+        run_id = SIM_STATE["run_id"]
 
-    background_tasks.add_task(run_simulation_worker, req.id)
-    return {"status": "started", "scenario": req.id}
+    background_tasks.add_task(run_simulation_worker, req.id, run_id)
+    return {"status": "started", "scenario": req.id, "run_id": run_id}
 
-def run_simulation_worker(scenario_id: str):
+def run_simulation_worker(scenario_id: str, run_id: Optional[str] = None):
     """Background worker to run simulation, record terminal logs and trigger KPI analysis."""
     from tools.nexasim import resolve_scenario_yaml, resolve_generated_dir, is_inside_docker
 
-    yaml_path = resolve_scenario_yaml(scenario_id)
-    out_dir = resolve_generated_dir(scenario_id)
-    short_name = out_dir.name
+    proc = None
+    exit_code = -1
+    try:
+        yaml_path = resolve_scenario_yaml(scenario_id)
+        if not yaml_path:
+            raise ValueError(f"Scenario '{scenario_id}' not found")
 
-    if not (out_dir / 'omnetpp.ini').exists():
-        from tools.gen_scenario import ScenarioGenerator
-        gen = ScenarioGenerator(str(yaml_path))
-        gen.generate(str(out_dir))
+        out_dir = resolve_generated_dir(scenario_id)
+        short_name = out_dir.name
 
-    in_docker = is_inside_docker()
-    if in_docker:
-        cmd = ['bash', '/artery/tools/opp_run.sh', '-f', f"/artery/scenarios/generated/{short_name}/omnetpp.ini", '-u', 'Cmdenv']
-        cwd = str(out_dir)
-        env = os.environ.copy()
-    else:
-        cmd = [
-            'docker', 'compose', 'run', '--rm',
-            '-w', f"/artery/scenarios/generated/{short_name}",
-            'nexasim', 'bash', '/artery/tools/opp_run.sh', '-f', f"/artery/scenarios/generated/{short_name}/omnetpp.ini", '-u', 'Cmdenv'
-        ]
-        cwd = str(REPO_ROOT)
-        env = os.environ.copy()
-        env['MSYS_NO_PATHCONV'] = '1'
+        if not (out_dir / 'omnetpp.ini').exists():
+            from tools.gen_scenario import ScenarioGenerator
+            gen = ScenarioGenerator(str(yaml_path))
+            gen.generate(str(out_dir))
 
-    with SIM_LOCK:
-        SIM_STATE["logs"].append(f"[*] Dispatching simulation for '{scenario_id}'...")
+        in_docker = is_inside_docker()
+        if in_docker:
+            cmd = ['bash', '/artery/tools/opp_run.sh', '-f', f"/artery/scenarios/generated/{short_name}/omnetpp.ini", '-u', 'Cmdenv']
+            cwd = str(out_dir)
+            env = os.environ.copy()
+        else:
+            cmd = [
+                'docker', 'compose', 'run', '--rm',
+                '-w', f"/artery/scenarios/generated/{short_name}",
+                'nexasim', 'bash', '/artery/tools/opp_run.sh', '-f', f"/artery/scenarios/generated/{short_name}/omnetpp.ini", '-u', 'Cmdenv'
+            ]
+            cwd = str(REPO_ROOT)
+            env = os.environ.copy()
+            env['MSYS_NO_PATHCONV'] = '1'
 
-    proc = subprocess.Popen(
-        cmd,
-        cwd=cwd,
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        encoding='utf-8',
-        errors='replace',
-        bufsize=1
-    )
-
-    for line in proc.stdout:
         with SIM_LOCK:
-            SIM_STATE["logs"].append(line.rstrip('\r\n'))
+            append_sim_log(f"[*] Dispatching simulation for '{scenario_id}'...")
 
-    proc.wait()
+        proc = subprocess.Popen(
+            cmd,
+            cwd=cwd,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding='utf-8',
+            errors='replace',
+            bufsize=1
+        )
 
-    from tools.analyze_results import analyze_simulation_directory
-    analyze_simulation_directory(str(out_dir), generate_dashboard=True)
+        if proc.stdout:
+            for line in proc.stdout:
+                with SIM_LOCK:
+                    append_sim_log(line.rstrip('\r\n'))
 
-    with SIM_LOCK:
-        SIM_STATE["running"] = False
-        SIM_STATE["exit_code"] = proc.returncode
-        SIM_STATE["logs"].append(f"\n[+] Simulation run completed (Exit Code {proc.returncode})")
+        exit_code = proc.wait()
+        if exit_code == 0:
+            from tools.analyze_results import analyze_simulation_directory
+            analyze_simulation_directory(str(out_dir), generate_dashboard=True)
+        else:
+            with SIM_LOCK:
+                append_sim_log("[!] Simulation failed; KPI analysis skipped")
+    except Exception as exc:
+        with SIM_LOCK:
+            append_sim_log(f"[!] Simulation worker error: {exc}")
+    finally:
+        with SIM_LOCK:
+            SIM_STATE["running"] = False
+            SIM_STATE["exit_code"] = exit_code if proc is None else proc.returncode
+            append_sim_log(
+                f"\n[+] Simulation run completed (Exit Code {SIM_STATE['exit_code']})"
+            )
 
 # Dynamic results handler with token injection for Cesium & Carto
 @app.get("/results/{scenario}/results/{filename}")
@@ -328,20 +426,30 @@ async def serve_scenario_result_file(scenario: str, filename: str):
 # Static files for /results/ path, inherently secure against Path Traversal
 if GENERATED_DIR.exists():
     app.mount("/results", StaticFiles(directory=str(GENERATED_DIR)), name="results")
+    app.mount("/assets", StaticFiles(directory=str(STATIC_DIR)), name="assets")
 else:
     os.makedirs(GENERATED_DIR, exist_ok=True)
     app.mount("/results", StaticFiles(directory=str(GENERATED_DIR)), name="results")
 
 
-def start_studio_server(port: int = 8080, open_browser: bool = False):
+def start_studio_server(port: int = 8080, host: str = '127.0.0.1', open_browser: bool = False):
     """Starts the NexaSim Studio local web control center using Uvicorn."""
     url = f"http://localhost:{port}"
+
+    carto_key = os.environ.get('CARTO_API_KEY')
+    cesium_token = os.environ.get('CESIUM_ION_TOKEN')
 
     print(f"\n==========================================================================")
     print(f" NexaSim Studio • 3D Space-Ground Simulation Command Center")
     print(f" Powered by FastAPI")
     print(f" URL: {url}")
     print(f" Dual-View Engine: 2D Leaflet Tactical Map + 3D CesiumJS Digital Twin")
+
+    if not carto_key:
+        print(" [!] Warning: CARTO_API_KEY is not set. 2D Map may fallback to OpenStreetMap.")
+    if not cesium_token:
+        print(" [!] Warning: CESIUM_ION_TOKEN is not set. 3D Globe may fallback to offline terrain.")
+
     print(f" Press Ctrl+C to stop the studio server")
     print(f"==========================================================================\n")
 
@@ -349,12 +457,13 @@ def start_studio_server(port: int = 8080, open_browser: bool = False):
         import webbrowser
         webbrowser.open(url)
 
-    uvicorn.run(app, host="0.0.0.0", port=port, log_level="warning")
+    uvicorn.run(app, host=host, port=port, log_level="warning")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='NexaSim Studio Web Server')
     parser.add_argument('--port', type=int, default=8080, help='Port to bind (default: 8080)')
+    parser.add_argument('--host', default='127.0.0.1', help='Host to bind (default: 127.0.0.1)')
     parser.add_argument('--open', action='store_true', help='Open studio in browser automatically')
     args = parser.parse_args()
 
-    start_studio_server(port=args.port, open_browser=args.open)
+    start_studio_server(port=args.port, host=args.host, open_browser=args.open)

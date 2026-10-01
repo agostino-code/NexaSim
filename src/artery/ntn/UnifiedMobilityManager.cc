@@ -238,6 +238,8 @@ void UnifiedMobilityManager::initiateHandover(int ueId, const std::string& targe
     if (it == ueContexts.end()) return;
     
     UEContext& ue = it->second;
+    ue.previousNodeId = ue.currentNodeId;
+    ue.previousNetwork = ue.currentNetwork;
     ue.handoverInProgress = true;
     ue.targetNodeId = targetNodeId;
     ue.targetNetwork = networkNodes[targetNodeId].type;
@@ -309,8 +311,8 @@ void UnifiedMobilityManager::completeHandover(int ueId, bool success) {
     } else {
         failedHandovers++;
         emit(handoverFailedSignal, ueId);
-        // Revert to previous node
-        ue.currentNodeId = ue.targetNodeId;  // This would be the old node in case of failure
+        ue.currentNodeId = ue.previousNodeId;
+        ue.currentNetwork = ue.previousNetwork;
     }
     
     ue.handoverInProgress = false;

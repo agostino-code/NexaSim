@@ -51,6 +51,8 @@ __pycache__/
 # Environment
 .venv
 .env
+.pytest_cache/
+pytest-cache-files-*/
 node_modules/
 package.json
 package-lock.json

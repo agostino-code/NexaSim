@@ -20,7 +20,10 @@ jobs:
           python-version: '3.10'
 
       - name: Install dependencies
-        run: pip install pyyaml
+        run: pip install pyyaml pydantic fastapi httpx starlette
+
+      - name: Run automated test suite
+        run: python -m unittest discover -s tests -p "test_*.py"
 
       - name: Validate all scenario YAML definitions
         run: |

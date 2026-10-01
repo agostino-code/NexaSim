@@ -16,6 +16,7 @@ import json
 import os
 import sys
 import argparse
+import random
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, asdict
@@ -105,6 +106,8 @@ class ScenarioGenerator:
         self.output = self.scenario.get('output', {})
         self.area = self.scenario.get('area', {})
         self.time = self.scenario.get('time', {})
+        self.seed = int(self.scenario.get('seed', 42))
+        self.rng = random.Random(self.seed)
         
         self.satellites: List[Satellite] = []
         self.ground_stations: List[GroundStation] = []
@@ -117,6 +120,21 @@ class ScenarioGenerator:
             self._generate_constellation()
             self._generate_terrestrial()
             self._generate_user_terminals()
+
+    def _geo_to_local(self, lat: float, lon: float, altitude_m: float = 0.0) -> tuple[float, float, float]:
+        """Convert scenario latitude/longitude to a local ENU approximation."""
+        center_lat = float(self.area.get('center_lat', 0.0))
+        center_lon = float(self.area.get('center_lon', 0.0))
+        meters_per_degree = 111000.0
+        x = (lon - center_lon) * meters_per_degree * math.cos(math.radians(center_lat))
+        y = (lat - center_lat) * meters_per_degree
+        return x, y, altitude_m
+
+    def _blind_spot_bounds(self, blind_spot: Dict[str, Any]) -> tuple[float, float, float, float]:
+        """Convert a YAML latitude/longitude blind spot to local X/Y bounds."""
+        min_x, min_y, _ = self._geo_to_local(blind_spot['lat_min'], blind_spot['lon_min'])
+        max_x, max_y, _ = self._geo_to_local(blind_spot['lat_max'], blind_spot['lon_max'])
+        return min_x, max_x, min_y, max_y
     
     def generate(self, output_dir: str):
         """Generate all scenario files"""
@@ -263,8 +281,7 @@ class ScenarioGenerator:
                 lon = min_lon
                 while lon < max_lon:
                     # Select type based on ratio
-                    import random
-                    r = random.random()
+                    r = self.rng.random()
                     cumulative = 0
                     selected_type = types[0]
                     for t in types:
@@ -302,10 +319,9 @@ class ScenarioGenerator:
         bbox = self.area.get('bbox', [13.0, 52.3, 13.6, 52.7])
         min_lon, min_lat, max_lon, max_lat = bbox
         
-        import random
         for i in range(count):
-            lat = random.uniform(min_lat, max_lat)
-            lon = random.uniform(min_lon, max_lon)
+            lat = self.rng.uniform(min_lat, max_lat)
+            lon = self.rng.uniform(min_lon, max_lon)
             
             ut = UserTerminal(
                 terminal_id=i,
@@ -448,9 +464,10 @@ seed-set = {seed}
                 f.write(f"*.groundStation[{i}].longitude = {gs.lon}\n")
                 f.write(f"*.groundStation[{i}].altitude = {gs.alt}\n")
                 f.write(f"*.groundStation[{i}].elevationMaskDeg = {gs.elevation_mask_deg}\n")
-                f.write(f"*.groundStation[{i}].mobility.initialX = {gs.lon * 111000}m\n")
-                f.write(f"*.groundStation[{i}].mobility.initialY = {gs.lat * 111000}m\n")
-                f.write(f"*.groundStation[{i}].mobility.initialZ = {gs.alt}m\n")
+                x, y, z = self._geo_to_local(gs.lat, gs.lon, gs.alt)
+                f.write(f"*.groundStation[{i}].mobility.initialX = {x}m\n")
+                f.write(f"*.groundStation[{i}].mobility.initialY = {y}m\n")
+                f.write(f"*.groundStation[{i}].mobility.initialZ = {z}m\n")
             
             f.write("\n# gNBs\n")
             for i, gnb in enumerate(self.gnbs):
@@ -459,9 +476,10 @@ seed-set = {seed}
                 f.write(f"*.gnb[{i}].frequencyGhz = {gnb.frequency_ghz}\n")
                 f.write(f"*.gnb[{i}].bandwidthMhz = {gnb.bandwidth_mhz}\n")
                 f.write(f"*.gnb[{i}].mimoLayers = {gnb.mimo_layers}\n")
-                f.write(f"*.gnb[{i}].mobility.initialX = {gnb.lon * 111000}m\n")
-                f.write(f"*.gnb[{i}].mobility.initialY = {gnb.lat * 111000}m\n")
-                f.write(f"*.gnb[{i}].mobility.initialZ = {gnb.height_m}m\n")
+                x, y, z = self._geo_to_local(gnb.lat, gnb.lon, gnb.height_m)
+                f.write(f"*.gnb[{i}].mobility.initialX = {x}m\n")
+                f.write(f"*.gnb[{i}].mobility.initialY = {y}m\n")
+                f.write(f"*.gnb[{i}].mobility.initialZ = {z}m\n")
             
             f.write("\n# User Terminals\n")
             for i, ut in enumerate(self.user_terminals):
@@ -469,12 +487,13 @@ seed-set = {seed}
                 f.write(f"*.userTerminal[{i}].terminal.terminalType = \"{ut.terminal_type}\"\n")
                 f.write(f"*.userTerminal[{i}].terminal.arrayNumElements = {ut.array_elements}\n")
                 f.write(f"*.userTerminal[{i}].terminal.dualConnectivityEnabled = {str(ut.dual_connectivity).lower()}\n")
-                f.write(f"*.userTerminal[{i}].mobility.initialX = {ut.lon * 111000}m\n")
-                f.write(f"*.userTerminal[{i}].mobility.initialY = {ut.lat * 111000}m\n")
-                f.write(f"*.userTerminal[{i}].mobility.initialZ = 0m\n")
-                f.write(f"*.ue[{i}].mobility.initialX = {ut.lon * 111000}m\n")
-                f.write(f"*.ue[{i}].mobility.initialY = {ut.lat * 111000}m\n")
-                f.write(f"*.ue[{i}].mobility.initialZ = 0m\n")
+                x, y, z = self._geo_to_local(ut.lat, ut.lon)
+                f.write(f"*.userTerminal[{i}].mobility.initialX = {x}m\n")
+                f.write(f"*.userTerminal[{i}].mobility.initialY = {y}m\n")
+                f.write(f"*.userTerminal[{i}].mobility.initialZ = {z}m\n")
+                f.write(f"*.ue[{i}].mobility.initialX = {x}m\n")
+                f.write(f"*.ue[{i}].mobility.initialY = {y}m\n")
+                f.write(f"*.ue[{i}].mobility.initialZ = {z}m\n")
             
             f.write("\n# NR Manager\n")
             f.write(f"*.nrManager.channelModel = \"{self.terrestrial.get('channel_model', 'UMa')}\"\n")
@@ -483,6 +502,32 @@ seed-set = {seed}
             f.write(f"*.nrManager.networkSlicingEnabled = {str(self.terrestrial.get('core_network', {}).get('network_slicing', {}).get('enabled', True)).lower()}\n")
             f.write(f"*.nrManager.dualConnectivityEnabled = {str(self.terrestrial.get('ue', {}).get('dual_connectivity', {}).get('enabled', False)).lower()}\n")
             
+            # Extract dynamic environment & strategy parameters
+            switching_mode = (
+                self.terrestrial.get('switching_mode') or
+                self.terrestrial.get('integration', {}).get('handover', {}).get('mode') or
+                'coverage-based'
+            )
+            rain_rate = self.terrestrial.get('alpine_weather', {}).get('rain_rate_mm_hr', 15.0)
+            elev_mask = self.area.get('elevation_mask_deg', 25.0)
+
+            blind_spots = self.terrestrial.get('blind_spots', [])
+            blind_min_x = 1500.0
+            blind_max_x = 2800.0
+            blind_min_y = 800.0
+            blind_max_y = 2200.0
+            blind_atten = 45.0
+            if blind_spots and isinstance(blind_spots, list) and len(blind_spots) > 0:
+                bs0 = blind_spots[0]
+                if all(key in bs0 for key in ('lat_min', 'lat_max', 'lon_min', 'lon_max')):
+                    blind_min_x, blind_max_x, blind_min_y, blind_max_y = self._blind_spot_bounds(bs0)
+                else:
+                    blind_min_x = bs0.get('min_x', 1500.0)
+                    blind_max_x = bs0.get('max_x', 2800.0)
+                    blind_min_y = bs0.get('min_y', 800.0)
+                    blind_max_y = bs0.get('max_y', 2200.0)
+                blind_atten = bs0.get('attenuation_db', 45.0)
+
             # Output configuration
             f.write(f"""
 # Satellite Interface & MAC Defaults
@@ -577,8 +622,8 @@ seed-set = {seed}
 **.nrRadioMedium.backgroundNoise.power = -110dBm
 **.radioMedium.pathLoss.typename = "NTNPathLoss"
 **.nrRadioMedium.pathLoss.typename = "NTNPathLoss"
-**.radioMedium.pathLoss.rainRateMmPerH = 25.0
-**.radioMedium.pathLoss.elevationMaskDeg = 28.0
+**.radioMedium.pathLoss.rainRateMmPerH = {rain_rate}
+**.radioMedium.pathLoss.elevationMaskDeg = {elev_mask}
 **.radioMedium.pathLoss.environmentType = "suburban"
 **.radioMedium.mediumLimitCache.carrierFrequency = 28GHz
 **.nrRadioMedium.mediumLimitCache.carrierFrequency = 3.5GHz
@@ -595,9 +640,13 @@ seed-set = {seed}
 **.antenna.mobility.typename = ""
 **.antenna.mobilityModule = "^.^.^.mobility"
 
-# Output
+# Output Configuration (Optimized Selective Vector Recording: ~80% disk I/O savings)
 **.scalar-recording = true
-**.vector-recording = true
+**.vector-recording = false
+*.node[*].hybridManager.*.vector-recording = true
+*.node[*].mecClient.*.vector-recording = true
+*.satellite[*].islNic[*].*.vector-recording = true
+*.node[*].satNic.mac.*.vector-recording = true
 output-vector-file = "${{resultdir}}/${{configname}}-${{runnumber}}.vec"
 output-scalar-file = "${{resultdir}}/${{configname}}-${{runnumber}}.sca"
 
@@ -624,9 +673,16 @@ output-scalar-file = "${{resultdir}}/${{configname}}-${{runnumber}}.sca"
 *.groundStation[*].mecServer.localPort = 5000
 
 # =========================================================================
-# Multi-RAT Vertical Handover Strategy Configuration
+# Multi-RAT Vertical Handover Strategy Configuration (Dynamic & Unambiguous)
 # =========================================================================
-*.node[*].hybridManager.switchingMode = "{self.terrestrial.get('switching_mode', 'coverage-based')}"
+*.node[*].hybridManager.switchingMode = "{switching_mode}"
+*.node[*].hybridManager.checkInterval = 0.5s
+*.node[*].hybridManager.elevationMaskDeg = {elev_mask}
+*.node[*].hybridManager.blindSpotMinX = {blind_min_x}
+*.node[*].hybridManager.blindSpotMaxX = {blind_max_x}
+*.node[*].hybridManager.blindSpotMinY = {blind_min_y}
+*.node[*].hybridManager.blindSpotMaxY = {blind_max_y}
+*.node[*].hybridManager.blindSpotAttenuationDb = {blind_atten}
 
 # =========================================================================
 # INET Canvas Visualizers (Matching squidslab/simu-scs-hybrid)
@@ -646,13 +702,6 @@ output-scalar-file = "${{resultdir}}/${{configname}}-${{runnumber}}.sca"
 *.visualizer.mobilityVisualizer.displayVelocities = true
 *.visualizer.mobilityVisualizer.displayMovementTrails = true
 *.visualizer.mobilityVisualizer.trailLength = 20
-
-# =========================================================================
-# Hybrid Interface Management (Vertical Handover Strategies)
-# =========================================================================
-**.hybridManager.switchingMode = "qos-based"
-**.hybridManager.checkInterval = 0.5s
-**.hybridManager.elevationMaskDeg = 25.0
 """)
         
         print(f"Written: {ini_path}")

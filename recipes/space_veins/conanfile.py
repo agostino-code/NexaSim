@@ -40,12 +40,16 @@ class SpaceVeinsConan(ConanFile):
         veins_src = os.path.join(self.source_folder, "lib", "veins", "src")
         veins_out = os.path.join(self.source_folder, "lib", "veins", "out", f"gcc-{opp_mode}", "src")
         self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && opp_makemake -f --deep --no-deep-includes --make-so -I. -o veins -O out -p VEINS", cwd=veins_src)
+        self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && make clean", cwd=veins_src)
+        self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && opp_makemake -f --deep --no-deep-includes --make-so -I. -o veins -O out -p VEINS", cwd=veins_src)
         self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && make -j{os.cpu_count()} MODE={opp_mode}", cwd=veins_src)
 
         # Build veins_inet
         self.output.info("Building veins_inet...")
         veins_inet_src = os.path.join(self.source_folder, "lib", "veins", "subprojects", "veins_inet", "src")
         veins_inet_out = os.path.join(self.source_folder, "lib", "veins", "subprojects", "veins_inet", "out", f"gcc-{opp_mode}", "src")
+        self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && opp_makemake -f --deep --no-deep-includes --make-so -I. -o veins_inet -O out -p VEINS_INET -I{inet_inc} -L{inet_lib} -lINET -I{veins_src} -L{veins_out} -lveins", cwd=veins_inet_src)
+        self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && make clean", cwd=veins_inet_src)
         self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && opp_makemake -f --deep --no-deep-includes --make-so -I. -o veins_inet -O out -p VEINS_INET -I{inet_inc} -L{inet_lib} -lINET -I{veins_src} -L{veins_out} -lveins", cwd=veins_inet_src)
         self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && make -j{os.cpu_count()} MODE={opp_mode}", cwd=veins_inet_src)
 
@@ -58,6 +62,8 @@ class SpaceVeinsConan(ConanFile):
             f"-I{veins_src} -L{veins_out} -lveins "
             f"-I{veins_inet_src} -L{veins_inet_out} -lveins_inet"
         )
+        self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && {makemake_cmd}", cwd=space_veins_src)
+        self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && make clean", cwd=space_veins_src)
         self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && {makemake_cmd}", cwd=space_veins_src)
         self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && make -j{os.cpu_count()} MODE={opp_mode}", cwd=space_veins_src)
 

@@ -41,18 +41,23 @@ CONAN_SO_DIRS=$(find "${SEARCH_DIRS[@]}" -name '*.so' -exec dirname {} \; 2>/dev
 BUILD_LIBS=$(find "${REPO_ROOT}/build" -name '*.so' -exec dirname {} \; 2>/dev/null | sort -u | tr '\n' ':')
 export LD_LIBRARY_PATH="/omnetpp/lib:${CONAN_LIBS}:${CONAN_SO_DIRS}:${BUILD_LIBS}:${REPO_ROOT}/build:${LD_LIBRARY_PATH}"
 
-# Prepare proper NED symlink hierarchies for Veins and subprojects
-for VEINS_DIR in $(find "${SEARCH_DIRS[@]}" -type d -path '*/lib/veins/src' 2>/dev/null); do
-    mkdir -p "$VEINS_DIR/org/car2x/veins/subprojects" 2>/dev/null || true
-    ln -sfn ../../veins "$VEINS_DIR/org/car2x/veins" 2>/dev/null || true
-    VEINS_ROOT=$(dirname "$VEINS_DIR")
-    if [ -d "$VEINS_ROOT/subprojects/veins_inet/src/veins_inet" ]; then
-        ln -sfn "$VEINS_ROOT/subprojects/veins_inet/src/veins_inet" "$VEINS_DIR/org/car2x/veins/subprojects/veins_inet" 2>/dev/null || true
-    fi
-done
+# Prepare clean NED roots for packages requiring specific directory structures
+mkdir -p /tmp/ned_roots/org/car2x/veins/subprojects 2>/dev/null || true
+
+# Veins package root (org.car2x.veins.*)
+VEINS_BASE=$(find "${SEARCH_DIRS[@]}" -type d -path '*/lib/veins/src/veins' 2>/dev/null | head -n 1)
+if [ -n "$VEINS_BASE" ]; then
+    for item in "$VEINS_BASE"/*; do
+        ln -sfn "$item" /tmp/ned_roots/org/car2x/veins/ 2>/dev/null || true
+    done
+fi
+
+VEINS_INET_SRC=$(find "${SEARCH_DIRS[@]}" -type d -path '*/lib/veins/subprojects/veins_inet/src/veins_inet' 2>/dev/null | head -n 1)
+if [ -n "$VEINS_INET_SRC" ]; then
+    ln -sfn "$VEINS_INET_SRC" /tmp/ned_roots/org/car2x/veins/subprojects/veins_inet 2>/dev/null || true
+fi
 
 # Prepare clean NED root for Simu5G
-mkdir -p /tmp/ned_roots 2>/dev/null || true
 SIMU5G_SRC=$(find "${SEARCH_DIRS[@]}" -type d -path '*/simu5*/b/src' 2>/dev/null | head -n 1)
 if [ -n "$SIMU5G_SRC" ]; then
     ln -sfn "$SIMU5G_SRC" /tmp/ned_roots/simu5g 2>/dev/null || true
@@ -60,17 +65,18 @@ fi
 
 # Find precise NED root paths
 INET_NED=$(find "${SEARCH_DIRS[@]}" -type d -path '*/lib/inet/src' 2>/dev/null | head -n 1)
-VEINS_NED=$(find "${SEARCH_DIRS[@]}" -type d -path '*/lib/veins/src' 2>/dev/null | head -n 1)
 SPACE_NED=$(find "${SEARCH_DIRS[@]}" -type d -path '*/space*/s/src' 2>/dev/null | head -n 1)
 
-NED_PATH="${REPO_ROOT}/src:${REPO_ROOT}/scenarios:/tmp/ned_roots:${INET_NED}:${VEINS_NED}:${SPACE_NED}"
+NED_PATH="${REPO_ROOT}/src:${REPO_ROOT}/scenarios:/tmp/ned_roots:${INET_NED}:${SPACE_NED}"
 
 # Auto-locate core OMNeT++ shared libraries from Conan packages & build
 INET_LIB=$(find "${SEARCH_DIRS[@]}" -name 'libINET.so' 2>/dev/null | head -n 1)
 VEINS_LIB=$(find "${SEARCH_DIRS[@]}" -name 'libveins.so' 2>/dev/null | head -n 1)
 SPACE_LIB=$(find "${SEARCH_DIRS[@]}" -name 'libspace_veins.so' 2>/dev/null | head -n 1)
 SIMU5G_LIB=$(find "${SEARCH_DIRS[@]}" -name 'libsimu5g.so' 2>/dev/null | head -n 1)
-CORE_LIB="${REPO_ROOT}/build/libartery_core.so"
+CORE_LIB=$(find "${REPO_ROOT}/build" -name 'libartery_core.so' 2>/dev/null | head -n 1)
+NTN_LIB=$(find "${REPO_ROOT}/build" -name 'libartery_ntn.so' 2>/dev/null | head -n 1)
+NR_LIB=$(find "${REPO_ROOT}/build" -name 'libartery_nr.so' 2>/dev/null | head -n 1)
 TRACI_LIB=$(find "${REPO_ROOT}/build" -name 'libtraci.so' 2>/dev/null | head -n 1)
 ENVMOD_LIB=$(find "${REPO_ROOT}/build" -name 'libartery_envmod.so' 2>/dev/null | head -n 1)
 
@@ -82,7 +88,9 @@ LIBS_ARGS=""
 [ -n "$SIMU5G_LIB" ] && LIBS_ARGS="$LIBS_ARGS -l $SIMU5G_LIB"
 [ -n "$TRACI_LIB" ] && LIBS_ARGS="$LIBS_ARGS -l $TRACI_LIB"
 [ -n "$ENVMOD_LIB" ] && LIBS_ARGS="$LIBS_ARGS -l $ENVMOD_LIB"
-[ -f "$CORE_LIB" ] && LIBS_ARGS="$LIBS_ARGS -l $CORE_LIB"
+[ -n "$CORE_LIB" ] && LIBS_ARGS="$LIBS_ARGS -l $CORE_LIB"
+[ -n "$NTN_LIB" ] && LIBS_ARGS="$LIBS_ARGS -l $NTN_LIB"
+[ -n "$NR_LIB" ] && LIBS_ARGS="$LIBS_ARGS -l $NR_LIB"
 
 OPP_EXEC="opp_run"
 command -v opp_run >/dev/null 2>&1 || OPP_EXEC="/omnetpp/bin/opp_run"
@@ -100,7 +108,19 @@ done
 
 if [ -n "$INI_FILE" ] && [ -f "$INI_FILE" ]; then
     INI_DIR="$(cd "$(dirname "$INI_FILE")" && pwd)"
+    INI_BASE="$(basename "$INI_FILE")"
     cd "$INI_DIR"
+    NEW_ARGS=()
+    PREV=""
+    for ARG in "$@"; do
+        if [ "$PREV" = "-f" ]; then
+            NEW_ARGS+=("$INI_BASE")
+        else
+            NEW_ARGS+=("$ARG")
+        fi
+        PREV="$ARG"
+    done
+    set -- "${NEW_ARGS[@]}"
 fi
 
 # Auto-compile SUMO network from .nod.xml and .edg.xml with netconvert if available

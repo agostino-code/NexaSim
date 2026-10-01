@@ -19,11 +19,14 @@ from typing import Dict, List, Any, Optional
 
 try:
     from tools.dashboard import generate_dashboard as render_dashboard
+    from tools.html_assets import externalize_html_assets
 except ImportError:
     try:
         from dashboard import generate_dashboard as render_dashboard
+        from html_assets import externalize_html_assets
     except ImportError:
         render_dashboard = None
+        externalize_html_assets = None
 
 def parse_sca_file(sca_path: Path) -> Dict[str, Any]:
     """Parse OMNeT++ .sca scalar file into structured dictionaries."""
@@ -99,6 +102,12 @@ def export_vectors(vec_file: str, output_csv: str) -> bool:
 def shutil_which(cmd: str) -> Optional[str]:
     import shutil
     return shutil.which(cmd)
+
+def format_metric(value: Optional[float], precision: int = 2) -> str:
+    """Format a measured KPI without replacing missing data with a guess."""
+    if value is None:
+        return "N/A"
+    return f"{value:.{precision}f}"
 
 def parse_vector_csv(csv_path: str) -> Dict[str, Dict[str, Any]]:
     """Parse OMNeT++ scavetool CSV-R export into structured series."""
@@ -332,6 +341,12 @@ def generate_dashboard_html(series: Dict[str, Any], kpis: Dict[str, Any], output
 </body>
 </html>
 """
+    html_template = externalize_html_assets(
+        html_template,
+        Path(output_path),
+        'analysis.css',
+        'analysis.js',
+    )
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(html_template)
 
@@ -448,15 +463,15 @@ def analyze_simulation_directory(sim_dir: str, generate_dashboard: bool = True) 
                 elif "mecTaskLatency" in sname and sval > 0:
                     mec_latencies.append(float(sval) * 1000.0) # in ms
 
-    avg_latency = (sum(latencies) / len(latencies)) if latencies else 14.8
-    avg_jitter = (sum(jitters) / len(jitters)) if jitters else 0.8
-    pdr_pct = (total_packets_rcvd / total_packets_sent * 100.0) if total_packets_sent > 0 else 99.4
+    avg_latency = (sum(latencies) / len(latencies)) if latencies else None
+    avg_jitter = (sum(jitters) / len(jitters)) if jitters else None
+    pdr_pct = (total_packets_rcvd / total_packets_sent * 100.0) if total_packets_sent > 0 else None
 
-    mean_sat_pct = (sum(sat_ratios) / len(sat_ratios) * 100.0) if sat_ratios else 45.0
-    mean_cell_pct = (sum(cell_ratios) / len(cell_ratios) * 100.0) if cell_ratios else 55.0
+    mean_sat_pct = (sum(sat_ratios) / len(sat_ratios) * 100.0) if sat_ratios else None
+    mean_cell_pct = (sum(cell_ratios) / len(cell_ratios) * 100.0) if cell_ratios else None
     valid_socs = [s for s in battery_socs if not (isinstance(s, float) and (math.isnan(s) or math.isinf(s)))]
-    mean_battery_soc = (sum(valid_socs) / len(valid_socs)) if valid_socs else 98.4
-    mean_mec_latency = (sum(mec_latencies) / len(mec_latencies)) if mec_latencies else 28.5
+    mean_battery_soc = (sum(valid_socs) / len(valid_socs)) if valid_socs else None
+    mean_mec_latency = (sum(mec_latencies) / len(mec_latencies)) if mec_latencies else None
 
     # 3. Modelled Link Budget Metrics based on Actual Physical Parameters
     alt_km = float(walker_alt) if walker_alt.replace('.', '', 1).isdigit() else 550.0
@@ -488,17 +503,17 @@ def analyze_simulation_directory(sim_dir: str, generate_dashboard: bool = True) 
     print(f"  • Terrestrial 5G Connection Ratio:      {mean_cell_pct:.1f}%")
     print(f"  • LEO Satellite Connection Ratio:       {mean_sat_pct:.1f}%")
     print(f"  • Total Seamless Vertical Handovers:    {total_switches}")
-    print(f"  • Average Vehicle Battery SoC:          {mean_battery_soc:.1f}%")
+    print(f"  • Average Vehicle Battery SoC:          {format_metric(mean_battery_soc, 1)}%")
     if mec_latencies:
-        print(f"  • MEC Task Latency (RTT + Compute):     {mean_mec_latency:.2f} ms")
+        print(f"  • MEC Task Latency (RTT + Compute):     {format_metric(mean_mec_latency)} ms")
 
     print(f"\n--- [4] PHY & RADIO CHANNEL MEASUREMENTS ---")
     print(f"  • Total Packets Transmitted:            {total_packets_sent} packets")
     print(f"  • Total Packets Successfully Received:  {total_packets_rcvd} packets")
     print(f"  • Total Packets Dropped:                {total_packets_dropped} packets")
-    print(f"  • Packet Delivery Ratio (PDR):          {pdr_pct:.2f}%")
-    print(f"  • Average End-to-End Latency:           {avg_latency:.3f} ms")
-    print(f"  • Average Packet Jitter:                {avg_jitter:.3f} ms")
+    print(f"  • Packet Delivery Ratio (PDR):          {format_metric(pdr_pct)}%")
+    print(f"  • Average End-to-End Latency:           {format_metric(avg_latency, 3)} ms")
+    print(f"  • Average Packet Jitter:                {format_metric(avg_jitter, 3)} ms")
 
     print(f"\n--- [5] LINK BUDGET & PHYSICAL NTN EVALUATION ---")
     print(f"  • One-Way Space Propagation Delay:      {one_way_prop_delay_ms:.2f} ms (@ {alt_km:.0f} km zenith)")
@@ -519,7 +534,7 @@ def analyze_simulation_directory(sim_dir: str, generate_dashboard: bool = True) 
         "cell_usage_pct": mean_cell_pct,
         "sat_usage_pct": mean_sat_pct,
         "total_vho_switches": total_switches,
-        "mean_qos_score": 0.95,
+        "mean_qos_score": None,
         "final_battery_soc": mean_battery_soc,
         "pdr_pct": pdr_pct,
         "packets_sent": total_packets_sent,

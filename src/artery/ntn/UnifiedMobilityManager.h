@@ -69,6 +69,8 @@ public:
         int ueId = 0;
         std::string currentNodeId;
         NetworkType currentNetwork = NetworkType::TERRESTRIAL_NR;
+        std::string previousNodeId;
+        NetworkType previousNetwork = NetworkType::TERRESTRIAL_NR;
         std::string targetNodeId;
         NetworkType targetNetwork = NetworkType::NTN_LEO;
         

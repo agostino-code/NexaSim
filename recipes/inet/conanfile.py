@@ -29,6 +29,8 @@ class InetConan(ConanFile):
         self.output.info("Generating makefiles...")
         self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && opp_featuretool disable wirelesstutorial configuratortutorial", cwd=self.source_folder)
         self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && make makefiles", cwd=self.source_folder)
+        self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && make clean", cwd=self.source_folder)
+        self.run(f"export PATH=/omnetpp/bin:{bin_dir}:$PATH && make makefiles", cwd=self.source_folder)
         
         # Compila in base a CMAKE_BUILD_TYPE mappandolo sui MODE di OMNeT++ 
         mode = "debug" if self.settings.build_type == "Debug" else "release"

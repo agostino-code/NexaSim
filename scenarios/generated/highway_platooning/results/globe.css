@@ -1,0 +1,106 @@
+html, body, #cesiumContainer {
+            width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
+            background-color: #030712; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .hud-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(15, 23, 42, 0.88);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 12px;
+            padding: 18px 22px;
+            color: #f8fafc;
+            backdrop-filter: blur(12px);
+            z-index: 999;
+            width: 340px;
+            box-shadow: 0 12px 24px -4px rgba(0,0,0,0.5);
+        }
+        .hud-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 6px;
+        }
+        .hud-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #38bdf8;
+            letter-spacing: -0.2px;
+        }
+        .hud-badge {
+            font-size: 11px;
+            font-weight: 700;
+            background: #0284c7;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .hud-scenario {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 14px;
+        }
+        .telemetry-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 14px;
+        }
+        .telem-item { display: flex; flex-direction: column; }
+        .telem-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 600; }
+        .telem-val { font-size: 15px; font-weight: 700; color: #f8fafc; }
+
+        .cam-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .hud-btn {
+            background: rgba(30, 41, 59, 0.85);
+            border: 1px solid rgba(51, 65, 85, 0.8);
+            color: #f8fafc;
+            padding: 9px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .hud-btn:hover {
+            background: #0284c7;
+            border-color: #38bdf8;
+        }
+        .basemap-select {
+            width: 100%;
+            background: rgba(30, 41, 59, 0.85);
+            border: 1px solid rgba(51, 65, 85, 0.8);
+            color: #f8fafc;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-top: 10px;
+            outline: none;
+            cursor: pointer;
+        }
+        .legend {
+            margin-top: 14px;
+            font-size: 11px;
+            color: #cbd5e1;
+            border-top: 1px solid rgba(51, 65, 85, 0.6);
+            padding-top: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }

@@ -1,14 +1,14 @@
 version 2
-run General-0-20260928-17:57:07-246
+run General-0-20261001-23:39:36-369
 attr configname General
-attr datetime 20260928-17:57:07
+attr datetime 20261001-23:39:36
 attr experiment General
-attr inifile /artery/scenarios/generated/emergency_corridor/omnetpp.ini
+attr inifile omnetpp.ini
 attr iterationvars ""
 attr iterationvarsf ""
 attr measurement ""
 attr network generated.emergency_corridor.GeneratedScenario
-attr processid 246
+attr processid 369
 attr repetition 0
 attr replication #0
 attr resultdir results
@@ -489,7 +489,7 @@ param **.hybridManager.switchingMode "\"qos-based\""
 param **.hybridManager.checkInterval 0.5s
 param **.hybridManager.elevationMaskDeg 25.0
 
-scalar GeneratedScenario.traci.launcher port 38619
+scalar GeneratedScenario.traci.launcher port 54791
 scalar GeneratedScenario.node[0].wlan[0].agent dropConfirm:count 0
 attr title "dropped confirms, count"
 scalar GeneratedScenario.node[0].wlan[0].agent acceptConfirm:count 0

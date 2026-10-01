@@ -4,6 +4,7 @@
 #include <omnetpp.h>
 #include "artery/hybrid/ISwitchingStrategy.h"
 #include <string>
+#include <memory>
 
 namespace artery {
 namespace hybrid {
@@ -20,8 +21,14 @@ private:
     std::string m_cellInterfaceName;
     bool m_isSatelliteActive;
     
-    ISwitchingStrategy* m_strategy;
+    std::unique_ptr<ISwitchingStrategy> m_strategy;
     
+    // 3GPP Rel-17 NTN Handover parameters & state
+    double m_hysteresisMarginDb;
+    double m_timeToTrigger;
+    int m_candidateInterface; // -1 = none, 0 = 5G, 1 = Satellite
+    omnetpp::simtime_t m_candidateTriggerTime;
+
     // Statistics & Counters
     int m_totalSwitches;
     omnetpp::simtime_t m_lastSwitchTime;
@@ -39,15 +46,18 @@ protected:
     void handleMessage(omnetpp::cMessage* msg) override;
     void finish() override;
     
-    ISwitchingStrategy* createStrategy();
+    std::unique_ptr<ISwitchingStrategy> createStrategy();
 
 public:
     HybridInterfaceManager();
     virtual ~HybridInterfaceManager();
     
+    void requestSwitch(bool toSatellite);
     void performSwitch(bool toSatellite);
     bool isSatelliteActive() const { return m_isSatelliteActive; }
     int getTotalSwitches() const { return m_totalSwitches; }
+    double getHysteresisMarginDb() const { return m_hysteresisMarginDb; }
+    double getTimeToTrigger() const { return m_timeToTrigger; }
     
     void emitQoSScore(double score);
     void emitBatterySoC(double soc);

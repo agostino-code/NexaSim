@@ -108,6 +108,27 @@ docker compose run --rm -p 6080:6080 nexasim-gui
 docker compose run --rm nexasim-analyze
 ```
 
+### Reproducible Build and Validation
+
+The build service uses a single Release tree at `build/Release` and removes stale generated CMake files before configuring. Conan dependencies are rebuilt only when the requested package is missing from the cache.
+
+The INET and space_veins recipes regenerate Message Compiler outputs with the OMNeT++ toolchain installed in the container. This keeps generated headers compatible with the OMNeT++ version used by the simulator.
+
+For a clean build, use the project service rather than configuring a second build tree manually:
+
+```bash
+docker compose run --rm nexasim-build
+```
+
+The recommended pre-run checks are:
+
+```bash
+./nexasim validate
+./nexasim generate stelvio
+```
+
+Studio binds to `127.0.0.1` by default. Use `--host` only when exposing it through a controlled network boundary.
+
 ---
 
 ## Scenario Library
@@ -236,4 +257,4 @@ The globe renders: LEO constellation satellites with Keplerian/SGP4 orbital dyna
 
 - **NexaSphere**: Developed under the European Union's Horizon Europe research framework for 3D unified communication networks.
 - **Artery**: Based on the Artery V2X Simulation Framework (Raphael Riebl et al., GPLv2).
-- **Core Components**: INET Framework, Simu5G, space_veins, and Vanetza.
+- **Core Components**: INET Framework, Simu5G, space_veins, and Vanetza.

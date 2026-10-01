@@ -70,9 +70,8 @@ class VanetzaConan(ConanFile):
         self.cpp_info.includedirs = [
             "include",
             "include/vanetza/asn1/its",
-            "include/vanetza/asn1/its_r2",
+            "include/vanetza/asn1/r2",
             "include/vanetza/asn1/security",
-            "include/vanetza/asn1/security_r2",
             "include/vanetza/asn1/support",
         ]
         self.cpp_info.libdirs = ["lib"]

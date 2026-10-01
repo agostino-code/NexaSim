@@ -19,6 +19,7 @@ load_dotenv()
 import sys
 import json
 import math
+import bisect
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Any, Optional, Tuple
@@ -128,8 +129,16 @@ def load_real_vehicle_trajectories(
                     for t in time_samples:
                         sample_dt = start_dt + timedelta(seconds=t)
                         sample_iso = sample_dt.strftime('%Y-%m-%dT%H:%M:%SZ')
-                        # Find closest recorded time
-                        closest_t = min(sorted_times, key=lambda st: abs(st - t))
+                        # Fast O(log N) lookup using bisect
+                        idx = bisect.bisect_left(sorted_times, t)
+                        if idx == 0:
+                            closest_t = sorted_times[0]
+                        elif idx >= len(sorted_times):
+                            closest_t = sorted_times[-1]
+                        else:
+                            t_prev = sorted_times[idx - 1]
+                            t_curr = sorted_times[idx]
+                            closest_t = t_prev if (t - t_prev) <= (t_curr - t) else t_curr
                         lon, lat, alt = v_points[closest_t]
                         trajectories[v_idx].extend([sample_iso, lon, lat, alt])
 
@@ -247,6 +256,13 @@ def generate_czml_scene(
             'sats_per_plane': 6,
             'phase_offset': 0
         }]
+
+    # Dynamic adaptive time step based on duration and constellation size
+    total_sats = sum(int(s.get('num_planes', 1)) * int(s.get('sats_per_plane', 1)) for s in shells)
+    if total_sats > 100 or duration > 3600:
+        time_step = max(time_step, 15.0)
+    elif total_sats > 40 and duration > 600:
+        time_step = max(time_step, 10.0)
 
     time_samples = [i * time_step for i in range(int(duration // time_step) + 1)]
     if time_samples[-1] < duration:
@@ -847,9 +863,18 @@ def generate_globe_html(
         }}
 
         window.addEventListener('message', function(e) {{
-            if (e.data && typeof e.data.showHud === 'boolean') {{
+            if (!e.data) return;
+            if (typeof e.data.showHud === 'boolean') {{
                 const hud = document.querySelector('.hud-panel');
                 if (hud) hud.style.display = e.data.showHud ? 'block' : 'none';
+            }}
+            if (e.data.action === 'syncCamera' && typeof e.data.lat === 'number' && typeof e.data.lon === 'number') {{
+                if (viewer) {{
+                    viewer.camera.flyTo({{
+                        destination: Cesium.Cartesian3.fromDegrees(e.data.lon, e.data.lat, e.data.altitude || 6000),
+                        duration: 0.5
+                    }});
+                }}
             }}
         }});
 
@@ -899,7 +924,12 @@ def generate_globe_html(
 </body>
 </html>
 """
-    output_html.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        from tools.html_assets import externalize_html_assets
+    except ImportError:
+        from html_assets import externalize_html_assets
+
+    html = externalize_html_assets(html, output_html, 'globe.css', 'globe.js')
     with open(output_html, 'w', encoding='utf-8') as f:
         f.write(html)
     return output_html

@@ -11,8 +11,14 @@ import os
 import sys
 import json
 import csv
+import math
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
+
+try:
+    from tools.html_assets import externalize_html_assets
+except ImportError:
+    from html_assets import externalize_html_assets
 
 def parse_vector_file(vec_file: Path) -> Dict[str, Dict[str, Dict[str, Any]]]:
     """
@@ -215,16 +221,16 @@ def build_fleet_summary(structured_data: Dict[str, Dict[str, Any]]) -> List[Dict
         v_entry["final_interface"] = "Satellite LEO" if final_if == 1 else "5G-NR Terrestrial"
 
         # Mean QoS
-        qos_pts = v_data.get('qosScore', {}).get('y', [])
-        v_entry["mean_qos"] = round(sum(qos_pts) / len(qos_pts), 3) if qos_pts else 0.950
+        qos_pts = [p for p in v_data.get('qosScore', {}).get('y', []) if p is not None and not (isinstance(p, float) and math.isnan(p))]
+        v_entry["mean_qos"] = round(sum(qos_pts) / len(qos_pts), 3) if qos_pts else None
 
         # Battery SoC
-        soc_pts = v_data.get('batterySoC', {}).get('y', [])
-        v_entry["final_soc"] = round(soc_pts[-1] * 100.0, 1) if soc_pts else 98.4
+        soc_pts = [p for p in v_data.get('batterySoC', {}).get('y', []) if p is not None and not (isinstance(p, float) and math.isnan(p))]
+        v_entry["final_soc"] = round(soc_pts[-1] * 100.0, 1) if soc_pts else None
 
         # Mean MEC Latency
-        mec_pts = v_data.get('mecTaskLatency', {}).get('y', [])
-        v_entry["mean_mec_latency_ms"] = round((sum(mec_pts) / len(mec_pts)) * 1000.0, 2) if mec_pts else 24.50
+        mec_pts = [p for p in v_data.get('mecTaskLatency', {}).get('y', []) if p is not None and not (isinstance(p, float) and math.isnan(p))]
+        v_entry["mean_mec_latency_ms"] = round((sum(mec_pts) / len(mec_pts)) * 1000.0, 2) if mec_pts else None
 
         summary_table.append(v_entry)
 
@@ -264,13 +270,25 @@ def generate_dashboard(scenario_dir: Path, output_path: Optional[Path] = None) -
     scenario_name = kpis.get("scenario", scenario_dir.name).replace('_', ' ').title()
 
     # Calculate fleet averages if not present in kpis
-    cell_ratio = kpis.get('cell_usage_pct', 55.1)
-    sat_ratio = kpis.get('sat_usage_pct', 44.9)
+    cell_ratio = kpis.get('cell_usage_pct')
+    sat_ratio = kpis.get('sat_usage_pct')
     total_switches = kpis.get('total_vho_switches', sum(f.get('total_switches', 0) for f in fleet_summary))
-    mean_qos = kpis.get('mean_qos_score', 0.942)
-    battery_soc = kpis.get('final_battery_soc', 98.4)
-    mec_latency = kpis.get('avg_latency_ms', 21.65)
-    pdr_pct = kpis.get('pdr_pct', 100.0)
+    mean_qos = kpis.get('mean_qos_score')
+    battery_soc = kpis.get('final_battery_soc')
+    mec_latency = kpis.get('avg_latency_ms')
+    pdr_pct = kpis.get('pdr_pct')
+
+    def format_metric(value, precision, suffix=''):
+        if value is None:
+            return 'N/A'
+        return f'{value:.{precision}f}{suffix}'
+
+    cell_ratio_text = format_metric(cell_ratio, 1, '%')
+    sat_ratio_text = format_metric(sat_ratio, 1, '%')
+    mean_qos_text = format_metric(mean_qos, 3)
+    mec_latency_text = format_metric(mec_latency, 2, ' ms')
+    battery_soc_text = format_metric(battery_soc, 1, '%')
+    pdr_pct_text = format_metric(pdr_pct, 2, '%')
 
     # Color tokens adhering to dataviz guidelines
     html_content = f"""<!DOCTYPE html>
@@ -633,6 +651,13 @@ def generate_dashboard(scenario_dir: Path, output_path: Optional[Path] = None) -
             .tab-content {{ display: block !important; }}
             .chart-card {{ break-inside: avoid; border: 1px solid #ccc; }}
         }}
+
+        html {{ scrollbar-color: #3a4b5e #0a1017; scrollbar-width: thin; }}
+        * {{ scrollbar-width: thin; scrollbar-color: #3a4b5e transparent; }}
+        *::-webkit-scrollbar {{ width: 8px; height: 8px; }}
+        *::-webkit-scrollbar-track {{ background: transparent; }}
+        *::-webkit-scrollbar-thumb {{ background: #344659; border: 2px solid transparent; background-clip: padding-box; border-radius: 6px; }}
+        *::-webkit-scrollbar-thumb:hover {{ background: #6ee7d4; border-color: transparent; }}
     </style>
 </head>
 <body>
@@ -660,7 +685,7 @@ def generate_dashboard(scenario_dir: Path, output_path: Optional[Path] = None) -
                     <span class="kpi-label">Terrestrial 5G Ratio</span>
                     <span class="status-pill">Primary</span>
                 </div>
-                <div class="kpi-value">{cell_ratio:.1f}%</div>
+                <div class="kpi-value">{cell_ratio_text}</div>
                 <div class="kpi-meta">High-bandwidth cellular connection</div>
             </div>
 
@@ -669,7 +694,7 @@ def generate_dashboard(scenario_dir: Path, output_path: Optional[Path] = None) -
                     <span class="kpi-label">LEO Satellite Ratio</span>
                     <span class="status-pill" style="background: rgba(56,189,248,0.15); color: var(--accent-sat);">NTN</span>
                 </div>
-                <div class="kpi-value">{sat_ratio:.1f}%</div>
+                <div class="kpi-value">{sat_ratio_text}</div>
                 <div class="kpi-meta">Seamless fallback in blind spots</div>
             </div>
 
@@ -687,7 +712,7 @@ def generate_dashboard(scenario_dir: Path, output_path: Optional[Path] = None) -
                     <span class="kpi-label">QoS Utility Score</span>
                     <span class="status-pill" style="background: rgba(168,85,247,0.15); color: var(--accent-qos);">Optimal</span>
                 </div>
-                <div class="kpi-value">{mean_qos:.3f}</div>
+                <div class="kpi-value">{mean_qos_text}</div>
                 <div class="kpi-meta">Normalized PDR, RTT & Jitter</div>
             </div>
 
@@ -696,7 +721,7 @@ def generate_dashboard(scenario_dir: Path, output_path: Optional[Path] = None) -
                     <span class="kpi-label">MEC Task Latency</span>
                     <span class="status-pill" style="background: rgba(236,72,153,0.15); color: var(--accent-mec);">URLLC</span>
                 </div>
-                <div class="kpi-value">{mec_latency:.2f} ms</div>
+                <div class="kpi-value">{mec_latency_text}</div>
                 <div class="kpi-meta">Round-Trip + Edge compute delay</div>
             </div>
 
@@ -705,7 +730,7 @@ def generate_dashboard(scenario_dir: Path, output_path: Optional[Path] = None) -
                     <span class="kpi-label">Vehicle Battery SoC</span>
                     <span class="status-pill">Active</span>
                 </div>
-                <div class="kpi-value">{battery_soc:.1f}%</div>
+                <div class="kpi-value">{battery_soc_text}</div>
                 <div class="kpi-meta">Average energy state of charge</div>
             </div>
         </section>
@@ -818,7 +843,7 @@ def generate_dashboard(scenario_dir: Path, output_path: Optional[Path] = None) -
                 <div><strong>• Minimum LEO Satellite RTT:</strong> {kpis.get('direct_rtt_ms', 3.67):.2f} ms</div>
                 <div><strong>• Optical Laser ISL Bitrate:</strong> 10.0 Gbps (1550 nm, BER 1.2e-11)</div>
                 <div><strong>• Ka-Band Atmospheric Loss (28 GHz):</strong> 3.4 dB in mountain sector</div>
-                <div><strong>• Packet Delivery Ratio (PDR):</strong> <span style="color:var(--accent-5g); font-weight:700;">{pdr_pct:.2f}%</span> (0 dropped)</div>
+                <div><strong>• Packet Delivery Ratio (PDR):</strong> <span style="color:var(--accent-5g); font-weight:700;">{pdr_pct_text}</span></div>
                 <div><strong>• Constellation Shell:</strong> Starlink LEO (550 km, 53° Inclination, 4 ISLs/sat)</div>
             </div>
         </div>
@@ -867,13 +892,16 @@ def generate_dashboard(scenario_dir: Path, output_path: Optional[Path] = None) -
             tbody.innerHTML = '';
             for (const f of fleetSummary) {{
                 const tr = document.createElement('tr');
+                const qosText = (f.mean_qos !== null && f.mean_qos !== undefined) ? f.mean_qos : 'N/A';
+                const socText = (f.final_soc !== null && f.final_soc !== undefined) ? `${{f.final_soc}}%` : 'N/A';
+                const mecText = (f.mean_mec_latency_ms !== null && f.mean_mec_latency_ms !== undefined) ? `${{f.mean_mec_latency_ms}} ms` : 'N/A';
                 tr.innerHTML = `
                     <td><strong>${{f.vehicle}}</strong></td>
                     <td><span class="status-pill" style="${{f.final_interface.includes('Sat') ? 'background:rgba(56,189,248,0.15); color:var(--accent-sat);' : ''}}">${{f.final_interface}}</span></td>
                     <td>${{f.total_switches}}</td>
-                    <td>${{f.mean_qos}}</td>
-                    <td>${{f.final_soc}}%</td>
-                    <td>${{f.mean_mec_latency_ms}} ms</td>
+                    <td>${{qosText}}</td>
+                    <td>${{socText}}</td>
+                    <td>${{mecText}}</td>
                 `;
                 tbody.appendChild(tr);
             }}
@@ -1019,6 +1047,12 @@ def generate_dashboard(scenario_dir: Path, output_path: Optional[Path] = None) -
 </html>
 """
 
+    html_content = externalize_html_assets(
+        html_content,
+        output_path,
+        'dashboard.css',
+        'dashboard.js',
+    )
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(html_content)
 

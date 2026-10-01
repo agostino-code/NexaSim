@@ -327,7 +327,7 @@ def cmd_studio(args):
     except ImportError:
         from studio import start_studio_server
 
-    start_studio_server(port=args.port, open_browser=args.open)
+    start_studio_server(port=args.port, host=args.host, open_browser=args.open)
 
 def cmd_all(args):
     """All-in-one end-to-end command."""
@@ -431,6 +431,7 @@ Examples:
     # studio
     p_std = subparsers.add_parser('studio', help='Launch NexaSim Studio local web control center')
     p_std.add_argument('--port', type=int, default=8080, help='Port to bind (default: 8080)')
+    p_std.add_argument('--host', default='127.0.0.1', help='Host to bind (default: 127.0.0.1)')
     p_std.add_argument('--open', action='store_true', default=True, help='Open studio in browser')
     p_std.set_defaults(func=cmd_studio)
 

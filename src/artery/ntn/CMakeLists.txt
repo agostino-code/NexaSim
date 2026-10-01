@@ -1,9 +1,5 @@
 # src/artery/ntn/CMakeLists.txt
-set_target_properties(core PROPERTIES
-    NED_FOLDERS ${CMAKE_CURRENT_SOURCE_DIR}
-)
-
-target_sources(core PRIVATE
+add_artery_feature(ntn
     LEO_SatelliteManager.cc
     GroundStationManager.cc
     ConstellationManager.cc
@@ -14,4 +10,9 @@ target_sources(core PRIVATE
     NTNPathLoss.cc
 )
 
-target_link_libraries(core PUBLIC space_veins::space_veins INET::INET)
+target_link_libraries(ntn PUBLIC space_veins::space_veins INET::INET)
+
+# NTN components often interact with 5G-NR via Unified Mobility Management
+if(TARGET nr)
+    target_link_libraries(ntn PUBLIC nr)
+endif()

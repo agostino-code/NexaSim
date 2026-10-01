@@ -29,10 +29,12 @@ try:
     from tools.nexasim import resolve_scenario_yaml, is_inside_docker
     from tools.gen_scenario import ScenarioGenerator
     from tools.analyze_results import analyze_simulation_directory
+    from tools.html_assets import externalize_html_assets
 except ImportError:
     from nexasim import resolve_scenario_yaml, is_inside_docker
     from gen_scenario import ScenarioGenerator
     from analyze_results import analyze_simulation_directory
+    from html_assets import externalize_html_assets
 
 def parse_sweep_param(param_str: str) -> tuple[str, List[str]]:
     """Parses 'name=val1,val2,val3' into ('name', ['val1', 'val2', 'val3'])."""
@@ -421,6 +423,12 @@ def generate_sweep_report_html(summary: Dict[str, Any], output_path: Path):
 </body>
 </html>
 """
+    html = externalize_html_assets(
+        html,
+        output_path,
+        'sweep.css',
+        'sweep.js',
+    )
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(html)
 

@@ -19,6 +19,10 @@ private:
     omnetpp::cMessage* m_evalTimer;
     double m_checkInterval;
     double m_elevationMaskDeg;
+    double m_blindSpotMinX;
+    double m_blindSpotMaxX;
+    double m_blindSpotMinY;
+    double m_blindSpotMaxY;
 
 public:
     CoverageBasedStrategy(HybridInterfaceManager* mgr);
@@ -112,6 +116,10 @@ private:
     double m_lookaheadTimeS;
     double m_timeToLossThresholdS;
     double m_minDwellTimeS;
+    double m_blindSpotMinX;
+    double m_blindSpotMaxX;
+    double m_blindSpotMinY;
+    double m_blindSpotMaxY;
     omnetpp::simtime_t m_lastSwitchTime;
 
 public:
