@@ -1,11 +1,33 @@
 import React, { useEffect, useRef } from 'react';
 import Chart from 'chart.js/auto';
-import { Printer, RefreshCw, Database } from 'lucide-react';
+import { Printer, RefreshCw, Database, GitCompare } from 'lucide-react';
 import { useStudioStore } from '../../store/useStudioStore';
 import { fetchTelemetry, fetchKpis } from '../../services/api';
 import { TelemetrySeries, KpiSummary } from '../../types/scenario';
 import { InfoTip } from '../common/InfoTip';
 import { Sparkline } from '../common/Sparkline';
+
+/** Lightweight Chart.js plugin to draw vertical simTime scrubber cursor */
+const timeCursorPlugin = {
+  id: 'timeCursor',
+  afterDraw: (chart: any) => {
+    const st = useStudioStore.getState().simTime;
+    const xScale = chart.scales.x;
+    if (!xScale) return;
+    const xPixel = xScale.getPixelForValue(st);
+    if (xPixel < chart.chartArea.left || xPixel > chart.chartArea.right) return;
+    const ctx = chart.ctx;
+    ctx.save();
+    ctx.beginPath();
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = '#06b6d4'; // cyan
+    ctx.lineWidth = 1.5;
+    ctx.moveTo(xPixel, chart.chartArea.top);
+    ctx.lineTo(xPixel, chart.chartArea.bottom);
+    ctx.stroke();
+    ctx.restore();
+  },
+};
 
 /** "—" for not-recorded (null) metrics; never fabricates a number. */
 const fmtMetric = (v: number | null | undefined, digits = 1, suffix = ''): string =>
@@ -69,6 +91,10 @@ export const ExecutiveDashboard: React.FC = () => {
   const setHasRunData = useStudioStore((s) => s.setHasRunData);
   const setFleetAggregates = useStudioStore((s) => s.setFleetAggregates);
   const setProvenanceOpen = useStudioStore((s) => s.setProvenanceOpen);
+  const simTime = useStudioStore((s) => s.simTime);
+  const compareData = useStudioStore((s) => s.compareData);
+  const compareBaselineEnabled = useStudioStore((s) => s.compareBaselineEnabled);
+  const toggleCompareBaseline = useStudioStore((s) => s.toggleCompareBaseline);
 
   const chartRef1 = useRef<HTMLCanvasElement>(null);
   const chartRef2 = useRef<HTMLCanvasElement>(null);
@@ -85,6 +111,16 @@ export const ExecutiveDashboard: React.FC = () => {
     responsive: true,
     maintainAspectRatio: false,
     animation: false as const,
+    onClick: (e: any, _elements: any, chart: any) => {
+      const rect = chart.canvas?.getBoundingClientRect();
+      if (!rect) return;
+      const clientX = e.native?.clientX ?? e.x;
+      const xPixel = clientX - rect.left;
+      const dataX = chart.scales.x?.getValueForPixel(xPixel);
+      if (typeof dataX === 'number' && !isNaN(dataX)) {
+        useStudioStore.getState().setSimTime(Math.max(0, dataX));
+      }
+    },
     plugins: {
       legend: { display: false },
       tooltip: {
@@ -169,11 +205,12 @@ export const ExecutiveDashboard: React.FC = () => {
     if (chartRef1.current) {
       chart1Instance.current = new Chart(chartRef1.current, {
         type: 'line',
+        plugins: [timeCursorPlugin],
         data: {
           labels: [],
           datasets: [
             {
-              label: 'Active RAT (0=5G-NR, 1=Satellite LEO)',
+              label: 'Active RAT (0=5G-NR, 1=Satellite LEO, 2=V2X)',
               data: [],
               borderColor: '#38bdf8',
               backgroundColor: 'rgba(56, 189, 248, 0.1)',
@@ -191,8 +228,8 @@ export const ExecutiveDashboard: React.FC = () => {
             y: {
               ...baseChartOptions.scales.y,
               min: 0,
-              max: 1.2,
-              title: axisTitle('Link state (0 = 5G · 1 = LEO)'),
+              max: 2.2,
+              title: axisTitle('Link state (0=5G · 1=LEO · 2=V2X)'),
             },
           },
         },
@@ -203,6 +240,7 @@ export const ExecutiveDashboard: React.FC = () => {
     if (chartRef2.current) {
       chart2Instance.current = new Chart(chartRef2.current, {
         type: 'line',
+        plugins: [timeCursorPlugin],
         data: {
           labels: [],
           datasets: [
@@ -214,6 +252,16 @@ export const ExecutiveDashboard: React.FC = () => {
               borderWidth: 2,
               pointRadius: 0,
               fill: true,
+            },
+            {
+              label: 'Baseline QoS',
+              data: [],
+              borderColor: '#f59e0b',
+              borderDash: [5, 5],
+              borderWidth: 1.5,
+              pointRadius: 0,
+              fill: false,
+              hidden: true,
             },
           ],
         },
@@ -236,6 +284,7 @@ export const ExecutiveDashboard: React.FC = () => {
     if (chartRef3.current) {
       chart3Instance.current = new Chart(chartRef3.current, {
         type: 'line',
+        plugins: [timeCursorPlugin],
         data: {
           labels: [],
           datasets: [
@@ -247,6 +296,16 @@ export const ExecutiveDashboard: React.FC = () => {
               borderWidth: 2,
               pointRadius: 0,
               fill: true,
+            },
+            {
+              label: 'Baseline Latency',
+              data: [],
+              borderColor: '#f59e0b',
+              borderDash: [5, 5],
+              borderWidth: 1.5,
+              pointRadius: 0,
+              fill: false,
+              hidden: true,
             },
           ],
         },
@@ -267,6 +326,7 @@ export const ExecutiveDashboard: React.FC = () => {
     if (chartRef4.current) {
       chart4Instance.current = new Chart(chartRef4.current, {
         type: 'line',
+        plugins: [timeCursorPlugin],
         data: {
           labels: [],
           datasets: [
@@ -279,6 +339,17 @@ export const ExecutiveDashboard: React.FC = () => {
               pointRadius: 0,
               stepped: true,
               fill: true,
+            },
+            {
+              label: 'Baseline Handovers',
+              data: [],
+              borderColor: '#38bdf8',
+              borderDash: [5, 5],
+              borderWidth: 1.5,
+              pointRadius: 0,
+              stepped: true,
+              fill: false,
+              hidden: true,
             },
           ],
         },
@@ -311,6 +382,9 @@ export const ExecutiveDashboard: React.FC = () => {
   // In-place dataset updates without recreating Chart instances
   useEffect(() => {
     const timestamps = telemetrySeries ? telemetrySeries.timestamps : [];
+    const hasBaseline = compareBaselineEnabled && compareData?.available && compareData?.telemetry;
+    const baseTelem = hasBaseline ? compareData?.telemetry : null;
+    const baseLabel = compareData?.baseline_strategy || 'Baseline';
 
     // Update Chart 1
     const c1 = chart1Instance.current;
@@ -320,7 +394,7 @@ export const ExecutiveDashboard: React.FC = () => {
       c1.update('none');
     }
 
-    // Update Chart 2
+    // Update Chart 2 (QoS)
     const c2 = chart2Instance.current;
     if (c2) {
       const qosData = qosHasSeries
@@ -336,25 +410,49 @@ export const ExecutiveDashboard: React.FC = () => {
       c2.data.labels = timestamps;
       c2.data.datasets[0].data = qosData;
       c2.data.datasets[0].label = qosLabel;
+
+      if (c2.data.datasets[1]) {
+        c2.data.datasets[1].data = (hasBaseline && baseTelem?.qos_score) ? baseTelem.qos_score : [];
+        c2.data.datasets[1].label = `Baseline: ${baseLabel}`;
+        c2.data.datasets[1].hidden = !hasBaseline;
+      }
       c2.update('none');
     }
 
-    // Update Chart 3
+    // Update Chart 3 (Latency)
     const c3 = chart3Instance.current;
     if (c3) {
       c3.data.labels = timestamps;
       c3.data.datasets[0].data = telemetrySeries ? telemetrySeries.rtt_ms : [];
+      if (c3.data.datasets[1]) {
+        c3.data.datasets[1].data = (hasBaseline && baseTelem?.rtt_ms) ? baseTelem.rtt_ms : [];
+        c3.data.datasets[1].label = `Baseline: ${baseLabel}`;
+        c3.data.datasets[1].hidden = !hasBaseline;
+      }
       c3.update('none');
     }
 
-    // Update Chart 4
+    // Update Chart 4 (Handovers)
     const c4 = chart4Instance.current;
     if (c4) {
       c4.data.labels = timestamps;
       c4.data.datasets[0].data = telemetrySeries ? telemetrySeries.handover_events : [];
+      if (c4.data.datasets[1]) {
+        c4.data.datasets[1].data = (hasBaseline && baseTelem?.handover_events) ? baseTelem.handover_events : [];
+        c4.data.datasets[1].label = `Baseline: ${baseLabel}`;
+        c4.data.datasets[1].hidden = !hasBaseline;
+      }
       c4.update('none');
     }
-  }, [telemetrySeries, kpis, qosHasSeries, qosSeries, qosMean]);
+  }, [telemetrySeries, kpis, qosHasSeries, qosSeries, qosMean, compareBaselineEnabled, compareData]);
+
+  // Smooth timeline cursor redraw on simTime changes
+  useEffect(() => {
+    chart1Instance.current?.render();
+    chart2Instance.current?.render();
+    chart3Instance.current?.render();
+    chart4Instance.current?.render();
+  }, [simTime]);
 
   // Reload real telemetry + KPI data (used by the toolbar and empty-state CTA)
   const handleReload = async () => {
@@ -429,6 +527,20 @@ export const ExecutiveDashboard: React.FC = () => {
           )}
         </div>
         <div className="flex items-center gap-1.5">
+          {compareData?.available && (
+            <button
+              onClick={toggleCompareBaseline}
+              className={`flex items-center gap-1.5 px-2.5 py-1 border rounded text-[11px] font-semibold transition ${
+                compareBaselineEnabled
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
+                  : 'bg-bg-card hover:bg-bg-card-hover border-border-medium text-slate-300'
+              }`}
+              title="Toggle A/B comparison against recorded baseline run"
+            >
+              <GitCompare size={12} />
+              <span>{compareBaselineEnabled ? 'Comparing Baseline' : 'Compare Baseline'}</span>
+            </button>
+          )}
           <button
             onClick={() => setProvenanceOpen(true)}
             className="flex items-center gap-1 px-2.5 py-1 bg-bg-card hover:bg-bg-card-hover border border-border-medium rounded text-[11px] font-semibold text-slate-300"
@@ -508,8 +620,13 @@ export const ExecutiveDashboard: React.FC = () => {
             <InfoTip text="Vertical handovers recorded in the switchCount vectors (make-before-break 5G ⇄ LEO switching)." />
           </div>
           <div className="flex items-end justify-between gap-1 mt-0.5">
-            <div className="text-lg font-bold font-mono text-slate-100 tabular-nums">
-              {vhoCount != null ? vhoCount : '—'}
+            <div className="text-lg font-bold font-mono text-slate-100 tabular-nums flex items-baseline gap-1">
+              <span>{vhoCount != null ? vhoCount : '—'}</span>
+              {compareBaselineEnabled && compareData?.kpis?.total_vho_switches != null && vhoCount != null && (
+                <span className={`text-[10px] font-mono font-bold ${vhoCount <= compareData.kpis.total_vho_switches ? 'text-accent-green' : 'text-accent-red'}`}>
+                  {vhoCount <= compareData.kpis.total_vho_switches ? '▼' : '▲'} {Math.abs(((vhoCount - compareData.kpis.total_vho_switches) / Math.max(1, compareData.kpis.total_vho_switches)) * 100).toFixed(0)}%
+                </span>
+              )}
             </div>
             <Sparkline data={handoverSeries} color="#f59e0b" />
           </div>
@@ -523,8 +640,13 @@ export const ExecutiveDashboard: React.FC = () => {
             <InfoTip text="Fleet-mean multi-criteria QoS utility (qosScore / mean_qos_score), 0–1. '—' = not recorded." />
           </div>
           <div className="flex items-end justify-between gap-1 mt-0.5">
-            <div className="text-lg font-bold font-mono text-slate-100 tabular-nums">
-              {fmtMetric(qosScore, 3)}
+            <div className="text-lg font-bold font-mono text-slate-100 tabular-nums flex items-baseline gap-1">
+              <span>{fmtMetric(qosScore, 3)}</span>
+              {compareBaselineEnabled && compareData?.kpis?.mean_qos_score != null && qosScore != null && (
+                <span className={`text-[10px] font-mono font-bold ${qosScore >= compareData.kpis.mean_qos_score ? 'text-accent-green' : 'text-accent-red'}`}>
+                  {qosScore >= compareData.kpis.mean_qos_score ? '▲' : '▼'} {Math.abs(((qosScore - compareData.kpis.mean_qos_score) / Math.max(0.01, compareData.kpis.mean_qos_score)) * 100).toFixed(1)}%
+                </span>
+              )}
             </div>
             <Sparkline data={qosSeries} color="#a855f7" />
           </div>
@@ -538,8 +660,13 @@ export const ExecutiveDashboard: React.FC = () => {
             <InfoTip text="MEC task latency / RTT (mecTaskLatency vectors, avg_latency_ms KPI). URLLC target < 50 ms. '—' = not recorded." />
           </div>
           <div className="flex items-end justify-between gap-1 mt-0.5">
-            <div className="text-lg font-bold font-mono text-slate-100 tabular-nums">
-              {fmtMetric(latency, 1, ' ms')}
+            <div className="text-lg font-bold font-mono text-slate-100 tabular-nums flex items-baseline gap-1">
+              <span>{fmtMetric(latency, 1, ' ms')}</span>
+              {compareBaselineEnabled && compareData?.kpis?.avg_latency_ms != null && latency != null && (
+                <span className={`text-[10px] font-mono font-bold ${latency <= compareData.kpis.avg_latency_ms ? 'text-accent-green' : 'text-accent-red'}`}>
+                  {latency <= compareData.kpis.avg_latency_ms ? '▼' : '▲'} {Math.abs(((latency - compareData.kpis.avg_latency_ms) / compareData.kpis.avg_latency_ms) * 100).toFixed(1)}%
+                </span>
+              )}
             </div>
             <Sparkline data={latencySeries} color="#ec4899" />
           </div>
@@ -559,6 +686,75 @@ export const ExecutiveDashboard: React.FC = () => {
             <Sparkline data={telemetrySeries?.throughput_mbps} color="#3b82f6" />
           </div>
           <div className="text-[10px] text-slate-400">Aggregated rate</div>
+        </div>
+      </div>
+
+      {/* Scientific & Reliability Metrics Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+        <div className="bg-bg-panel border border-border-subtle p-2 rounded">
+          <div className="text-[10px] uppercase font-mono font-bold text-slate-400 flex items-center gap-1">
+            <span>Latency P95 / P99</span>
+            <InfoTip text="95th and 99th percentile end-to-end MEC latency (latency_p95_ms, latency_p99_ms). '—' = not recorded." />
+          </div>
+          <div className="text-base font-bold font-mono text-slate-100 mt-0.5 tabular-nums">
+            {kpis?.latency_p95_ms != null ? `${fmtMetric(kpis.latency_p95_ms, 1, ' / ')}${fmtMetric(kpis?.latency_p99_ms, 1, ' ms')}` : '—'}
+          </div>
+          <div className="text-[10px] text-slate-400">Tail latency</div>
+        </div>
+
+        <div className="bg-bg-panel border border-border-subtle p-2 rounded">
+          <div className="text-[10px] uppercase font-mono font-bold text-slate-400 flex items-center gap-1">
+            <span>Ping-Pong VHO</span>
+            <InfoTip text="Handovers returning to prior RAT within 3.0s window (3GPP TR 36.839 / TS 38.300)." />
+          </div>
+          <div className="text-base font-bold font-mono text-slate-100 mt-0.5 tabular-nums">
+            {kpis?.ping_pong_handovers != null ? `${kpis.ping_pong_handovers} (${fmtMetric(kpis?.ping_pong_rate_pct, 1, '%')})` : '—'}
+          </div>
+          <div className="text-[10px] text-slate-400">Rapid reversals</div>
+        </div>
+
+        <div className="bg-bg-panel border border-border-subtle p-2 rounded">
+          <div className="text-[10px] uppercase font-mono font-bold text-slate-400 flex items-center gap-1">
+            <span>Mean BLER</span>
+            <InfoTip text="Mean Block Error Rate over all transmission slots (mean_bler_pct). '—' = not recorded." />
+          </div>
+          <div className="text-base font-bold font-mono text-slate-100 mt-0.5 tabular-nums">
+            {fmtMetric(kpis?.mean_bler_pct, 3, '%')}
+          </div>
+          <div className="text-[10px] text-slate-400">Channel errors</div>
+        </div>
+
+        <div className="bg-bg-panel border border-border-subtle p-2 rounded">
+          <div className="text-[10px] uppercase font-mono font-bold text-slate-400 flex items-center gap-1">
+            <span>Outage Ratio</span>
+            <InfoTip text="Ratio of simulation time spent disconnected or in blackout (outage_time_pct)." />
+          </div>
+          <div className="text-base font-bold font-mono text-slate-100 mt-0.5 tabular-nums">
+            {fmtMetric(kpis?.outage_time_pct, 2, '%')}
+          </div>
+          <div className="text-[10px] text-slate-400">Service availability</div>
+        </div>
+
+        <div className="bg-bg-panel border border-border-subtle p-2 rounded">
+          <div className="text-[10px] uppercase font-mono font-bold text-slate-400 flex items-center gap-1">
+            <span>Battery SoC</span>
+            <InfoTip text="Mean final vehicle battery State of Charge (final_battery_soc). '—' = not recorded." />
+          </div>
+          <div className="text-base font-bold font-mono text-slate-100 mt-0.5 tabular-nums">
+            {fmtMetric(kpis?.final_battery_soc, 1, '%')}
+          </div>
+          <div className="text-[10px] text-slate-400">Energy remaining</div>
+        </div>
+
+        <div className="bg-bg-panel border border-border-subtle p-2 rounded">
+          <div className="text-[10px] uppercase font-mono font-bold text-slate-400 flex items-center gap-1">
+            <span>Energy / MB</span>
+            <InfoTip text="Joules consumed per Megabyte delivered (energy_per_mb_joules)." />
+          </div>
+          <div className="text-base font-bold font-mono text-slate-100 mt-0.5 tabular-nums">
+            {fmtMetric(kpis?.energy_per_mb_joules, 2, ' J/MB')}
+          </div>
+          <div className="text-[10px] text-slate-400">Efficiency</div>
         </div>
       </div>
 

@@ -46,6 +46,17 @@ simple ConstellationManager
         // Visibility update interval (seconds)
         double visibilityUpdateInterval = default(1.0);
 
+        // Geodetic Reference Origin (WGS84) for Local-to-ECEF / ENU Projections
+        double originLatitude = default(46.538);   // Degrees North
+        double originLongitude = default(10.453);  // Degrees East
+        double originAltitude = default(2757.0);   // Meters ASL
+
+        // Routing & Environment Profile
+        string islRoutingMode = default("grid_plus"); // "grid_plus" (4-neighbor), "shortest_path", "all_pairs"
+        double islSwitchingDelayMs = default(0.050); // Optical switching / OEO processing latency per hop [ms]
+        string environmentProfile = default("suburban"); // "urban", "suburban", "rural", "alpine"
+        string azimuthHorizonMask = default(""); // Azimuthal horizon mask angles in degrees (e.g. 8 or 36 sectors)
+
         @signal[islHopCount](type=long);
         @statistic[islHopCount](title="ISL Route Hop Count"; record=vector,mean,max; interpolationmode=sample-hold);
         @signal[islRouteLatency](type=double);

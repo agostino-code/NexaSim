@@ -12,11 +12,19 @@ src/artery/messages/*_m.h
 output/
 *.vec
 *.vci
+*.sca
 *.log
 *.czml
 trace_fcd.xml
 scenarios/cache/
 scenarios/**/results/*.csv
+scenarios/**/results/*.vec
+scenarios/**/results/*.vci
+scenarios/**/results/*.sca
+scenarios/generated/sweep_*
+
+# Frontend Studio Build Artifacts
+studio/dist/
 
 # Building website with mkdocs
 www/

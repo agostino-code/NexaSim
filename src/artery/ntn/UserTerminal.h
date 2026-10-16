@@ -137,6 +137,15 @@ protected:
     double terrestrialRsrpDbm = -140;
     double terrestrialSnrDb = -20;
     
+    // Energy & Duty Cycle Model
+    double batteryCapacityJoules = 100000.0;
+    double remainingJoules = 100000.0;
+    double powerTxW = 18.0;      // Active Phased Array transmission
+    double powerRxW = 6.0;       // Active reception & tracking
+    double powerIdleW = 1.2;     // Idle listening
+    double powerDualRadioW = 28.0; // Extra draw during Make-Before-Break preparation
+    omnetpp::simtime_t lastEnergyUpdate = 0;
+
     // Signals
     omnetpp::simsignal_t stateChangedSignal;
     omnetpp::simsignal_t satAcquiredSignal;
@@ -148,6 +157,7 @@ protected:
     omnetpp::simsignal_t dataRateSignal;
     omnetpp::simsignal_t beamDirectionSignal;
     omnetpp::simsignal_t elevationSignal;
+    omnetpp::simsignal_t batterySocSignal;
     
     // Statistics
     long totalHandovers = 0;

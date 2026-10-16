@@ -21,7 +21,7 @@ import subprocess
 import shutil
 import yaml
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
@@ -213,6 +213,107 @@ def cmd_generate(args):
     print(f"{GREEN}Generation complete!{RESET}\n")
     return out_dir
 
+def find_warm_container() -> Optional[str]:
+    """Find a running warm container capable of executing NexaSim simulations."""
+    if not shutil.which("docker"):
+        return None
+    try:
+        res = subprocess.run(
+            ["docker", "ps", "--filter", "status=running", "--format", "{{.Names}}"],
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+        if res.returncode == 0:
+            running_names = [line.strip() for line in res.stdout.splitlines() if line.strip()]
+            preferred = ["nexasim-studio", "nexasim-worker", "nexasim", "artery-dev"]
+            for pref in preferred:
+                for name in running_names:
+                    if pref in name:
+                        return name
+            for name in running_names:
+                if any(k in name.lower() for k in ("nexasim", "artery")):
+                    return name
+    except Exception:
+        pass
+    return None
+
+def resolve_execution_backend(
+    scenario_short_name: str,
+    gui: bool = False,
+    extra_args: Optional[List[str]] = None
+) -> Tuple[str, List[str], str, Dict[str, str]]:
+    """
+    Intelligently resolves the fastest simulation execution backend:
+    - Priority 1: Native / inside container (<20ms overhead)
+    - Priority 2: Warm container via docker exec (<50ms overhead)
+    - Priority 3: Cold fallback via docker compose run --rm
+
+    Returns: (backend_type, cmd, cwd, env)
+    """
+    out_dir = resolve_generated_dir(scenario_short_name)
+    opp_run_sh = REPO_ROOT / 'tools' / 'opp_run.sh'
+    gui_script = REPO_ROOT / 'tools' / 'start_gui.sh'
+    extra = list(extra_args or [])
+
+    # Priority 1: Native or inside Docker container
+    is_native = is_inside_docker()
+    if not is_native and os.name != 'nt':
+        # On Linux host, check if opp_run and artery libraries exist
+        has_opp = shutil.which('opp_run') is not None or Path('/omnetpp/bin/opp_run').exists()
+        has_lib = (REPO_ROOT / 'build').exists() and any((REPO_ROOT / 'build').rglob('*.so'))
+        if has_opp and has_lib:
+            is_native = True
+
+    if is_native:
+        if gui:
+            cmd = ['bash', str(gui_script), '-f', str(out_dir / 'omnetpp.ini')] + extra
+        else:
+            cmd = ['bash', str(opp_run_sh), '-f', str(out_dir / 'omnetpp.ini'), '-u', 'Cmdenv'] + extra
+        return "native", cmd, str(out_dir), os.environ.copy()
+
+    # Priority 2: Warm container via docker exec
+    warm = find_warm_container()
+    if warm:
+        env = os.environ.copy()
+        env['MSYS_NO_PATHCONV'] = '1'
+        if gui:
+            cmd = [
+                'docker', 'exec',
+                '-w', f"/artery/scenarios/generated/{scenario_short_name}",
+                warm, 'bash', '/artery/tools/start_gui.sh',
+                '-f', f"/artery/scenarios/generated/{scenario_short_name}/omnetpp.ini"
+            ] + extra
+        else:
+            cmd = [
+                'docker', 'exec',
+                '-w', f"/artery/scenarios/generated/{scenario_short_name}",
+                warm, 'bash', '/artery/tools/opp_run.sh',
+                '-f', f"/artery/scenarios/generated/{scenario_short_name}/omnetpp.ini",
+                '-u', 'Cmdenv'
+            ] + extra
+        return "docker_exec", cmd, str(REPO_ROOT), env
+
+    # Priority 3: Cold fallback via docker compose run --rm
+    env = os.environ.copy()
+    env['MSYS_NO_PATHCONV'] = '1'
+    if gui:
+        cmd = [
+            'docker', 'compose', 'run', '--rm', '-p', '6080:6080',
+            '-w', f"/artery/scenarios/generated/{scenario_short_name}",
+            'nexasim-gui', 'bash', '/artery/tools/start_gui.sh',
+            '-f', f"/artery/scenarios/generated/{scenario_short_name}/omnetpp.ini"
+        ] + extra
+    else:
+        cmd = [
+            'docker', 'compose', 'run', '--rm',
+            '-w', f"/artery/scenarios/generated/{scenario_short_name}",
+            'nexasim', 'bash', '/artery/tools/opp_run.sh',
+            '-f', f"/artery/scenarios/generated/{scenario_short_name}/omnetpp.ini",
+            '-u', 'Cmdenv'
+        ] + extra
+    return "docker_run", cmd, str(REPO_ROOT), env
+
 def cmd_run(args):
     """Execute scenario simulation (in container or locally)."""
     yaml_path = resolve_scenario_yaml(args.scenario)
@@ -229,43 +330,23 @@ def cmd_run(args):
         gen_script = REPO_ROOT / 'tools' / 'gen_scenario.py'
         subprocess.run([sys.executable, str(gen_script), str(yaml_path), '-o', str(out_dir)], check=True)
 
-    in_docker = is_inside_docker()
+    backend, cmd, cwd, env = resolve_execution_backend(short_name, gui=args.gui)
 
-    if in_docker:
-        # Run directly inside container
-        opp_run_sh = REPO_ROOT / 'tools' / 'opp_run.sh'
-        if args.gui:
-            gui_script = REPO_ROOT / 'tools' / 'start_gui.sh'
-            cmd = ['bash', str(gui_script), '-f', str(out_dir / 'omnetpp.ini')]
-        else:
-            cmd = ['bash', str(opp_run_sh), '-f', str(out_dir / 'omnetpp.ini'), '-u', 'Cmdenv']
-
-        print(f"{BOLD}[*] Executing inside container: {' '.join(cmd)}{RESET}")
-        res = subprocess.run(cmd, cwd=str(out_dir))
-        return res.returncode
+    if backend == "native":
+        print(f"{BOLD}[*] Executing natively (in-container): {' '.join(cmd)}{RESET}")
+    elif backend == "docker_exec":
+        print(f"{BOLD}{GREEN}[*] Executing on warm container via docker exec: {' '.join(cmd)}{RESET}")
     else:
-        # Host execution: dispatch via docker compose
-        print(f"{BOLD}[*] Dispatching simulation via Docker Compose...{RESET}")
-        if args.gui:
-            print(f"\n{BOLD}{CYAN}========================================================================{RESET}")
-            print(f"{BOLD}{GREEN} Starting NexaSim OMNeT++ Qtenv & SUMO-GUI Virtual Desktop             {RESET}")
-            print(f"{BOLD}{GREEN} Connect via Browser: {CYAN}http://localhost:6080/vnc.html{RESET}")
-            print(f"{BOLD}{CYAN}========================================================================{RESET}\n")
-            cmd = [
-                'docker', 'compose', 'run', '--rm', '-p', '6080:6080',
-                '-w', f"/artery/scenarios/generated/{short_name}",
-                'nexasim-gui', 'bash', '/artery/tools/start_gui.sh', '-f', f"/artery/scenarios/generated/{short_name}/omnetpp.ini"
-            ]
-        else:
-            cmd = [
-                'docker', 'compose', 'run', '--rm',
-                '-w', f"/artery/scenarios/generated/{short_name}",
-                'nexasim', 'bash', '/artery/tools/opp_run.sh', '-f', f"/artery/scenarios/generated/{short_name}/omnetpp.ini", '-u', 'Cmdenv'
-            ]
-        env = os.environ.copy()
-        env['MSYS_NO_PATHCONV'] = '1'
-        res = subprocess.run(cmd, cwd=str(REPO_ROOT), env=env)
-        return res.returncode
+        print(f"{BOLD}{YELLOW}[*] Dispatching simulation via docker compose run (cold start fallback)...{RESET}")
+
+    if args.gui:
+        print(f"\n{BOLD}{CYAN}========================================================================{RESET}")
+        print(f"{BOLD}{GREEN} Starting NexaSim OMNeT++ Qtenv & SUMO-GUI Virtual Desktop             {RESET}")
+        print(f"{BOLD}{GREEN} Connect via Browser: {CYAN}http://localhost:6080/vnc.html{RESET}")
+        print(f"{BOLD}{CYAN}========================================================================{RESET}\n")
+
+    res = subprocess.run(cmd, cwd=cwd, env=env)
+    return res.returncode
 
 def cmd_analyze(args):
     """Run KPI evaluation and generate dashboard."""

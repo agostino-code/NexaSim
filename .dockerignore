@@ -1,23 +1,47 @@
-*
-# whitelisting essential files
-!CMakeLists.txt
-!extern/inet/inet_featuretool
-!extern/inet/.nedfolders
-!extern/inet/.oppfeatures
-!extern/inet/examples/*
-!extern/inet/showcases/*
-!extern/inet/src/*
-!extern/inet/tutorials/*
-!extern/pybind11/CMakeLists.txt
-!extern/pybind11/include/*
-!extern/pybind11/tools/*
-!extern/sim0mqpp/*
-!extern/simulte/.nedfolders
-!extern/simulte/simulations/package.ned
-!extern/simulte/src/*
-!extern/vanetza/*
-!extern/veins/examples/veins/*.ned
-!extern/veins/src/*
-!extern/veins/.nedfolders
-!cmake/*
-!src/*
+# NexaSim .dockerignore
+# Exclude build artifacts, dependencies, caches, and test results
+
+# Git and IDE metadata
+.git/
+.github/
+.vscode/
+.devcontainer/
+
+# Build outputs
+build/
+bin/
+lib/
+cmake-build-*/
+out/
+dist/
+
+# Studio Frontend artifacts and dependencies
+studio/node_modules/
+studio/dist/
+studio/.vite/
+
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+env/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Simulation outputs and large vector traces
+scenarios/generated/*/results/
+*.vec
+*.vci
+*.sca
+*.log
+output/
+
+# Package manager and OS caches
+.conan2/
+.cache/
+.DS_Store
+Thumbs.db

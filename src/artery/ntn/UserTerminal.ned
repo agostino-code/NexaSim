@@ -41,6 +41,31 @@ simple UserTerminal
         bool dualConnectivityEnabled = default(false);
         string terrestrialRat = default("nr");  // nr | lte
         double terrestrialRsrpThreshold = default(-110);
+
+        // Energy consumption model parameters
+        double batteryCapacityJoules = default(100000.0);
+        double powerTxW = default(18.0);
+        double powerRxW = default(6.0);
+        double powerIdleW = default(1.2);
+        double powerDualRadioW = default(28.0);
+
+        @signal[stateChanged](type=long);
+        @signal[satAcquired](type=long);
+        @signal[satLost](type=long);
+        @signal[handoverStarted](type=long);
+        @signal[handoverCompleted](type=long);
+        @signal[handoverFailed](type=long);
+        @signal[linkQuality](type=double);
+        @signal[dataRate](type=double);
+        @signal[beamDirection](type=double);
+        @signal[elevation](type=double);
+        @signal[batterySoC](type=double);
+
+        @statistic[stateChanged](title="Terminal State"; record=vector,last);
+        @statistic[linkQuality](title="NTN Link Quality"; record=vector,mean);
+        @statistic[dataRate](title="Throughput"; unit=Mbps; record=vector,mean,max);
+        @statistic[elevation](title="Satellite Elevation"; unit=deg; record=vector,mean);
+        @statistic[batterySoC](title="Battery State of Charge"; record=vector,last);
         
     gates:
         input radioIn;

@@ -5,6 +5,8 @@ import {
   TelemetrySeries,
   FleetSnapshot,
   KpiSummary,
+  FleetTimelineResponse,
+  CompareResponse,
 } from '../types/scenario';
 
 export async function fetchScenarios(signal?: AbortSignal): Promise<ScenarioSummary[]> {
@@ -123,4 +125,20 @@ export async function fetchKpis(name: string, signal?: AbortSignal): Promise<Kpi
   }
   const data = await res.json();
   return data;
+}
+
+export async function fetchFleetTimeline(name: string, signal?: AbortSignal): Promise<FleetTimelineResponse> {
+  const res = await fetch(`/api/fleet_timeline?name=${encodeURIComponent(name)}`, { signal });
+  if (!res.ok) {
+    return { scenario: name, timestamps: [], vehicles_timeline: {} };
+  }
+  return res.json();
+}
+
+export async function fetchCompare(name: string, signal?: AbortSignal): Promise<CompareResponse> {
+  const res = await fetch(`/api/compare?name=${encodeURIComponent(name)}`, { signal });
+  if (!res.ok) {
+    return { available: false, scenario: name };
+  }
+  return res.json();
 }

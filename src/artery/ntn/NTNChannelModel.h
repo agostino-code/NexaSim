@@ -69,6 +69,10 @@ public:
         
         // Polarization
         double polarizationLossDb = 0.5;
+
+        // 3D Obstacle & Azimuthal Horizon Masking (ITU-R P.526)
+        double azimuthDeg = 0.0;
+        double obstacleElevationMaskDeg = 0.0;
     };
     
     struct PathLossResult {
@@ -79,10 +83,22 @@ public:
         double cloudLossDb = 0;
         double scintillationLossDb = 0;
         double polarizationLossDb = 0;
+        double clutterLossDb = 0;
+        double diffractionLossDb = 0;
         double losProbability = 0;
+        bool isLOS = true;
+        bool isObstacleBlocked = false;
         double shadowingDb = 0;
         double dopplerShiftHz = 0;
+        double satAntennaGainDbi = 0;
+        double utAntennaGainDbi = 0;
     };
+
+    /**
+     * ITU-R P.526 Knife-Edge Diffraction attenuation
+     */
+    static double calculateKnifeEdgeDiffractionLoss(double v);
+    static double calculateObstacleDiffractionLoss(double elevationDeg, double obstacleMaskDeg, double frequencyGhz, double slantRangeKm = 600.0);
 
     /**
      * Calculate complete path loss for NTN link
@@ -96,6 +112,28 @@ public:
                                              double satelliteVelocityKmps = 7.5,
                                              double groundVelocityKmps = 0.0,
                                              omnetpp::cRNG* rng = nullptr);
+
+    /**
+     * Official 3GPP TR 38.811 Table 6.6.2-1 / 6.6.2-2 Clutter Loss
+     */
+    static double calculateClutterLoss(double elevationDeg, FrequencyBand band, Environment env, bool isLOS);
+
+    /**
+     * Official 3GPP TR 38.811 Table 6.6.2-1 / 6.6.2-2 Shadow Fading standard deviation
+     */
+    static double getShadowFadingStdDev(double elevationDeg, FrequencyBand band, Environment env, bool isLOS);
+
+    /**
+     * Phased-Array Bessel antenna pattern (3GPP TR 38.811 Section 6.4.1)
+     * G(psi) = G_max * |2 * J1(u) / u|^2, where u = pi * (d_a / lambda) * sin(psi)
+     */
+    static double calculateBesselAntennaGain(double offBoresightDeg, double maxGainDbi,
+                                            double apertureDiameterM, double frequencyGhz);
+
+    /**
+     * Bessel function of first kind of order 1: J_1(x)
+     */
+    static double besselJ1(double x);
     
     /**
      * Calculate LOS probability based on 3GPP TR 38.811

@@ -19,6 +19,7 @@ import subprocess
 import itertools
 from pathlib import Path
 from typing import Dict, List, Any, Optional
+import concurrent.futures
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
@@ -26,12 +27,12 @@ if str(REPO_ROOT) not in sys.path:
 GENERATED_DIR = REPO_ROOT / 'scenarios' / 'generated'
 
 try:
-    from tools.nexasim import resolve_scenario_yaml, is_inside_docker
+    from tools.nexasim import resolve_scenario_yaml, is_inside_docker, find_warm_container
     from tools.gen_scenario import ScenarioGenerator
     from tools.analyze_results import analyze_simulation_directory
     from tools.html_assets import externalize_html_assets
 except ImportError:
-    from nexasim import resolve_scenario_yaml, is_inside_docker
+    from nexasim import resolve_scenario_yaml, is_inside_docker, find_warm_container
     from gen_scenario import ScenarioGenerator
     from analyze_results import analyze_simulation_directory
     from html_assets import externalize_html_assets
@@ -53,14 +54,22 @@ def run_single_sweep_simulation(scenario_dir: Path, in_docker: bool) -> int:
         res = subprocess.run(cmd, cwd=str(scenario_dir), capture_output=True, text=True)
         return res.returncode
     else:
+        warm = find_warm_container()
         rel_dir = scenario_dir.relative_to(REPO_ROOT).as_posix()
-        cmd = [
-            'docker', 'compose', 'run', '--rm',
-            '-w', f"/artery/{rel_dir}",
-            'nexasim', 'bash', '/artery/tools/opp_run.sh', '-f', f"/artery/{rel_dir}/omnetpp.ini", '-u', 'Cmdenv'
-        ]
         env = os.environ.copy()
         env['MSYS_NO_PATHCONV'] = '1'
+        if warm:
+            cmd = [
+                'docker', 'exec',
+                '-w', f"/artery/{rel_dir}",
+                warm, 'bash', '/artery/tools/opp_run.sh', '-f', f"/artery/{rel_dir}/omnetpp.ini", '-u', 'Cmdenv'
+            ]
+        else:
+            cmd = [
+                'docker', 'compose', 'run', '--rm',
+                '-w', f"/artery/{rel_dir}",
+                'nexasim', 'bash', '/artery/tools/opp_run.sh', '-f', f"/artery/{rel_dir}/omnetpp.ini", '-u', 'Cmdenv'
+            ]
         res = subprocess.run(cmd, cwd=str(REPO_ROOT), env=env, capture_output=True, text=True)
         return res.returncode
 
@@ -73,6 +82,9 @@ def patch_omnetpp_ini(ini_path: Path, overrides: Dict[str, Any]):
         for k, v in overrides.items():
             if k == 'seed':
                 f.write(f"seed-set = {v}\n")
+            elif k in ('runs', 'repeat'):
+                f.write(f"repeat = {v}\n")
+                f.write("seed-set = ${repetition}\n")
             elif k in ('switchingMode', 'switching_mode'):
                 f.write(f'**.hybridManager.switchingMode = "{v}"\n')
             elif k in ('rainRate', 'rainRateMmPerH'):
@@ -87,14 +99,48 @@ def patch_omnetpp_ini(ini_path: Path, overrides: Dict[str, Any]):
             else:
                 f.write(f'{k} = {v}\n')
 
+def _execute_single_sweep_worker(args_tuple: tuple) -> Dict[str, Any]:
+    """Worker task executed concurrently in isolated run directories."""
+    idx, total_runs, run_config, sweep_root_str, yaml_path_str, in_docker, export_paper = args_tuple
+    sweep_root = Path(sweep_root_str)
+    yaml_path = Path(yaml_path_str)
+    run_name = f"run_{idx:03d}"
+    run_dir = sweep_root / run_name
+
+    print(f"[{idx}/{total_runs}] Starting parallel execution of {run_name}: {run_config}...")
+
+    # 1. Generate base scenario files in isolated directory
+    generator = ScenarioGenerator(str(yaml_path), runs=run_config.get('runs'))
+    generator.generate(str(run_dir))
+
+    # 2. Patch omnetpp.ini with specific sweep parameters
+    patch_omnetpp_ini(run_dir / 'omnetpp.ini', run_config)
+
+    # 3. Execute simulation
+    ret = run_single_sweep_simulation(run_dir, in_docker)
+    if ret != 0:
+        print(f"  [!] Warning: Simulation {run_name} returned exit code {ret}")
+
+    # 4. Analyze results
+    kpis = analyze_simulation_directory(str(run_dir), generate_dashboard=False, export_paper=export_paper)
+    print(f"[{idx}/{total_runs}] Finished {run_name}.")
+    return {
+        "run_id": run_name,
+        "parameters": run_config,
+        "kpis": kpis
+    }
+
 def run_parameter_sweep(
     scenario_identifier: str,
     params: List[str],
     reps: int = 1,
     seeds: Optional[List[int]] = None,
-    output_dir: Optional[Path] = None
+    output_dir: Optional[Path] = None,
+    max_workers: Optional[int] = None,
+    runs: Optional[int] = None,
+    export_paper: bool = False
 ) -> Dict[str, Any]:
-    """Coordinates the entire benchmark sweep execution."""
+    """Coordinates the entire benchmark sweep execution using ProcessPoolExecutor for parallel speedup."""
     yaml_path = resolve_scenario_yaml(scenario_identifier)
     if not yaml_path:
         raise FileNotFoundError(f"Scenario '{scenario_identifier}' not found.")
@@ -114,6 +160,9 @@ def run_parameter_sweep(
         k, vals = parse_sweep_param(p)
         param_dict[k] = vals
 
+    if runs is not None and runs > 1:
+        param_dict['runs'] = [runs]
+
     if not seeds:
         seeds = [42 + i * 101 for i in range(reps)]
 
@@ -124,42 +173,36 @@ def run_parameter_sweep(
     value_combinations = list(itertools.product(*[param_dict[k] for k in keys]))
     total_runs = len(value_combinations)
 
+    workers = max_workers or min(os.cpu_count() or 4, total_runs)
+
     print(f"\n==========================================================================")
     print(f" NexaSim Automated Benchmark Suite: Sweep on '{base_name}'")
-    print(f" Total Experimental Configurations: {total_runs} runs")
+    print(f" Total Experimental Configurations: {total_runs} runs (Workers: {workers})")
     print(f" Output Destination: {sweep_root}")
     print(f"==========================================================================\n")
 
     in_docker = is_inside_docker()
-    results = []
-
+    task_args = []
     for idx, combo in enumerate(value_combinations, 1):
         run_config = dict(zip(keys, combo))
-        run_name = f"run_{idx:03d}"
-        run_dir = sweep_root / run_name
+        task_args.append((idx, total_runs, run_config, str(sweep_root), str(yaml_path), in_docker, export_paper))
 
-        print(f"[{idx}/{total_runs}] Executing {run_name}: {run_config}...")
-
-        # 1. Generate base scenario files
-        generator = ScenarioGenerator(str(yaml_path))
-        generator.generate(str(run_dir))
-
-        # 2. Patch omnetpp.ini with specific sweep parameters
-        patch_omnetpp_ini(run_dir / 'omnetpp.ini', run_config)
-
-        # 3. Execute simulation
-        ret = run_single_sweep_simulation(run_dir, in_docker)
-        if ret != 0:
-            print(f"  [!] Warning: Simulation {run_name} returned exit code {ret}")
-
-        # 4. Analyze results
-        kpis = analyze_simulation_directory(str(run_dir), generate_dashboard=False)
-        record = {
-            "run_id": run_name,
-            "parameters": run_config,
-            "kpis": kpis
-        }
-        results.append(record)
+    results = []
+    if workers > 1 and total_runs > 1:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
+            future_to_idx = {executor.submit(_execute_single_sweep_worker, arg): arg[0] for arg in task_args}
+            for future in concurrent.futures.as_completed(future_to_idx):
+                try:
+                    res = future.result()
+                    results.append(res)
+                except Exception as exc:
+                    idx = future_to_idx[future]
+                    print(f"  [!] Run {idx} generated an exception: {exc}")
+        # Sort results by run_id
+        results.sort(key=lambda r: r["run_id"])
+    else:
+        for arg in task_args:
+            results.append(_execute_single_sweep_worker(arg))
 
     # 5. Summarize and generate report
     summary = {
@@ -178,6 +221,57 @@ def run_parameter_sweep(
     report_html_path = sweep_root / "sweep_report.html"
     generate_sweep_report_html(summary, report_html_path)
     print(f"[+] Executive Comparative Benchmark Report: {report_html_path}")
+
+    # Export paper artifacts if requested
+    if export_paper:
+        csv_path = sweep_root / "summary_metrics.csv"
+        tex_path = sweep_root / "ieee_table.tex"
+
+        with open(csv_path, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(["run_id", "configuration", "total_vho_switches", "cell_usage_pct", "sat_usage_pct", "avg_latency_ms", "pdr_pct", "final_battery_soc"])
+            for r in results:
+                cfg_str = "; ".join(f"{k}={v}" for k, v in r.get("parameters", {}).items())
+                kp = r.get("kpis", {})
+                writer.writerow([
+                    r.get("run_id"),
+                    cfg_str,
+                    kp.get("total_vho_switches", 0),
+                    f"{kp.get('cell_usage_pct', 0.0):.1f}",
+                    f"{kp.get('sat_usage_pct', 0.0):.1f}",
+                    f"{kp.get('avg_latency_ms', 0.0):.2f}",
+                    f"{kp.get('pdr_pct', 0.0):.2f}",
+                    f"{kp.get('final_battery_soc', 0.0):.1f}"
+                ])
+        print(f"[+] Sweep Paper CSV Exported: {csv_path}")
+
+        tex_rows = []
+        for r in results:
+            cfg_str = ", ".join(f"{k}={v}" for k, v in r.get("parameters", {}).items() if k != 'seed')
+            kp = r.get("kpis", {})
+            vho = kp.get("total_vho_switches", 0)
+            pdr = f"{kp.get('pdr_pct', 100.0):.2f}\\%"
+            lat = f"{kp.get('avg_latency_ms', 0.0):.2f} ms"
+            soc = f"{kp.get('final_battery_soc', 100.0):.1f}\\%"
+            tex_rows.append(f"{r.get('run_id')} & {cfg_str or 'Default'} & {vho} & {pdr} & {lat} & {soc} \\\\")
+
+        tex_content = f"""% Auto-generated by NexaSim Sweep Suite - IEEE Conference/Journal Table Format
+\\begin{{table}}[htbp]
+\\centering
+\\caption{{NexaSphere Parameter Sweep Comparative Benchmark Performance}}
+\\label{{tab:nexasphere_sweep}}
+\\begin{{tabular}}{{llcccc}}
+\\toprule
+\\textbf{{Run ID}} & \\textbf{{Configuration}} & \\textbf{{VHO}} & \\textbf{{PDR}} & \\textbf{{Latency}} & \\textbf{{Battery SoC}} \\\\
+\\midrule
+""" + "\n".join(tex_rows) + f"""
+\\bottomrule
+\\end{{tabular}}
+\\end{{table}}
+"""
+        with open(tex_path, 'w', encoding='utf-8') as f:
+            f.write(tex_content)
+        print(f"[+] Sweep IEEE LaTeX Table Exported: {tex_path}")
 
     return summary
 
@@ -438,13 +532,23 @@ def main():
     parser.add_argument('--param', action='append', required=True, help="Parameter to sweep: 'name=v1,v2,v3'")
     parser.add_argument('--reps', type=int, default=1, help='Number of random seed repetitions per configuration')
     parser.add_argument('--seeds', type=str, help='Comma-separated explicit seeds (e.g. 42,43,44)')
+    parser.add_argument('--runs', type=int, default=None, help='Number of Monte Carlo simulation runs (repeat = N)')
+    parser.add_argument('--export-paper', action='store_true', default=False, help='Export IEEE LaTeX booktabs table and summary CSV')
     parser.add_argument('-o', '--output', help='Custom output directory for sweep runs')
 
     args = parser.parse_args()
     seed_list = [int(s.strip()) for s in args.seeds.split(',')] if args.seeds else None
     out_dir = Path(args.output) if args.output else None
 
-    run_parameter_sweep(args.scenario, args.param, reps=args.reps, seeds=seed_list, output_dir=out_dir)
+    run_parameter_sweep(
+        args.scenario,
+        args.param,
+        reps=args.reps,
+        seeds=seed_list,
+        output_dir=out_dir,
+        runs=args.runs,
+        export_paper=args.export_paper
+    )
 
 if __name__ == '__main__':
     main()

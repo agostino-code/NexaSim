@@ -142,9 +142,16 @@ set +e
 # Execute via python runner to isolate and handle INET 4.2.2 static destructor crash
 # in __run_exit_handlers (SIGSEGV / code 139 / -11) after clean simulation finish
 
+# High-throughput headless execution configuration:
+# Always ensure -u Cmdenv and disable synchronous per-event disk flushing (--record-eventlog=false)
+CMDENV_DEFAULT=""
+if [[ "$*" != *"-u "* ]]; then
+    CMDENV_DEFAULT="-u Cmdenv"
+fi
+
 EXTRA_ARGS=""
-if [[ "$*" == *"-u Cmdenv"* ]]; then
-    EXTRA_ARGS="--cmdenv-express-mode=true --cmdenv-performance-display=false"
+if [[ "$*" == *"-u Cmdenv"* ]] || [ -n "$CMDENV_DEFAULT" ]; then
+    EXTRA_ARGS="--cmdenv-express-mode=true --cmdenv-performance-display=false --cmdenv-status-frequency=2s --record-eventlog=false"
 fi
 
 python3 -c "
@@ -153,7 +160,7 @@ args = sys.argv[1:]
 res = subprocess.run(args)
 rc = 0 if res.returncode in (-11, 139) else res.returncode
 sys.exit(rc)
-" "$OPP_EXEC" -n "${NED_PATH}" $LIBS_ARGS $EXTRA_ARGS "$@"
+" "$OPP_EXEC" -n "${NED_PATH}" $LIBS_ARGS $CMDENV_DEFAULT $EXTRA_ARGS "$@"
 EXIT_CODE=$?
 
 exit $EXIT_CODE

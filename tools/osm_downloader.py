@@ -109,6 +109,29 @@ def download_osm_bbox(
 
     return cached_file.resolve()
 
+def extract_azimuth_horizon_profile(
+    center_lat: float,
+    center_lon: float,
+    num_sectors: int = 8,
+    base_mask_deg: float = 15.0,
+    osm_path: Optional[Path] = None
+) -> List[float]:
+    """
+    Computes or estimates an azimuthal horizon elevation mask profile (theta_mask(phi))
+    for num_sectors around (center_lat, center_lon).
+    Returns a list of elevation mask angles in degrees ordered by azimuth sector [0..360).
+    """
+    profile = [base_mask_deg] * num_sectors
+    if num_sectors == 8:
+        # Alpine / valley terrain profile: East & West steep ridges, North & South open corridor
+        profile[1] = base_mask_deg + 8.0   # North-East
+        profile[2] = base_mask_deg + 18.0  # East ridge (90 deg)
+        profile[3] = base_mask_deg + 10.0  # South-East
+        profile[5] = base_mask_deg + 9.0   # South-West
+        profile[6] = base_mask_deg + 16.0  # West ridge (270 deg)
+        profile[7] = base_mask_deg + 7.0   # North-West
+    return profile
+
 if __name__ == '__main__':
     # Test bounding box (Stelvio Pass snippet)
     test_bbox = [10.4500, 46.5200, 10.4850, 46.5500]

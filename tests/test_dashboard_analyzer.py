@@ -108,6 +108,71 @@ class TestDashboardAnalyzer(unittest.TestCase):
         self.assertTrue((out_html.parent / 'dashboard.js').exists())
         self.assertNotIn('<style>', content)
 
+    def test_multi_run_monte_carlo_ci95_and_paper_export(self):
+        """Tests that analyze_simulation_directory computes 95% CI across multiple runs and exports IEEE LaTeX table."""
+        mock_sim_dir = self.temp_dir / 'mock_multirun'
+        mock_results = mock_sim_dir / 'results'
+        mock_results.mkdir(parents=True, exist_ok=True)
+
+        sca_template = """run General-{idx}-20261016-21:00:00-1234
+attr network GeneratedScenario
+attr sim-time-limit 100s
+par *.constellationManager.constellationType "starlink_shell"
+scalar GeneratedScenario.hybridManager totalSwitches {switches}
+scalar GeneratedScenario.userTerminal[0].nic packetsSent 1000
+scalar GeneratedScenario.userTerminal[0].nic packetsReceived {rcvd}
+scalar GeneratedScenario.userTerminal[0].nic avgLatencyMs {lat}
+scalar GeneratedScenario.hybridManager satUsageRatio {sat}
+scalar GeneratedScenario.hybridManager cellUsageRatio {cell}
+scalar GeneratedScenario.hybridManager batterySoC 0.95
+"""
+        # Run 0
+        (mock_results / "General-0.sca").write_text(
+            sca_template.format(idx=0, switches=10, rcvd=990, lat=12.0, sat=0.4, cell=0.6),
+            encoding='utf-8'
+        )
+        # Run 1
+        (mock_results / "General-1.sca").write_text(
+            sca_template.format(idx=1, switches=12, rcvd=980, lat=14.0, sat=0.5, cell=0.5),
+            encoding='utf-8'
+        )
+        # Run 2
+        (mock_results / "General-2.sca").write_text(
+            sca_template.format(idx=2, switches=14, rcvd=970, lat=16.0, sat=0.6, cell=0.4),
+            encoding='utf-8'
+        )
+
+        res = analyze_simulation_directory(str(mock_sim_dir), generate_dashboard=False, export_paper=True)
+        self.assertEqual(res["runs_count"], 3)
+        self.assertIn("multi_run_stats", res)
+
+        stats = res["multi_run_stats"]
+        self.assertIn("total_vho_switches", stats)
+        # switches: [10, 12, 14] -> mean = 12.0, std = 2.0, CI95 = 1.96 * 2.0 / sqrt(3) ~ 2.2632
+        sw_stat = stats["total_vho_switches"]
+        self.assertAlmostEqual(sw_stat["mean"], 12.0, places=2)
+        self.assertAlmostEqual(sw_stat["std"], 2.0, places=2)
+        self.assertGreater(sw_stat["ci95_half_width"], 2.20)
+        self.assertLess(sw_stat["ci95_half_width"], 2.30)
+        self.assertEqual(sw_stat["min"], 10.0)
+        self.assertEqual(sw_stat["max"], 14.0)
+
+        # Check export_paper artifacts
+        csv_file = mock_results / "summary_metrics.csv"
+        tex_file = mock_results / "ieee_table.tex"
+        self.assertTrue(csv_file.exists())
+        self.assertTrue(tex_file.exists())
+
+        csv_content = csv_file.read_text(encoding='utf-8')
+        self.assertIn("total_vho_switches", csv_content)
+        self.assertIn("pdr_pct", csv_content)
+
+        tex_content = tex_file.read_text(encoding='utf-8')
+        self.assertIn("\\begin{table}", tex_content)
+        self.assertIn("\\toprule", tex_content)
+        self.assertIn("Total Vertical Handovers (VHO)", tex_content)
+        self.assertIn("\\pm", tex_content)
+
 
 if __name__ == '__main__':
     unittest.main()

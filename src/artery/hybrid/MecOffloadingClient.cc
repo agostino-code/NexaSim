@@ -108,12 +108,40 @@ void MecOffloadingClient::generateTask()
         }
     }
 
-    // 2. Co-simulation Channel & Edge Processor Fallback
-    // Evaluates realistic propagation RTT + Edge Compute latency
-    double rtt = isSat ? (0.024 + omnetpp::uniform(omnetpp::getEnvir()->getRNG(0), 0.001, 0.006))
-                       : (0.005 + omnetpp::uniform(omnetpp::getEnvir()->getRNG(0), 0.0005, 0.002));
+    // 2. Co-simulation Channel & Edge Processor (M/M/1 queue model & physics RTT)
+    // If during Hard Handover outage, task suffers packet loss
+    if (m_hybridManager->isHandoverInterrupted()) {
+        EV_WARN << "MEC Task #" << taskId << " dropped during Hard Handover Interruption Window!" << std::endl;
+        m_hybridManager->updateClosedLoopControl();
+        return;
+    }
+
+    double rtt = 0.0;
+    if (m_hybridManager->isV2XActive()) {
+        rtt = m_hybridManager->calculateRelayPhysicalRTT(m_hybridManager->getRelayNodeId(), m_hybridManager->getRelayDistanceM(), m_taskSizeByte);
+    } else if (isSat) {
+        rtt = m_hybridManager->calculatePhysicalRTT(true, m_taskSizeByte, 650.0, 700.0, 1.0, 0.002, 120.0, 0.015);
+    } else {
+        rtt = m_hybridManager->calculatePhysicalRTT(false, m_taskSizeByte, 650.0, 700.0, 0.8, 0.002, 250.0, 0.005);
+    }
+
+    // M/M/1 queuing model on edge server:
+    // mu = service rate (tasks/sec), lambda = arrival rate (tasks/sec)
     double mips = isSat ? 5000.0 : 20000.0;
-    double computeTime = (m_taskInstructions / 1e6) / mips;
+    double meanServiceTime = (m_taskInstructions / 1e6) / mips; // seconds
+    double lambda = 1.0 / std::max(0.01, m_taskGenerationInterval);
+    double mu = 1.0 / std::max(1e-5, meanServiceTime);
+
+    double queueDelay = 0.0;
+    if (mu > lambda) {
+        // Expected waiting time in M/M/1 queue: W_q = lambda / (mu * (mu - lambda))
+        queueDelay = lambda / (mu * (mu - lambda));
+    } else {
+        // High load queuing penalty
+        queueDelay = 3.0 * meanServiceTime;
+    }
+
+    double computeTime = meanServiceTime + queueDelay;
     double totalDelay = rtt + computeTime;
 
     auto finishMsg = new omnetpp::cMessage("localMecFinish");
@@ -123,7 +151,7 @@ void MecOffloadingClient::generateTask()
 
     EV_INFO << "Offloading Task #" << taskId
             << " to " << (isSat ? "Satellite Edge" : "Terrestrial Edge")
-            << " (Modeled Latency: " << totalDelay * 1000 << " ms)" << std::endl;
+            << " (Physics RTT: " << rtt * 1000.0 << " ms, Compute + Queue: " << computeTime * 1000.0 << " ms)" << std::endl;
 
     scheduleAt(omnetpp::simTime() + totalDelay, finishMsg);
 }
@@ -136,6 +164,10 @@ void MecOffloadingClient::handleLocalTaskCompleted(omnetpp::cMessage *msg)
         msg->setContextPointer(nullptr);
 
         emit(m_sigTaskLatency, latency);
+
+        if (m_hybridManager) {
+            m_hybridManager->recordPacketReception(omnetpp::simTime() - latency, latency);
+        }
 
         EV_INFO << "MEC Task #" << msg->getKind() << " completed. "
                 << "Total Latency (RTT + Compute): " << latency * 1000 << " ms" << std::endl;
@@ -155,6 +187,10 @@ void MecOffloadingClient::socketDataArrived(inet::UdpSocket *socket, inet::Packe
             if (auto payload = dynamic_cast<MecTaskPacket*>(chunk->getPacket())) {
                 double latency = omnetpp::simTime().dbl() - payload->getGenerationTime();
                 emit(m_sigTaskLatency, latency);
+
+                if (m_hybridManager) {
+                    m_hybridManager->recordPacketReception(omnetpp::SimTime(payload->getGenerationTime()), latency);
+                }
                 
                 EV_INFO << "MEC Task #" << payload->getTaskId() << " completed. "
                         << "Total Latency (RTT + Compute): " << latency * 1000 << " ms" << std::endl;

@@ -129,16 +129,54 @@ export interface KpiSummary {
   user_terminals_count?: number;
   cell_usage_pct?: number | null;
   sat_usage_pct?: number | null;
+  v2x_usage_pct?: number | null;
   total_vho_switches?: number;
+  ping_pong_handovers?: number | null;
+  ping_pong_rate_pct?: number | null;
   mean_qos_score?: number | null;
   final_battery_soc?: number | null;
+  energy_per_mb_joules?: number | null;
   pdr_pct?: number | null;
+  mean_bler_pct?: number | null;
+  outage_time_pct?: number | null;
   packets_sent?: number;
   packets_rcvd?: number;
   packets_dropped?: number;
   avg_latency_ms?: number | null;
+  latency_p95_ms?: number | null;
+  latency_p99_ms?: number | null;
   avg_jitter_ms?: number | null;
   one_way_prop_delay_ms?: number;
   direct_rtt_ms?: number;
   throughput_mbps?: number | null;
+}
+
+export interface FleetTimelinePoint {
+  t: number;
+  speed_kmh?: number | null;
+  throughput_mbps?: number | null;
+  mec_latency_ms?: number | null;
+  qos_score?: number | null;
+  battery_soc_pct?: number | null;
+  vho_count?: number | null;
+  active_rat?: RatType | null;
+  elevation_deg?: number | null;
+  slant_range_km?: number | null;
+  doppler_khz?: number | null;
+  carrier_ghz?: number | null;
+  heading_deg?: number | null;
+}
+
+export interface FleetTimelineResponse {
+  scenario: string;
+  timestamps: number[];
+  vehicles_timeline: Record<string, FleetTimelinePoint[]>;
+}
+
+export interface CompareResponse {
+  available: boolean;
+  scenario: string;
+  baseline_strategy?: string | null;
+  kpis?: KpiSummary | null;
+  telemetry?: TelemetrySeries | null;
 }

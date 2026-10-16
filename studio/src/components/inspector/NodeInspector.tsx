@@ -256,6 +256,24 @@ export const NodeInspector: React.FC = () => {
                 onCommit={(v) => updateNode(type, index, { lat_max: v })}
               />
             </div>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <NumberField
+                label="Lon Min"
+                value={data.lon_min}
+                step="0.0001"
+                min={-180}
+                max={180}
+                onCommit={(v) => updateNode(type, index, { lon_min: v })}
+              />
+              <NumberField
+                label="Lon Max"
+                value={data.lon_max}
+                step="0.0001"
+                min={-180}
+                max={180}
+                onCommit={(v) => updateNode(type, index, { lon_max: v })}
+              />
+            </div>
           </>
         )}
 
@@ -274,6 +292,10 @@ export const NodeInspector: React.FC = () => {
               <span className="text-slate-200">{fmt(display.speed_kmh, 1, ' km/h')}</span>
             </div>
             <div className="flex justify-between">
+              <span className="text-slate-500">Throughput</span>
+              <span className="text-slate-200">{fmt(display.throughput_mbps, 2, ' Mbps')}</span>
+            </div>
+            <div className="flex justify-between">
               <span className="text-slate-500">MEC latency</span>
               <span className="text-slate-200">{fmt(display.mec_latency_ms, 1, ' ms')}</span>
             </div>
@@ -288,6 +310,26 @@ export const NodeInspector: React.FC = () => {
             <div className="flex justify-between">
               <span className="text-slate-500">VHO switches</span>
               <span className="text-slate-200">{display.vho_count ?? '—'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Elevation</span>
+              <span className="text-slate-200">{fmt(display.elevation_deg, 1, '°')}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Slant Range</span>
+              <span className="text-slate-200">{fmt(display.slant_range_km, 1, ' km')}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Doppler Shift</span>
+              <span className="text-slate-200">{fmt(display.doppler_khz, 2, ' kHz')}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Carrier Freq</span>
+              <span className="text-slate-200">{fmt(display.carrier_ghz, 2, ' GHz')}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Heading</span>
+              <span className="text-slate-200">{fmt(display.heading_deg, 1, '°')}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">Blind spot</span>

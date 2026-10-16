@@ -1,6 +1,7 @@
 {
   "$defs": {
     "AreaConfig": {
+      "additionalProperties": false,
       "properties": {
         "name": {
           "description": "Geographic area name",
@@ -58,6 +59,19 @@
           "default": 15.0,
           "description": "Orographic terrain elevation mask in degrees",
           "title": "Elevation Mask Deg"
+        },
+        "environment_profile": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "suburban",
+          "description": "3GPP propagation profile: urban, suburban, rural, alpine",
+          "title": "Environment Profile"
         }
       },
       "required": [
@@ -70,6 +84,7 @@
       "type": "object"
     },
     "BlindSpotConfig": {
+      "additionalProperties": false,
       "properties": {
         "name": {
           "description": "Blind spot name",
@@ -125,6 +140,7 @@
       "type": "object"
     },
     "ConstellationConfig": {
+      "additionalProperties": false,
       "properties": {
         "type": {
           "default": "starlink_shell",
@@ -229,12 +245,39 @@
             }
           ],
           "title": "Ground Stations"
+        },
+        "mec_cpu_gflops": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Satellite onboard edge computing capacity in GFLOPS / MIPS",
+          "title": "Mec Cpu Gflops"
+        },
+        "isl_routing_mode": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ISL routing topology",
+          "title": "Isl Routing Mode"
         }
       },
       "title": "ConstellationConfig",
       "type": "object"
     },
     "DualConnectivityConfig": {
+      "additionalProperties": false,
       "properties": {
         "enabled": {
           "default": true,
@@ -288,12 +331,330 @@
           ],
           "default": true,
           "title": "Seamless Failover"
+        },
+        "daps_enabled": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": true,
+          "description": "Enable 3GPP Rel-16/17 Dual Active Protocol Stack (Make-Before-Break)",
+          "title": "Daps Enabled"
+        },
+        "make_before_break": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": true,
+          "description": "Make-Before-Break handover",
+          "title": "Make Before Break"
         }
       },
       "title": "DualConnectivityConfig",
       "type": "object"
     },
+    "GNBDeploymentConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "deployment": {
+          "default": "grid",
+          "title": "Deployment",
+          "type": "string"
+        },
+        "count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Count"
+        },
+        "density_per_km2": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 5.0,
+          "title": "Density Per Km2"
+        },
+        "inter_site_distance_m": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 1000.0,
+          "title": "Inter Site Distance M"
+        },
+        "sites": {
+          "items": {
+            "$ref": "#/$defs/GNBSiteConfig"
+          },
+          "title": "Sites",
+          "type": "array"
+        },
+        "types": {
+          "items": {
+            "$ref": "#/$defs/GNBTypeConfig"
+          },
+          "title": "Types",
+          "type": "array"
+        }
+      },
+      "title": "GNBDeploymentConfig",
+      "type": "object"
+    },
+    "GNBSiteConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "description": "Base station identifier",
+          "title": "Name",
+          "type": "string"
+        },
+        "lat": {
+          "maximum": 90.0,
+          "minimum": -90.0,
+          "title": "Lat",
+          "type": "number"
+        },
+        "lon": {
+          "maximum": 180.0,
+          "minimum": -180.0,
+          "title": "Lon",
+          "type": "number"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "macro",
+          "title": "Type"
+        },
+        "height_m": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 25.0,
+          "title": "Height M"
+        },
+        "tx_power_dbm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 46.0,
+          "title": "Tx Power Dbm"
+        },
+        "frequency_ghz": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 3.5,
+          "title": "Frequency Ghz"
+        },
+        "bandwidth_mhz": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 100.0,
+          "title": "Bandwidth Mhz"
+        },
+        "mimo_layers": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 4,
+          "title": "Mimo Layers"
+        },
+        "coverage_radius_m": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 1500.0,
+          "title": "Coverage Radius M"
+        },
+        "beamforming": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": true,
+          "title": "Beamforming"
+        }
+      },
+      "required": [
+        "name",
+        "lat",
+        "lon"
+      ],
+      "title": "GNBSiteConfig",
+      "type": "object"
+    },
+    "GNBTypeConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "ratio": {
+          "default": 1.0,
+          "minimum": 0,
+          "title": "Ratio",
+          "type": "number"
+        },
+        "height_m": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 25.0,
+          "title": "Height M"
+        },
+        "tx_power_dbm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 46.0,
+          "title": "Tx Power Dbm"
+        },
+        "frequency_ghz": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 3.5,
+          "title": "Frequency Ghz"
+        },
+        "bandwidth_mhz": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 100.0,
+          "title": "Bandwidth Mhz"
+        },
+        "mimo_layers": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 4,
+          "title": "Mimo Layers"
+        },
+        "beamforming": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": true,
+          "title": "Beamforming"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "GNBTypeConfig",
+      "type": "object"
+    },
     "GroundStationConfig": {
+      "additionalProperties": false,
       "properties": {
         "name": {
           "description": "Ground Station identifier",
@@ -374,6 +735,7 @@
       "type": "object"
     },
     "ISLConfig": {
+      "additionalProperties": false,
       "properties": {
         "enabled": {
           "default": true,
@@ -490,12 +852,40 @@
           "default": 80.0,
           "description": "Beam acquisition time in ms",
           "title": "Acquisition Time Ms"
+        },
+        "routing_mode": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "grid_plus",
+          "description": "ISL routing topology: grid_plus, shortest_path, all_pairs",
+          "title": "Routing Mode"
+        },
+        "switching_delay_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0.05,
+          "description": "Optical switching / OEO delay per hop in ms",
+          "title": "Switching Delay Ms"
         }
       },
       "title": "ISLConfig",
       "type": "object"
     },
     "IncidentConfig": {
+      "additionalProperties": false,
       "properties": {
         "enabled": {
           "default": false,
@@ -596,6 +986,7 @@
       "type": "object"
     },
     "OutputConfig": {
+      "additionalProperties": false,
       "properties": {
         "directory": {
           "anyOf": [
@@ -647,12 +1038,26 @@
           ],
           "default": 0.5,
           "title": "Write Interval S"
+        },
+        "visualization": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Visualization"
         }
       },
       "title": "OutputConfig",
       "type": "object"
     },
     "PhasedArrayConfig": {
+      "additionalProperties": false,
       "properties": {
         "elements": {
           "anyOf": [
@@ -724,6 +1129,7 @@
       "type": "object"
     },
     "ScenarioSpec": {
+      "additionalProperties": false,
       "properties": {
         "name": {
           "title": "Name",
@@ -752,6 +1158,13 @@
           ],
           "default": "1.0",
           "title": "Version"
+        },
+        "seed": {
+          "default": 42,
+          "description": "Random seed for reproducible generation",
+          "minimum": 0,
+          "title": "Seed",
+          "type": "integer"
         },
         "area": {
           "anyOf": [
@@ -825,6 +1238,7 @@
       "type": "object"
     },
     "ShellConfig": {
+      "additionalProperties": false,
       "properties": {
         "name": {
           "description": "Orbital shell identifier",
@@ -882,19 +1296,18 @@
       "type": "object"
     },
     "TerrestrialConfig": {
+      "additionalProperties": false,
       "properties": {
         "gnb": {
           "anyOf": [
             {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/$defs/GNBDeploymentConfig"
             },
             {
               "type": "null"
             }
           ],
-          "default": null,
-          "title": "Gnb"
+          "default": null
         },
         "blind_spots": {
           "anyOf": [
@@ -921,6 +1334,19 @@
           ],
           "default": "RMa",
           "title": "Channel Model"
+        },
+        "environment_profile": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "3GPP propagation profile: urban, suburban, rural, alpine",
+          "title": "Environment Profile"
         },
         "ue": {
           "anyOf": [
@@ -958,12 +1384,64 @@
           ],
           "default": null,
           "title": "Alpine Weather"
+        },
+        "core_network": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Core Network"
+        },
+        "mec_cpu_gflops": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "MEC Edge server compute capacity in GFLOPS / MIPS",
+          "title": "Mec Cpu Gflops"
+        },
+        "carrier_aggregation": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Carrier Aggregation"
+        },
+        "switching_mode": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Switching Mode"
         }
       },
       "title": "TerrestrialConfig",
       "type": "object"
     },
     "TimeConfig": {
+      "additionalProperties": false,
       "properties": {
         "start": {
           "anyOf": [
@@ -1019,6 +1497,7 @@
       "type": "object"
     },
     "UEConfig": {
+      "additionalProperties": false,
       "properties": {
         "count": {
           "description": "Number of simulated vehicles / user terminals",
@@ -1091,6 +1570,7 @@
       "type": "object"
     }
   },
+  "additionalProperties": false,
   "properties": {
     "scenario": {
       "$ref": "#/$defs/ScenarioSpec"

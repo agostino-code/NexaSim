@@ -30,6 +30,11 @@ void UnifiedMobilityManager::initialize(int stage) {
         dualConnectivityEnabled = par("dualConnectivityEnabled");
         evaluationIntervalMs = par("evaluationIntervalMs");
         
+        if (hasPar("originLatitude")) originLatitude = par("originLatitude").doubleValue();
+        if (hasPar("originLongitude")) originLongitude = par("originLongitude").doubleValue();
+        if (hasPar("originAltitude")) originAltitude = par("originAltitude").doubleValue();
+        if (hasPar("trajectoryType")) trajectoryType = par("trajectoryType").stringValue();
+
         // Find other managers
         constellationManager = dynamic_cast<ConstellationManager*>(
             getSimulation()->getModuleByPath("constellationManager"));
@@ -484,12 +489,137 @@ void UnifiedMobilityManager::steerTraffic(int ueId, double nrRatio, const std::s
 }
 
 void UnifiedMobilityManager::evaluateSatelliteVisibility(int ueId) {
-    // Query constellation manager for upcoming satellite passes
-    // This would help with proactive handover preparation
+    if (!constellationManager) return;
+    inet::Coord pos = getUEPosition3D(ueId);
+    auto visibleSats = constellationManager->findVisibleSatellites(pos, policy.elevationMinDeg);
+    auto it = ueContexts.find(ueId);
+    if (it != ueContexts.end() && !visibleSats.empty()) {
+        int bestSat = visibleSats[0];
+        auto metrics = constellationManager->calculateTopocentricMetrics(bestSat, pos, inet::Coord(0,0,0), 28.0, policy.elevationMinDeg);
+        it->second.currentElevationDeg = metrics.elevationDeg;
+    }
 }
 
 void UnifiedMobilityManager::predictSatellitePasses(int ueId) {
-    // Use orbital mechanics to predict future visibility
+    // Predictive lookahead for upcoming passes
+}
+
+void UnifiedMobilityManager::setOrigin(double latDeg, double lonDeg, double altM) {
+    originLatitude = latDeg;
+    originLongitude = lonDeg;
+    originAltitude = altM;
+}
+
+inet::Coord UnifiedMobilityManager::localToEcef(const inet::Coord& localPos) const {
+    constexpr double a = 6378137.0;
+    constexpr double f = 1.0 / 298.257223563;
+    constexpr double e2 = 2.0 * f - f * f;
+
+    double phi = originLatitude * M_PI / 180.0;
+    double lam = originLongitude * M_PI / 180.0;
+    double sinPhi = std::sin(phi);
+    double cosPhi = std::cos(phi);
+    double sinLam = std::sin(lam);
+    double cosLam = std::cos(lam);
+
+    double N = a / std::sqrt(1.0 - e2 * sinPhi * sinPhi);
+    double x0 = (N + originAltitude) * cosPhi * cosLam;
+    double y0 = (N + originAltitude) * cosPhi * sinLam;
+    double z0 = (N * (1.0 - e2) + originAltitude) * sinPhi;
+
+    double dx = -sinLam * localPos.x - sinPhi * cosLam * localPos.y + cosPhi * cosLam * localPos.z;
+    double dy =  cosLam * localPos.x - sinPhi * sinLam * localPos.y + cosPhi * sinLam * localPos.z;
+    double dz =  0.0 * localPos.x    + cosPhi * localPos.y          + sinPhi * localPos.z;
+
+    return inet::Coord(x0 + dx, y0 + dy, z0 + dz);
+}
+
+inet::Coord UnifiedMobilityManager::localToGeodetic(const inet::Coord& localPos) const {
+    inet::Coord ecef = localToEcef(localPos);
+    constexpr double a = 6378137.0;
+    constexpr double f = 1.0 / 298.257223563;
+    constexpr double b = a * (1.0 - f);
+    constexpr double e2 = 2.0 * f - f * f;
+    constexpr double ep2 = (a * a - b * b) / (b * b);
+
+    double p = std::sqrt(ecef.x * ecef.x + ecef.y * ecef.y);
+    double lonDeg = std::atan2(ecef.y, ecef.x) * 180.0 / M_PI;
+    if (p < 1e-6) {
+        double latDeg = ecef.z >= 0.0 ? 90.0 : -90.0;
+        double altM = std::abs(ecef.z) - b;
+        return inet::Coord(lonDeg, latDeg, altM);
+    }
+    double theta = std::atan2(ecef.z * a, p * b);
+    double sTh = std::sin(theta);
+    double cTh = std::cos(theta);
+    double phi = std::atan2(ecef.z + ep2 * b * sTh * sTh * sTh, p - e2 * a * cTh * cTh * cTh);
+    double latDeg = phi * 180.0 / M_PI;
+    double sinPhi = std::sin(phi);
+    double N = a / std::sqrt(1.0 - e2 * sinPhi * sinPhi);
+    double altM = p / std::cos(phi) - N;
+    return inet::Coord(lonDeg, latDeg, altM);
+}
+
+inet::Coord UnifiedMobilityManager::geodeticToLocal(double latDeg, double lonDeg, double altM) const {
+    constexpr double a = 6378137.0;
+    constexpr double f = 1.0 / 298.257223563;
+    constexpr double e2 = 2.0 * f - f * f;
+
+    double phi = latDeg * M_PI / 180.0;
+    double lam = lonDeg * M_PI / 180.0;
+    double sinPhi = std::sin(phi);
+    double cosPhi = std::cos(phi);
+    double sinLam = std::sin(lam);
+    double cosLam = std::cos(lam);
+
+    double N = a / std::sqrt(1.0 - e2 * sinPhi * sinPhi);
+    double x = (N + altM) * cosPhi * cosLam;
+    double y = (N + altM) * cosPhi * sinLam;
+    double z = (N * (1.0 - e2) + altM) * sinPhi;
+
+    inet::Coord targetEcef(x, y, z);
+    inet::Coord originEcef = localToEcef(inet::Coord(0, 0, 0));
+    inet::Coord diff = targetEcef - originEcef;
+
+    double phi0 = originLatitude * M_PI / 180.0;
+    double lam0 = originLongitude * M_PI / 180.0;
+    double sPhi0 = std::sin(phi0);
+    double cPhi0 = std::cos(phi0);
+    double sLam0 = std::sin(lam0);
+    double cLam0 = std::cos(lam0);
+
+    double east  = -sLam0 * diff.x + cLam0 * diff.y;
+    double north = -sPhi0 * cLam0 * diff.x - sPhi0 * sLam0 * diff.y + cPhi0 * diff.z;
+    double up    =  cPhi0 * cLam0 * diff.x + cPhi0 * sLam0 * diff.y + sPhi0 * diff.z;
+    return inet::Coord(east, north, up);
+}
+
+double UnifiedMobilityManager::calculate3DElevation(const inet::Coord& ueLocalPos, const inet::Coord& satLocalPos) const {
+    inet::Coord diff = satLocalPos - ueLocalPos;
+    double slantDist = diff.length();
+    if (slantDist < 1e-3) return 90.0;
+
+    double sinElev = diff.z / slantDist;
+    sinElev = std::clamp(sinElev, -1.0, 1.0);
+    return std::asin(sinElev) * 180.0 / M_PI;
+}
+
+bool UnifiedMobilityManager::check3DLOS(const inet::Coord& ueLocalPos, const inet::Coord& satLocalPos, double minElevationDeg) const {
+    double elev = calculate3DElevation(ueLocalPos, satLocalPos);
+    return elev >= minElevationDeg;
+}
+
+void UnifiedMobilityManager::updateUEPosition3D(int ueId, const inet::Coord& pos, const inet::Coord& vel) {
+    uePositions3D[ueId] = pos;
+    ueVelocities3D[ueId] = vel;
+}
+
+inet::Coord UnifiedMobilityManager::getUEPosition3D(int ueId) const {
+    auto it = uePositions3D.find(ueId);
+    if (it != uePositions3D.end()) {
+        return it->second;
+    }
+    return inet::Coord(0, 0, 1.5);
 }
 
 UnifiedMobilityManager::NetworkNode* UnifiedMobilityManager::findBestTargetNode(const UEContext& ue, NetworkType preferredType) {

@@ -155,6 +155,14 @@ protected:
     // Configuration
     HandoverPolicy policy;
     bool dualConnectivityEnabled = true;
+
+    // 3D Geodetic Reference Origin (WGS84) and Multi-Domain Trajectories
+    double originLatitude = 46.538;
+    double originLongitude = 10.453;
+    double originAltitude = 2757.0;
+    std::string trajectoryType = "sumo"; // "sumo", "uav_corridor", "maritime", "highspeed_rail"
+    std::map<int, inet::Coord> uePositions3D;
+    std::map<int, inet::Coord> ueVelocities3D;
     
     // Network topology
     std::map<std::string, NetworkNode> networkNodes;
@@ -224,10 +232,20 @@ protected:
     double calculateUtility(const UEContext& ue, const NetworkNode& node);
     void steerTraffic(int ueId, double nrRatio, const std::string& reason);
     
-    // NTN-specific
+    // NTN-specific & 3D Multi-Domain Support
     void evaluateSatelliteVisibility(int ueId);
     void predictSatellitePasses(int ueId);
     
+    // 3D Continuous Coordinates & Geometry
+    void setOrigin(double latDeg, double lonDeg, double altM);
+    inet::Coord localToGeodetic(const inet::Coord& localPos) const;
+    inet::Coord geodeticToLocal(double latDeg, double lonDeg, double altM) const;
+    inet::Coord localToEcef(const inet::Coord& localPos) const;
+    double calculate3DElevation(const inet::Coord& ueLocalPos, const inet::Coord& satLocalPos) const;
+    bool check3DLOS(const inet::Coord& ueLocalPos, const inet::Coord& satLocalPos, double minElevationDeg = 0.0) const;
+    void updateUEPosition3D(int ueId, const inet::Coord& pos, const inet::Coord& vel);
+    inet::Coord getUEPosition3D(int ueId) const;
+
     // Utilities
     NetworkNode* findBestTargetNode(const UEContext& ue, NetworkType preferredType = NetworkType::TERRESTRIAL_NR);
     double calculateHandoverCost(const UEContext& ue, const NetworkNode& target);

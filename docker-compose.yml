@@ -1,10 +1,30 @@
 services:
-  # NexaSim Build environment
+  # NexaSim Studio Interactive Web Server & Warm Simulation Daemon
+  nexasim-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: nexasim-studio
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./scenarios:/artery/scenarios
+      - ./config:/artery/config
+      - ./output:/artery/output
+    working_dir: /artery
+    environment:
+      - CONAN_HOME=/root/.conan2
+      - PYTHONUNBUFFERED=1
+    command: python3 tools/studio.py --host 0.0.0.0 --port 8000
+    restart: unless-stopped
+
+  # NexaSim Build Environment (for full recompilation)
   nexasim-build:
     build:
       context: .
       dockerfile: Dockerfile
-      target: headless
+      target: sim-builder
     volumes:
       - .:/artery
       - artery-conan2-cache:/root/.conan2
@@ -14,76 +34,56 @@ services:
     command: >
       bash -c "
         cd /artery &&
-        rm -rf build &&
         conan export recipes/inet --version 4.2.2 &&
         conan export recipes/space_veins --version 0.3 &&
         conan export recipes/simu5g --version 1.1.0 &&
         conan export recipes/vanetza --version 26.02 &&
         conan profile detect --force &&
         conan install . --build=missing -s build_type=Release &&
-        cmake -S . -B build/Release -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=/artery/build/Release/generators/conan_toolchain.cmake -DOMNETPP_ROOT=/omnetpp -G Ninja &&
+        cmake -S . -B build/Release -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=/artery/build/Release/generators/conan_toolchain.cmake -DOMNETPP_ROOT=/omnetpp &&
         cmake --build build/Release --parallel
       "
 
-  # NexaSim Headless Runtime environment
-  nexasim: &run-service
+  # Base template for runtime services
+  nexasim: &run-template
     build:
       context: .
       dockerfile: Dockerfile
-      target: headless
+      target: runtime
     volumes:
-      - .:/artery
-      - artery-conan2-cache:/root/.conan2
-      - ./output:/artery/output
-      - ./config:/artery/config
       - ./scenarios:/artery/scenarios
+      - ./config:/artery/config
+      - ./output:/artery/output
+      - artery-conan2-cache:/root/.conan2
     working_dir: /artery
     environment:
       - CONAN_HOME=/root/.conan2
+      - PYTHONUNBUFFERED=1
+
+  # NexaSim Headless Runtime Worker (supports instant docker exec)
+  nexasim-worker:
+    <<: *run-template
+    container_name: nexasim-worker
 
   # Backward compatibility alias
   nexasim-run:
-    <<: *run-service
+    <<: *run-template
 
-  # NexaSim Scenario runner
+  # NexaSim Scenario Runner
   nexasim-scenario:
-    <<: *run-service
+    <<: *run-template
     command: >
       bash -c "
-        python3 tools/nexasim.py all stelvio
+        python3 tools/nexasim.py run stelvio
       "
-    depends_on:
-      nexasim-build:
-        condition: service_completed_successfully
 
-  # NexaSim Analysis service
+  # NexaSim Analysis Service
   nexasim-analyze:
-    <<: *run-service
+    <<: *run-template
     command: >
       bash -c "
         python3 tools/analyze_results.py scenarios/generated/stelvio/
       "
-
-  # NexaSim Interactive Web GUI service (OMNeT++ Qtenv via NoVNC)
-  nexasim-gui:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: final
-    volumes:
-      - .:/artery
-      - artery-conan2-cache:/root/.conan2
-      - ./output:/artery/output
-      - ./config:/artery/config
-      - ./scenarios:/artery/scenarios
-    working_dir: /artery
-    ports:
-      - "6080:6080"
-    command: >
-      bash tools/start_gui.sh -f /artery/scenarios/generated/stelvio/omnetpp.ini
-    depends_on:
-      nexasim-build:
-        condition: service_completed_successfully
 
 volumes:
   artery-conan2-cache:

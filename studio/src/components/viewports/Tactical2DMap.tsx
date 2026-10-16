@@ -333,7 +333,7 @@ export const Tactical2DMap: React.FC = () => {
       });
     });
 
-    // 2. Ground gateways
+    // 2. Ground gateways (draggable markers updating ground_stations)
     currentScenario.ground_stations?.forEach((gw, index) => {
       const marker = L.circleMarker([gw.lat, gw.lon], {
         radius: 8,
@@ -347,6 +347,42 @@ export const Tactical2DMap: React.FC = () => {
         direction: 'bottom',
         offset: [0, 10],
         className: 'nx-label',
+      });
+
+      let isDragging = false;
+      marker.on('mousedown', () => {
+        if (activeDragCleanupRef.current) {
+          activeDragCleanupRef.current();
+        }
+        isDragging = true;
+        map.dragging.disable();
+
+        const onMouseMove = (me: L.LeafletMouseEvent) => {
+          if (!isDragging) return;
+          marker.setLatLng(me.latlng);
+        };
+
+        const cleanupDrag = () => {
+          if (!isDragging) return;
+          isDragging = false;
+          map.dragging.enable();
+          map.off('mousemove', onMouseMove);
+          map.off('mouseup', onMouseUp);
+          activeDragCleanupRef.current = null;
+        };
+
+        const onMouseUp = () => {
+          cleanupDrag();
+          const pos = marker.getLatLng();
+          updateNode('gs', index, {
+            lat: parseFloat(pos.lat.toFixed(5)),
+            lon: parseFloat(pos.lng.toFixed(5)),
+          });
+        };
+
+        activeDragCleanupRef.current = cleanupDrag;
+        map.on('mousemove', onMouseMove);
+        map.on('mouseup', onMouseUp);
       });
 
       marker.on('click', (e) => {

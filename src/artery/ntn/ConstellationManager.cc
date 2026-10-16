@@ -10,6 +10,18 @@
 namespace artery {
 namespace ntn {
 
+namespace {
+constexpr double WGS84_A = 6378137.0;                 // Semi-major axis (m)
+constexpr double WGS84_F = 1.0 / 298.257223563;       // Flattening
+constexpr double WGS84_B = WGS84_A * (1.0 - WGS84_F); // Semi-minor axis (m)
+constexpr double WGS84_E2 = 2.0 * WGS84_F - WGS84_F * WGS84_F; // First eccentricity squared
+constexpr double WGS84_E_PRIME2 = (WGS84_A * WGS84_A - WGS84_B * WGS84_B) / (WGS84_B * WGS84_B);
+constexpr double EARTH_ROTATION_OMEGA = 7.2921159e-5; // rad/s (Earth sidereal rotation)
+constexpr double GM_EARTH = 3.986004418e14;          // Standard gravitational parameter (m^3/s^2)
+constexpr double J2_EARTH = 1.08263e-3;               // J2 zonal perturbation coefficient
+constexpr double SPEED_OF_LIGHT = 299792458.0;        // Speed of light in vacuum (m/s)
+}
+
 Define_Module(ConstellationManager);
 
 void ConstellationManager::initialize(int stage) {
@@ -25,6 +37,11 @@ void ConstellationManager::initialize(int stage) {
         walkerAltitudeKm = par("walkerAltitudeKm");
         walkerInclinationDeg = par("walkerInclinationDeg");
         
+        // Geodetic origin
+        if (hasPar("originLatitude")) originLatitude = par("originLatitude").doubleValue();
+        if (hasPar("originLongitude")) originLongitude = par("originLongitude").doubleValue();
+        if (hasPar("originAltitude")) originAltitude = par("originAltitude").doubleValue();
+        
         // ISL params
         islEnabled = par("islEnabled");
         islType = par("islType").stringValue();
@@ -33,8 +50,22 @@ void ConstellationManager::initialize(int stage) {
         islWavelengthNm = par("islWavelengthNm");
         islTxPowerDbm = par("islTxPowerDbm");
         islRxSensitivityDbm = par("islRxSensitivityDbm");
-        islPointingAccuracyDeg = par("islPointingAccuracyDeg");
-        islAcquisitionTimeMs = par("islAcquisitionTimeMs");
+        islPointingAccuracyDeg = par("pointingAccuracyDeg");
+        islAcquisitionTimeMs = par("acquisitionTimeMs");
+        if (hasPar("islRoutingMode")) islRoutingMode = par("islRoutingMode").stringValue();
+        if (hasPar("islSwitchingDelayMs")) islSwitchingDelayMs = par("islSwitchingDelayMs").doubleValue();
+        if (hasPar("environmentProfile")) environmentProfile = par("environmentProfile").stringValue();
+        if (hasPar("azimuthHorizonMask")) {
+            std::string maskStr = par("azimuthHorizonMask").stringValue();
+            if (!maskStr.empty()) {
+                std::stringstream ss(maskStr);
+                double val = 0.0;
+                while (ss >> val) {
+                    azimuthHorizonMask.push_back(val);
+                    if (ss.peek() == ',' || ss.peek() == ';') ss.ignore();
+                }
+            }
+        }
         
         // Satellite defaults
         satNicType = par("satNicType").stringValue();
@@ -64,6 +95,7 @@ void ConstellationManager::initialize(int stage) {
         
         // Deploy constellation
         deployConstellation();
+        m_ephemerisCache.assign(satellites.size(), EphemerisCacheEntry{});
         
         // Create ground stations
         createGroundStationModules();
@@ -222,28 +254,30 @@ ConstellationManager::OrbitalElements ConstellationManager::computeWalkerElement
     int planeIdx, int satIdx, int P, int T, int F, double altitudeKm, double inclinationDeg) {
     
     OrbitalElements el;
-    const double earthRadiusKm = 6371.0;
-    const double mu = 398600.4418;  // km^3/s^2
+    const double earthRadiusKm = WGS84_A / 1000.0;
+    const double mu = GM_EARTH / 1e9;  // km^3/s^2
     
     el.semiMajorAxisKm = earthRadiusKm + altitudeKm;
-    el.eccentricity = 0.0;  // Circular
+    el.eccentricity = 0.0001;  // Circular / near-circular LEO
     el.inclinationDeg = inclinationDeg;
     
     // RAAN for this plane
-    el.raanDeg = planeIdx * (360.0 / P);
+    el.raanDeg = std::fmod(planeIdx * (360.0 / std::max(1, P)), 360.0);
+    if (el.raanDeg < 0.0) el.raanDeg += 360.0;
     
-    // Argument of perigee (0 for circular)
+    // Argument of perigee
     el.argPerigeeDeg = 0.0;
     
     // Mean anomaly with phasing
-    double satellitesPerPlane = T / P;
-    double meanAnomalyBase = satIdx * (360.0 / satellitesPerPlane);
-    double phasing = F * planeIdx * (360.0 / T);
-    el.meanAnomalyDeg = fmod(meanAnomalyBase + phasing, 360.0);
+    double satellitesPerPlane = static_cast<double>(T) / std::max(1, P);
+    double meanAnomalyBase = satIdx * (360.0 / std::max(1.0, satellitesPerPlane));
+    double phasing = F * planeIdx * (360.0 / std::max(1, T));
+    el.meanAnomalyDeg = std::fmod(meanAnomalyBase + phasing, 360.0);
+    if (el.meanAnomalyDeg < 0.0) el.meanAnomalyDeg += 360.0;
     
-    // Mean motion
-    double n = sqrt(mu / pow(el.semiMajorAxisKm, 3));  // rad/s
-    el.meanMotionRevPerDay = n * 86400.0 / (2 * M_PI);  // rev/day
+    // Mean motion (rad/s -> rev/day)
+    double n = std::sqrt(mu / std::pow(el.semiMajorAxisKm, 3));
+    el.meanMotionRevPerDay = n * 86400.0 / (2.0 * M_PI);
     
     // Epoch (current simulation time)
     el.epoch = 0;  // Will be set by SGP4Mobility
@@ -372,6 +406,11 @@ void ConstellationManager::updateSatellitePositions() {
 
 void ConstellationManager::computeISLTopology() {
     if (!islEnabled) return;
+
+    if (islRoutingMode == "grid_plus") {
+        computeGridPlusISLTopology();
+        return;
+    }
     
     // Clear old links
     std::vector<ISLLink> newLinks;
@@ -440,8 +479,97 @@ void ConstellationManager::computeISLTopology() {
     islLinks = std::move(newLinks);
 }
 
+void ConstellationManager::computeGridPlusISLTopology() {
+    std::vector<ISLLink> newLinks;
+
+    // Index satellites by (planeId, satIdInPlane)
+    std::map<std::pair<int, int>, int> planeSatToIdx;
+    std::map<int, int> planeCounts;
+    int maxPlane = 0;
+
+    for (size_t i = 0; i < satellites.size(); ++i) {
+        satellites[i].visibleSats.clear();
+        int p = satellites[i].planeId;
+        int s = satellites[i].satIdInPlane;
+        planeSatToIdx[{p, s}] = i;
+        planeCounts[p]++;
+        maxPlane = std::max(maxPlane, p);
+    }
+    int totalPlanes = maxPlane + 1;
+
+    for (size_t i = 0; i < satellites.size(); ++i) {
+        SatelliteInfo& satA = satellites[i];
+        if (!satA.module) continue;
+        int p = satA.planeId;
+        int s = satA.satIdInPlane;
+        int S = planeCounts[p];
+        if (S <= 0 || totalPlanes <= 0) continue;
+
+        inet::Coord posA = getSatellitePosition(satA);
+
+        // Grid+ 4 neighbors:
+        // 1. Intra-plane forward
+        // 2. Intra-plane backward
+        // 3. Inter-plane right
+        // 4. Inter-plane left
+        std::vector<std::pair<int, int>> candidateCoords = {
+            {p, (s + 1) % S},
+            {p, (s - 1 + S) % S},
+            {(p + 1) % totalPlanes, s},
+            {(p - 1 + totalPlanes) % totalPlanes, s}
+        };
+
+        for (const auto& coord : candidateCoords) {
+            auto it = planeSatToIdx.find(coord);
+            if (it == planeSatToIdx.end()) continue;
+            int j = it->second;
+            if (i >= static_cast<size_t>(j)) continue; // Process each undirected edge once
+
+            SatelliteInfo& satB = satellites[j];
+            if (!satB.module) continue;
+            inet::Coord posB = getSatellitePosition(satB);
+            double range = calculateRange(posA, posB);
+
+            if (range <= islMaxRangeKm && checkLOS(posA, posB, 0.0)) {
+                ISLLink link;
+                link.satA = i;
+                link.satB = j;
+                link.distanceKm = range;
+                link.active = true;
+                link.establishedAt = omnetpp::simTime();
+                link.linkQuality = calculateLinkBudget(link);
+
+                newLinks.push_back(link);
+                satA.visibleSats.push_back(j);
+                satB.visibleSats.push_back(i);
+
+                emitISLEstablished(i, j);
+            }
+        }
+    }
+
+    // Check for broken links
+    for (auto& oldLink : islLinks) {
+        bool stillExists = false;
+        for (auto& newLink : newLinks) {
+            if ((newLink.satA == oldLink.satA && newLink.satB == oldLink.satB) ||
+                (newLink.satA == oldLink.satB && newLink.satB == oldLink.satA)) {
+                stillExists = true;
+                break;
+            }
+        }
+        if (!stillExists && oldLink.active) {
+            emitISLBroken(oldLink.satA, oldLink.satB);
+            totalISLHandoffs++;
+        }
+    }
+
+    islLinks = std::move(newLinks);
+}
+
 void ConstellationManager::computeGroundStationVisibility() {
-    for (auto& gs : gstations) {
+    for (size_t g = 0; g < gstations.size(); ++g) {
+        auto& gs = gstations[g];
         gs.visibleSats.clear();
         if (!gs.module) continue;
         
@@ -456,89 +584,426 @@ void ConstellationManager::computeGroundStationVisibility() {
             
             if (elevation >= gs.elevationMaskDeg) {
                 gs.visibleSats.push_back(i);
-                sat.visibleGroundStations.push_back(gstations.size() - 1);  // Approximate
+                sat.visibleGroundStations.push_back(g);
             }
         }
     }
 }
 
-inet::Coord ConstellationManager::getSatellitePosition(const SatelliteInfo& sat) {
-    return computePositionFromElements(sat.elements, omnetpp::simTime().dbl());
+double ConstellationManager::calculateEndToEndNTNLatency(int servingSatId, double ueSlantRangeKm, int gatewayIndex) {
+    constexpr double cKmPerS = 299792.458;
+    double tUeToSat = ueSlantRangeKm / cKmPerS; // seconds
+
+    if (servingSatId < 0 || servingSatId >= static_cast<int>(satellites.size())) {
+        return tUeToSat;
+    }
+
+    // Check if serving satellite directly sees the target gateway
+    if (gatewayIndex >= 0 && gatewayIndex < static_cast<int>(gstations.size())) {
+        const auto& gs = gstations[gatewayIndex];
+        inet::Coord satPos = getSatellitePosition(satellites[servingSatId]);
+        inet::Coord gsPos = getGroundStationPosition(gs);
+        double elev = calculateElevation(satPos, gsPos);
+        if (elev >= gs.elevationMaskDeg) {
+            // Direct bent-pipe feeder link: N_isl = 0
+            double satGwDist = calculateRange(satPos, gsPos);
+            double tSatToGw = satGwDist / cKmPerS;
+            return tUeToSat + tSatToGw;
+        }
+    }
+
+    // Multi-hop ISL route
+    ISLRouteResult route;
+    if (gatewayIndex >= 0 && gatewayIndex < static_cast<int>(gstations.size())) {
+        route = getShortestRouteToGateway(servingSatId, gatewayIndex);
+    } else {
+        route = getShortestRouteToAnyGateway(servingSatId);
+    }
+
+    if (route.routeFound && !route.pathSats.empty()) {
+        double islLatencyS = route.totalLatencyMs / 1000.0;
+        int lastSatId = route.targetSatId;
+        double tSatToGw = 0.0025; // Default ~750km feeder link
+        if (route.gatewayIndex >= 0 && route.gatewayIndex < static_cast<int>(gstations.size())) {
+            inet::Coord lastSatPos = getSatellitePosition(satellites[lastSatId]);
+            inet::Coord gsPos = getGroundStationPosition(gstations[route.gatewayIndex]);
+            tSatToGw = calculateRange(lastSatPos, gsPos) / cKmPerS;
+        }
+        return tUeToSat + islLatencyS + tSatToGw;
+    }
+
+    // Fallback if mesh has temporary outage
+    return tUeToSat + 0.003;
 }
 
-inet::Coord ConstellationManager::getGroundStationPosition(const GroundStationInfo& gs) {
-    // Convert lat/lon/alt to coordinate meters
-    return inet::Coord(gs.lon * 111000.0, gs.lat * 111000.0, gs.alt);
+inet::Coord ConstellationManager::geodeticToEcef(double latDeg, double lonDeg, double altM) {
+    double phi = latDeg * M_PI / 180.0;
+    double lambda = lonDeg * M_PI / 180.0;
+    double sinPhi = std::sin(phi);
+    double cosPhi = std::cos(phi);
+    double sinLambda = std::sin(lambda);
+    double cosLambda = std::cos(lambda);
+
+    double N = WGS84_A / std::sqrt(1.0 - WGS84_E2 * sinPhi * sinPhi);
+    double x = (N + altM) * cosPhi * cosLambda;
+    double y = (N + altM) * cosPhi * sinLambda;
+    double z = (N * (1.0 - WGS84_E2) + altM) * sinPhi;
+    return inet::Coord(x, y, z);
 }
 
-double ConstellationManager::calculateElevation(const inet::Coord& satPos, const inet::Coord& gsPos) {
-    // Calculate elevation angle from ground position to satellite in degrees
-    inet::Coord diff = satPos - gsPos;
-    double range = diff.length();
-    double heightDiff = diff.z;
-    
-    if (range <= 0.0) return 90.0;
-    
-    double sinElev = std::max(-1.0, std::min(1.0, heightDiff / range));
-    double elevation = std::asin(sinElev) * 180.0 / M_PI;
-    return elevation;
+void ConstellationManager::ecefToGeodetic(const inet::Coord& ecef, double& latDeg, double& lonDeg, double& altM) {
+    double p = std::sqrt(ecef.x * ecef.x + ecef.y * ecef.y);
+    lonDeg = std::atan2(ecef.y, ecef.x) * 180.0 / M_PI;
+
+    if (p < 1e-6) {
+        latDeg = (ecef.z >= 0.0) ? 90.0 : -90.0;
+        altM = std::abs(ecef.z) - WGS84_B;
+        return;
+    }
+
+    // Bowring's geodetic algorithm
+    double theta = std::atan2(ecef.z * WGS84_A, p * WGS84_B);
+    double sinTheta = std::sin(theta);
+    double cosTheta = std::cos(theta);
+
+    double phi = std::atan2(
+        ecef.z + WGS84_E_PRIME2 * WGS84_B * sinTheta * sinTheta * sinTheta,
+        p - WGS84_E2 * WGS84_A * cosTheta * cosTheta * cosTheta
+    );
+    latDeg = phi * 180.0 / M_PI;
+    double sinPhi = std::sin(phi);
+    double N = WGS84_A / std::sqrt(1.0 - WGS84_E2 * sinPhi * sinPhi);
+    altM = p / std::cos(phi) - N;
+}
+
+inet::Coord ConstellationManager::localToEcef(const inet::Coord& localPos) const {
+    if (localPos.length() > 6000000.0) {
+        return localPos; // Already in ECEF
+    }
+    inet::Coord originEcef = geodeticToEcef(originLatitude, originLongitude, originAltitude);
+    double phi0 = originLatitude * M_PI / 180.0;
+    double lam0 = originLongitude * M_PI / 180.0;
+    double sinPhi = std::sin(phi0);
+    double cosPhi = std::cos(phi0);
+    double sinLam = std::sin(lam0);
+    double cosLam = std::cos(lam0);
+
+    double e = localPos.x;
+    double n = localPos.y;
+    double u = localPos.z;
+
+    double dx = -sinLam * e - sinPhi * cosLam * n + cosPhi * cosLam * u;
+    double dy =  cosLam * e - sinPhi * sinLam * n + cosPhi * sinLam * u;
+    double dz =               cosPhi * n          + sinPhi * u;
+
+    return originEcef + inet::Coord(dx, dy, dz);
+}
+
+inet::Coord ConstellationManager::ecefToLocal(const inet::Coord& ecefPos) const {
+    inet::Coord originEcef = geodeticToEcef(originLatitude, originLongitude, originAltitude);
+    inet::Coord diff = ecefPos - originEcef;
+    return ecefToEnu(diff, originLatitude, originLongitude);
+}
+
+inet::Coord ConstellationManager::ecefToEnu(const inet::Coord& rhoEcef, double refLatDeg, double refLonDeg) {
+    double phi = refLatDeg * M_PI / 180.0;
+    double lam = refLonDeg * M_PI / 180.0;
+    double sinPhi = std::sin(phi);
+    double cosPhi = std::cos(phi);
+    double sinLam = std::sin(lam);
+    double cosLam = std::cos(lam);
+
+    double E = -sinLam * rhoEcef.x + cosLam * rhoEcef.y;
+    double N = -sinPhi * cosLam * rhoEcef.x - sinPhi * sinLam * rhoEcef.y + cosPhi * rhoEcef.z;
+    double U =  cosPhi * cosLam * rhoEcef.x + cosPhi * sinLam * rhoEcef.y + sinPhi * rhoEcef.z;
+
+    return inet::Coord(E, N, U);
+}
+
+bool ConstellationManager::isAboveHorizonFast(const inet::Coord& ueEcef, const inet::Coord& satEcef) {
+    // Fast vector dot product: r_ue . (r_sat - r_ue) < 0 => below local horizontal tangent plane
+    inet::Coord rho = satEcef - ueEcef;
+    return (ueEcef.x * rho.x + ueEcef.y * rho.y + ueEcef.z * rho.z) >= 0.0;
+}
+
+void ConstellationManager::computeSatelliteEcefState(
+    const OrbitalElements& el, double time, inet::Coord& posEcef, inet::Coord& velEcef) const {
+
+    double a = el.semiMajorAxisKm * 1000.0; // km -> meters
+    double e = std::clamp(el.eccentricity, 1e-6, 0.999);
+    double i = el.inclinationDeg * M_PI / 180.0;
+    double raan0 = el.raanDeg * M_PI / 180.0;
+    double argPerigee0 = el.argPerigeeDeg * M_PI / 180.0;
+    double meanAnomaly0 = el.meanAnomalyDeg * M_PI / 180.0;
+
+    double n0 = (el.meanMotionRevPerDay > 0.0) 
+        ? (el.meanMotionRevPerDay * 2.0 * M_PI / 86400.0) 
+        : std::sqrt(GM_EARTH / (a * a * a));
+
+    // Secular J2 perturbations
+    double p = a * (1.0 - e * e);
+    double eta = WGS84_A / p;
+    double cosI = std::cos(i);
+    double sinI = std::sin(i);
+    double cos2I = cosI * cosI;
+    double j2Factor = 1.5 * J2_EARTH * eta * eta * n0;
+
+    double raanDot = -j2Factor * cosI;
+    double argPerigeeDot = 0.5 * j2Factor * (5.0 * cos2I - 1.0);
+    double meanAnomalyDot = n0 * (1.0 + 0.5 * j2Factor * std::sqrt(1.0 - e * e) * (3.0 * cos2I - 1.0));
+
+    double dt = time - el.epoch;
+    double raan = raan0 + raanDot * dt;
+    double argPerigee = argPerigee0 + argPerigeeDot * dt;
+    double M = std::fmod(meanAnomaly0 + meanAnomalyDot * dt, 2.0 * M_PI);
+    if (M < 0.0) M += 2.0 * M_PI;
+
+    // Kepler equation solver: E - e sin(E) = M
+    double E = M + e * std::sin(M) + 0.5 * e * e * std::sin(2.0 * M);
+    for (int iter = 0; iter < 6; ++iter) {
+        double f = E - e * std::sin(E) - M;
+        double fPrime = 1.0 - e * std::cos(E);
+        E -= f / fPrime;
+    }
+
+    double sinE = std::sin(E);
+    double cosE = std::cos(E);
+    double sinNu = (std::sqrt(1.0 - e * e) * sinE) / (1.0 - e * cosE);
+    double cosNu = (cosE - e) / (1.0 - e * cosE);
+    double nu = std::atan2(sinNu, cosNu);
+    double r = a * (1.0 - e * cosE);
+
+    // Orbital plane velocity
+    double h = std::sqrt(GM_EARTH * p);
+    double vr = (GM_EARTH / h) * e * sinNu;
+    double vt = (GM_EARTH / h) * (1.0 + e * cosNu);
+
+    double u = nu + argPerigee;
+    double cosU = std::cos(u);
+    double sinU = std::sin(u);
+    double cosO = std::cos(raan);
+    double sinO = std::sin(raan);
+
+    // ECI coordinates
+    double xEci = r * (cosO * cosU - sinO * sinU * cosI);
+    double yEci = r * (sinO * cosU + cosO * sinU * cosI);
+    double zEci = r * (sinU * sinI);
+
+    double vxOrb = vr * cosNu - vt * sinNu;
+    double vyOrb = vr * sinNu + vt * cosNu;
+
+    double Px = cosO * std::cos(argPerigee) - sinO * std::sin(argPerigee) * cosI;
+    double Py = sinO * std::cos(argPerigee) + cosO * std::sin(argPerigee) * cosI;
+    double Pz = std::sin(argPerigee) * sinI;
+
+    double Qx = -cosO * std::sin(argPerigee) - sinO * std::cos(argPerigee) * cosI;
+    double Qy = -sinO * std::sin(argPerigee) + cosO * std::cos(argPerigee) * cosI;
+    double Qz = std::cos(argPerigee) * sinI;
+
+    double vxEci = vxOrb * Px + vyOrb * Qx;
+    double vyEci = vxOrb * Py + vyOrb * Qy;
+    double vzEci = vxOrb * Pz + vyOrb * Qz;
+
+    // Earth rotation (ECI -> ECEF)
+    double thetaG = EARTH_ROTATION_OMEGA * time;
+    double cosG = std::cos(thetaG);
+    double sinG = std::sin(thetaG);
+
+    posEcef.x = cosG * xEci + sinG * yEci;
+    posEcef.y = -sinG * xEci + cosG * yEci;
+    posEcef.z = zEci;
+
+    // Velocity in rotating ECEF frame: v_ecef = R_z(thetaG) * v_eci - omega_E x r_ecef
+    double vxRot = cosG * vxEci + sinG * vyEci;
+    double vyRot = -sinG * vxEci + cosG * vyEci;
+    double vzRot = vzEci;
+
+    velEcef.x = vxRot + EARTH_ROTATION_OMEGA * posEcef.y;
+    velEcef.y = vyRot - EARTH_ROTATION_OMEGA * posEcef.x;
+    velEcef.z = vzRot;
 }
 
 inet::Coord ConstellationManager::computePositionFromElements(const OrbitalElements& el, double time) {
-    // Simplified position computation from orbital elements
-    // In reality, use SGP4 propagator
-    double n = el.meanMotionRevPerDay * 2 * M_PI / 86400.0;  // rad/s
-    double M = el.meanAnomalyDeg * M_PI / 180.0 + n * time;
-    
-    // For circular orbit
-    double a = el.semiMajorAxisKm;
-    double i = el.inclinationDeg * M_PI / 180.0;
-    double raan = el.raanDeg * M_PI / 180.0;
-    
-    // Position in orbital plane
-    double x_orb = a * cos(M);
-    double y_orb = a * sin(M);
-    double z_orb = 0;
-    
-    // Rotate to ECI
-    double cos_i = cos(i), sin_i = sin(i);
-    double cos_raan = cos(raan), sin_raan = sin(raan);
-    
-    double x = cos_raan * x_orb - sin_raan * cos_i * y_orb;
-    double y = sin_raan * x_orb + cos_raan * cos_i * y_orb;
-    double z = sin_i * y_orb;
-    
-    return inet::Coord(x * 1000, y * 1000, z * 1000);  // Convert to meters
+    inet::Coord pos, vel;
+    computeSatelliteEcefState(el, time, pos, vel);
+    return pos;
+}
+
+inet::Coord ConstellationManager::computeVelocityFromElements(const OrbitalElements& el, double time) {
+    inet::Coord pos, vel;
+    computeSatelliteEcefState(el, time, pos, vel);
+    return vel;
+}
+
+inet::Coord ConstellationManager::getSatellitePosition(const SatelliteInfo& sat) {
+    double t = omnetpp::simTime().dbl();
+    int idx = sat.globalId;
+    if (idx >= 0 && idx < static_cast<int>(m_ephemerisCache.size())) {
+        if (m_ephemerisCache[idx].timestamp == t) {
+            return m_ephemerisCache[idx].positionEcef;
+        }
+        inet::Coord pos, vel;
+        computeSatelliteEcefState(sat.elements, t, pos, vel);
+        m_ephemerisCache[idx] = EphemerisCacheEntry{t, pos, vel};
+        return pos;
+    }
+    return computePositionFromElements(sat.elements, t);
+}
+
+inet::Coord ConstellationManager::getSatelliteVelocity(const SatelliteInfo& sat) {
+    double t = omnetpp::simTime().dbl();
+    int idx = sat.globalId;
+    if (idx >= 0 && idx < static_cast<int>(m_ephemerisCache.size())) {
+        if (m_ephemerisCache[idx].timestamp == t) {
+            return m_ephemerisCache[idx].velocityEcef;
+        }
+        inet::Coord pos, vel;
+        computeSatelliteEcefState(sat.elements, t, pos, vel);
+        m_ephemerisCache[idx] = EphemerisCacheEntry{t, pos, vel};
+        return vel;
+    }
+    return computeVelocityFromElements(sat.elements, t);
+}
+
+inet::Coord ConstellationManager::getGroundStationPosition(const GroundStationInfo& gs) {
+    return geodeticToEcef(gs.lat, gs.lon, gs.alt);
+}
+
+double ConstellationManager::calculateElevation(const inet::Coord& satPos, const inet::Coord& gsPos) {
+    inet::Coord satEcef = (satPos.length() > 6000000.0) ? satPos : localToEcef(satPos);
+    inet::Coord obsEcef = (gsPos.length() > 6000000.0) ? gsPos : localToEcef(gsPos);
+
+    if (!isAboveHorizonFast(obsEcef, satEcef)) {
+        return -90.0;
+    }
+
+    double latDeg, lonDeg, altM;
+    ecefToGeodetic(obsEcef, latDeg, lonDeg, altM);
+    inet::Coord rhoEcef = satEcef - obsEcef;
+    double rangeM = rhoEcef.length();
+    if (rangeM <= 0.0) return 90.0;
+
+    inet::Coord rhoEnu = ecefToEnu(rhoEcef, latDeg, lonDeg);
+    double sinElev = std::clamp(rhoEnu.z / rangeM, -1.0, 1.0);
+    return std::asin(sinElev) * 180.0 / M_PI;
 }
 
 double ConstellationManager::calculateRange(const inet::Coord& posA, const inet::Coord& posB) {
-    return (posA - posB).length() / 1000.0;  // Return in km
+    inet::Coord ecefA = (posA.length() > 6000000.0) ? posA : localToEcef(posA);
+    inet::Coord ecefB = (posB.length() > 6000000.0) ? posB : localToEcef(posB);
+    return (ecefA - ecefB).length() / 1000.0; // km
 }
 
 bool ConstellationManager::checkLOS(const inet::Coord& posA, const inet::Coord& posB, double minElevationDeg) {
-    // Check if line of sight is obstructed by Earth
-    // Simplified: check if the line passes above Earth's surface
-    const double earthRadiusKm = 6371.0;
-    
-    // Calculate closest approach to Earth center
-    inet::Coord diff = posB - posA;
-    double t = -(posA.x * diff.x + posA.y * diff.y + posA.z * diff.z) / 
-               (diff.x * diff.x + diff.y * diff.y + diff.z * diff.z);
-    
-    if (t >= 0 && t <= 1) {
-        inet::Coord closest = posA + diff * t;
-        double distFromCenter = closest.length() / 1000.0;  // km
-        
-        if (distFromCenter < earthRadiusKm) {
-            return false;  // Obstructed by Earth
+    inet::Coord ecefA = (posA.length() > 6000000.0) ? posA : localToEcef(posA);
+    inet::Coord ecefB = (posB.length() > 6000000.0) ? posB : localToEcef(posB);
+
+    inet::Coord diff = ecefB - ecefA;
+    double diffLen2 = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
+    if (diffLen2 <= 0.0) return true;
+
+    double t = -(ecefA.x * diff.x + ecefA.y * diff.y + ecefA.z * diff.z) / diffLen2;
+    if (t >= 0.0 && t <= 1.0) {
+        inet::Coord closest = ecefA + diff * t;
+        if (closest.length() < WGS84_B) {
+            return false; // Obstructed by Earth ellipsoid
         }
     }
-    
-    // Check elevation at endpoints
-    double elevA = calculateElevation(posA, posB);  // Simplified
-    double elevB = calculateElevation(posB, posA);
-    
-    return elevA >= minElevationDeg && elevB >= minElevationDeg;
+
+    if (minElevationDeg > 0.0) {
+        double elevA = calculateElevation(ecefB, ecefA);
+        if (elevA < minElevationDeg) return false;
+    }
+
+    return true;
+}
+
+ConstellationManager::TopocentricMetrics ConstellationManager::calculateTopocentricMetrics(
+    int satId,
+    const inet::Coord& observerPos,
+    const inet::Coord& observerVel,
+    double carrierFreqGhz,
+    double minElevationDeg) {
+
+    TopocentricMetrics m;
+    if (satId < 0 || satId >= static_cast<int>(satellites.size())) {
+        return m;
+    }
+
+    const SatelliteInfo& sat = satellites[satId];
+    inet::Coord satEcef = getSatellitePosition(sat);
+    inet::Coord satVel = getSatelliteVelocity(sat);
+
+    inet::Coord obsEcef = (observerPos.length() > 6000000.0) ? observerPos : localToEcef(observerPos);
+    inet::Coord obsVel = observerVel;
+
+    // 1. Fast Horizon Culling
+    if (!isAboveHorizonFast(obsEcef, satEcef)) {
+        m.isVisible = false;
+        m.elevationDeg = -90.0;
+        return m;
+    }
+
+    // 2. Relative vectors in ECEF & ENU
+    inet::Coord rhoEcef = satEcef - obsEcef;
+    double slantRangeM = rhoEcef.length();
+    m.slantRangeKm = slantRangeM / 1000.0;
+
+    double latDeg, lonDeg, altM;
+    ecefToGeodetic(obsEcef, latDeg, lonDeg, altM);
+    m.rhoEnu = ecefToEnu(rhoEcef, latDeg, lonDeg);
+
+    if (slantRangeM <= 0.0) {
+        m.elevationDeg = 90.0;
+        m.azimuthDeg = 0.0;
+        m.isVisible = true;
+        return m;
+    }
+
+    // 3. Elevation & Azimuth
+    double sinElev = std::clamp(m.rhoEnu.z / slantRangeM, -1.0, 1.0);
+    m.elevationDeg = std::asin(sinElev) * 180.0 / M_PI;
+
+    m.azimuthDeg = std::atan2(m.rhoEnu.x, m.rhoEnu.y) * 180.0 / M_PI;
+    if (m.azimuthDeg < 0.0) m.azimuthDeg += 360.0;
+
+    double maskDeg = minElevationDeg;
+    if (!azimuthHorizonMask.empty()) {
+        maskDeg = std::max(maskDeg, getAzimuthElevationMask(m.azimuthDeg));
+    }
+
+    m.isTerrainBlocked = (m.elevationDeg < maskDeg);
+    m.isVisible = (m.elevationDeg >= minElevationDeg && !m.isTerrainBlocked);
+
+    if (m.isTerrainBlocked) {
+        m.diffractionLossDb = NTNChannelModel::calculateObstacleDiffractionLoss(m.elevationDeg, maskDeg, carrierFreqGhz, m.slantRangeKm);
+    } else {
+        m.diffractionLossDb = 0.0;
+    }
+
+    // 4. Exact Doppler shift: f_d = -(v_rel . rho) / (c * d) * f_c
+    inet::Coord vRel = satVel - obsVel;
+    double vLos = (vRel.x * rhoEcef.x + vRel.y * rhoEcef.y + vRel.z * rhoEcef.z) / slantRangeM;
+    double fcHz = carrierFreqGhz * 1e9;
+    m.dopplerShiftHz = -(vLos / SPEED_OF_LIGHT) * fcHz;
+
+    // Doppler rate: d(f_d)/dt
+    double vRelLen2 = vRel.x * vRel.x + vRel.y * vRel.y + vRel.z * vRel.z;
+    m.dopplerRateHzPerSec = -(fcHz / SPEED_OF_LIGHT) * ((vRelLen2 - vLos * vLos) / slantRangeM);
+
+    return m;
+}
+
+double ConstellationManager::getAzimuthElevationMask(double azimuthDeg) const {
+    if (azimuthHorizonMask.empty()) {
+        return 10.0;
+    }
+    double az = std::fmod(azimuthDeg, 360.0);
+    if (az < 0.0) az += 360.0;
+    int numSectors = static_cast<int>(azimuthHorizonMask.size());
+    double sectorWidth = 360.0 / numSectors;
+    int sectorIdx = std::clamp(static_cast<int>(az / sectorWidth), 0, numSectors - 1);
+    return azimuthHorizonMask[sectorIdx];
 }
 
 double ConstellationManager::calculateLinkBudget(const ISLLink& link) {
@@ -628,9 +1093,28 @@ ConstellationManager::GroundStationInfo* ConstellationManager::getGroundStationB
 
 std::vector<int> ConstellationManager::findVisibleSatellites(const inet::Coord& observerPos, double minElevationDeg) {
     std::vector<int> visible;
+    inet::Coord obsEcef = (observerPos.length() > 6000000.0) ? observerPos : localToEcef(observerPos);
+
+    double latDeg, lonDeg, altM;
+    ecefToGeodetic(obsEcef, latDeg, lonDeg, altM);
+
     for (size_t i = 0; i < satellites.size(); ++i) {
-        inet::Coord satPos = getSatellitePosition(satellites[i]);
-        double elevation = calculateElevation(satPos, observerPos);
+        inet::Coord satEcef = getSatellitePosition(satellites[i]);
+
+        // Fast horizon culling filter: O(1) vector check skips trigonometry
+        if (!isAboveHorizonFast(obsEcef, satEcef)) {
+            continue;
+        }
+
+        inet::Coord rhoEcef = satEcef - obsEcef;
+        double rangeM = rhoEcef.length();
+        if (rangeM <= 0.0) {
+            visible.push_back(i);
+            continue;
+        }
+
+        inet::Coord rhoEnu = ecefToEnu(rhoEcef, latDeg, lonDeg);
+        double elevation = std::asin(std::clamp(rhoEnu.z / rangeM, -1.0, 1.0)) * 180.0 / M_PI;
         if (elevation >= minElevationDeg) {
             visible.push_back(i);
         }

@@ -50,6 +50,14 @@ void UserTerminal::initialize(int stage) {
         dualConnectivityEnabled = par("dualConnectivityEnabled");
         terrestrialRat = par("terrestrialRat").stringValue();
         terrestrialRsrpThresholdDbm = par("terrestrialRsrpThreshold");
+
+        // Energy consumption model parameters
+        if (hasPar("batteryCapacityJoules")) batteryCapacityJoules = par("batteryCapacityJoules").doubleValue();
+        if (hasPar("powerTxW")) powerTxW = par("powerTxW").doubleValue();
+        if (hasPar("powerRxW")) powerRxW = par("powerRxW").doubleValue();
+        if (hasPar("powerIdleW")) powerIdleW = par("powerIdleW").doubleValue();
+        if (hasPar("powerDualRadioW")) powerDualRadioW = par("powerDualRadioW").doubleValue();
+        remainingJoules = batteryCapacityJoules;
         
         // Find mobility module
         mobilityModule = getParentModule()->getSubmodule("mobility");
@@ -73,6 +81,7 @@ void UserTerminal::initialize(int stage) {
         dataRateSignal = registerSignal("dataRate");
         beamDirectionSignal = registerSignal("beamDirection");
         elevationSignal = registerSignal("elevation");
+        batterySocSignal = registerSignal("batterySoC");
         
         // Initialize timers
         trackingTimer = new omnetpp::cMessage("trackingUpdate");
@@ -177,6 +186,25 @@ void UserTerminal::handleTrafficTick() {
     } else {
         packetsDroppedTotal++;
     }
+
+    // Energy consumption model: TX, RX, IDLE, dual-radio active during Make-Before-Break
+    omnetpp::simtime_t now = omnetpp::simTime();
+    double dt = (lastEnergyUpdate > 0) ? (now - lastEnergyUpdate).dbl() : 0.1;
+    lastEnergyUpdate = now;
+
+    double activePower = powerIdleW;
+    if (state == TerminalState::HANDOVER_PREPARE || state == TerminalState::HANDOVER_EXECUTE) {
+        // Dual-radio active during handover preparation window
+        activePower = powerDualRadioW;
+    } else if (hasSatLink) {
+        // Active TX duty cycle (e.g. 20% TX, 80% RX)
+        activePower = 0.20 * powerTxW + 0.80 * powerRxW;
+    }
+
+    double energySpentJoules = activePower * dt;
+    remainingJoules = std::max(0.0, remainingJoules - energySpentJoules);
+    double soc = remainingJoules / batteryCapacityJoules;
+    emit(batterySocSignal, soc);
 }
 
 void UserTerminal::finish() {
@@ -260,8 +288,17 @@ void UserTerminal::handleTrackingState() {
     
     // Update current satellite tracking
     if (constellationManager) {
-        // Get updated position from constellation manager
-        // For now, simulate tracking
+        auto metrics = constellationManager->calculateTopocentricMetrics(
+            currentSat.satId, currentPosition, currentVelocity, linkParams.frequencyGhz);
+        
+        auto* satInfo = constellationManager->getSatelliteById(currentSat.satId);
+        if (satInfo) {
+            currentSat.position = constellationManager->getSatellitePosition(*satInfo);
+            currentSat.velocity = constellationManager->getSatelliteVelocity(*satInfo);
+        }
+        currentSat.rangeKm = metrics.slantRangeKm;
+        currentSat.elevationDeg = metrics.elevationDeg;
+        currentSat.azimuthDeg = metrics.azimuthDeg;
         currentSat.linkQuality = calculateLinkBudget(currentSat);
         currentSat.snrDb = calculateSnr(currentSat.linkQuality * 30 - 30);
         currentSat.dataRateMbps = calculateDataRate(currentSat.snrDb, linkParams.bandwidthMhz * 1e6);
@@ -332,23 +369,20 @@ void UserTerminal::updateVisibleSatellites() {
             auto* satInfo = constellationManager->getSatelliteById(satIdx);
             if (!satInfo) continue;
             
+            auto metrics = constellationManager->calculateTopocentricMetrics(
+                satIdx, currentPosition, currentVelocity, linkParams.frequencyGhz, 10.0);
+
             SatelliteTrackInfo track;
             track.satId = satIdx;
             track.satName = satInfo->name;
-            track.position = satInfo->position;
-            track.velocity = satInfo->velocity;
-            track.rangeKm = (track.position - currentPosition).length() / 1000.0;
-            
-            // Calculate elevation/azimuth
-            inet::Coord diff = track.position - currentPosition;
-            track.elevationDeg = asin(diff.z / diff.length()) * 180.0 / M_PI;
-            track.azimuthDeg = atan2(diff.y, diff.x) * 180.0 / M_PI;
-            
-            // Estimate elevation rate (simplified)
-            track.elevationRateDegPerSec = 0.01;  // Placeholder
-            
+            track.position = constellationManager->getSatellitePosition(*satInfo);
+            track.velocity = constellationManager->getSatelliteVelocity(*satInfo);
+            track.rangeKm = metrics.slantRangeKm;
+            track.elevationDeg = metrics.elevationDeg;
+            track.azimuthDeg = metrics.azimuthDeg;
+            track.elevationRateDegPerSec = 0.01;
             track.linkQuality = calculateLinkBudget(track);
-            track.isVisible = track.elevationDeg >= 10.0;
+            track.isVisible = metrics.isVisible;
             
             candidateSats.push_back(track);
         }

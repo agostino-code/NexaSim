@@ -89,6 +89,21 @@ public:
         double shadowMarginDb = 8;
     };
 
+    struct MCSResult {
+        int cqi = 0;
+        int mcs = 0;
+        double codeRate = 0.0;
+        double spectralEfficiency = 0.0;
+        double bler = 0.0;
+        double throughputMbps = 0.0;
+    };
+
+    struct ShadowFadingState {
+        inet::Coord lastPosition;
+        double lastShadowingDb = 0.0;
+        bool initialized = false;
+    };
+
 protected:
     // Configuration
     std::string simu5gConfigFile;
@@ -161,16 +176,21 @@ protected:
     // MIMO
     void configureMIMO(const std::string& gnbName, int ueId, int layers);
     
+    // Spatially correlated shadow fading tracking
+    std::map<std::pair<int, std::string>, ShadowFadingState> m_shadowFadingStates;
+
     // Channel model
     double calculatePathLoss(const inet::Coord& txPos, const inet::Coord& rxPos, 
                              double frequencyGhz, double txHeight, double rxHeight);
     double calculateShadowing(double distanceKm);
+    double calculateCorrelatedShadowing(int ueId, const std::string& gnbName, const inet::Coord& currentPos, bool isLOS);
     double calculateFastFading();
     
     // Link budget
     double calculateLinkBudget(const GNBConfig& gnb, const UEConfig& ue);
     double calculateSNR(double receivedPowerDbm, double bandwidthHz);
     double calculateDataRate(double snrDb, double bandwidthHz, int mimoLayers);
+    static MCSResult evaluate3GPPThroughputAndBLER(double sinrDb, double bandwidthHz, int mimoLayers = 1);
     
     // Network slicing
     void createSlice(const SliceConfig& slice);

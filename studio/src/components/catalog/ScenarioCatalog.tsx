@@ -8,6 +8,7 @@ export const ScenarioCatalog: React.FC = () => {
   const currentScenario = useStudioStore((s) => s.currentScenario);
   const selectScenario = useStudioStore((s) => s.selectScenario);
   const appendLog = useStudioStore((s) => s.appendLog);
+  const updateScenarioParams = useStudioStore((s) => s.updateScenarioParams);
   const [filter, setFilter] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -126,18 +127,67 @@ export const ScenarioCatalog: React.FC = () => {
               <span>Save</span>
             </button>
           </div>
-          <div className="text-[11px] text-slate-300 flex flex-col gap-1 font-mono">
-            <div>
-              <span className="text-slate-500">Duration:</span> {currentScenario.duration_s}s
+          <div className="text-[11px] text-slate-300 flex flex-col gap-1.5 font-mono">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Duration (s):</span>
+              <input
+                type="number"
+                step={10}
+                min={10}
+                max={3600}
+                value={currentScenario.duration_s || 300}
+                onChange={(e) => updateScenarioParams({ duration_s: Number(e.target.value) })}
+                className="w-24 bg-bg-card border border-border-subtle rounded px-1.5 py-0.5 text-right text-slate-100 font-mono text-[11px] focus:border-brand-cyan outline-none"
+              />
             </div>
-            <div>
-              <span className="text-slate-500">Elevation Mask:</span> {currentScenario.elevation_mask_deg}°
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Elevation Mask (°):</span>
+              <input
+                type="number"
+                step={1}
+                min={5}
+                max={60}
+                value={currentScenario.elevation_mask_deg ?? 25}
+                onChange={(e) => updateScenarioParams({ elevation_mask_deg: Number(e.target.value) })}
+                className="w-24 bg-bg-card border border-border-subtle rounded px-1.5 py-0.5 text-right text-slate-100 font-mono text-[11px] focus:border-brand-cyan outline-none"
+              />
             </div>
-            <div>
-              <span className="text-slate-500">VHO Strategy:</span> {currentScenario.switching_mode}
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">VHO Strategy:</span>
+              <select
+                value={currentScenario.switching_mode || 'predictive_mbb'}
+                onChange={(e) => updateScenarioParams({ switching_mode: e.target.value })}
+                className="w-28 bg-bg-card border border-border-subtle rounded px-1.5 py-0.5 text-slate-100 font-mono text-[11px] focus:border-brand-cyan outline-none"
+              >
+                <option value="sinr">sinr</option>
+                <option value="mcdm">mcdm</option>
+                <option value="mbb">mbb</option>
+                <option value="predictive_mbb">predictive_mbb</option>
+              </select>
             </div>
-            <div>
-              <span className="text-slate-500">Ka-Band Rain:</span> {currentScenario.rain_rate} mm/h
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Rain Rate (mm/h):</span>
+              <input
+                type="number"
+                step={1}
+                min={0}
+                max={150}
+                value={currentScenario.rain_rate ?? 0}
+                onChange={(e) => updateScenarioParams({ rain_rate: Number(e.target.value) })}
+                className="w-24 bg-bg-card border border-border-subtle rounded px-1.5 py-0.5 text-right text-slate-100 font-mono text-[11px] focus:border-brand-cyan outline-none"
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">UE Vehicles:</span>
+              <input
+                type="number"
+                step={1}
+                min={1}
+                max={100}
+                value={currentScenario.vehicles || 4}
+                onChange={(e) => updateScenarioParams({ vehicles: Number(e.target.value) })}
+                className="w-24 bg-bg-card border border-border-subtle rounded px-1.5 py-0.5 text-right text-slate-100 font-mono text-[11px] focus:border-brand-cyan outline-none"
+              />
             </div>
             {currentScenario.description && (
               <p className="text-[10px] text-slate-500 font-sans mt-1 leading-relaxed">

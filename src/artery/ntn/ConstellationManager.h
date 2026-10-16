@@ -84,6 +84,24 @@ public:
         double linkQuality;
     };
 
+    struct TopocentricMetrics {
+        inet::Coord rhoEnu;        // [East, North, Up] vector in meters
+        double slantRangeKm = 0.0;
+        double elevationDeg = 0.0;
+        double azimuthDeg = 0.0;
+        double dopplerShiftHz = 0.0;
+        double dopplerRateHzPerSec = 0.0;
+        bool isVisible = false;
+        bool isTerrainBlocked = false;
+        double diffractionLossDb = 0.0;
+    };
+
+    struct EphemerisCacheEntry {
+        double timestamp = -1.0;
+        inet::Coord positionEcef; // meters
+        inet::Coord velocityEcef; // m/s
+    };
+
 protected:
     // Configuration
     std::string constellationConfigFile;
@@ -110,6 +128,8 @@ protected:
     // ISL configuration
     bool islEnabled = true;
     std::string islType = "laser";
+    std::string islRoutingMode = "grid_plus";
+    double islSwitchingDelayMs = 0.050; // Optical switching / OEO delay per hop [ms]
     double islMaxRangeKm = 5000;
     int islPortsPerSat = 4;
     double islWavelengthNm = 1550;
@@ -118,6 +138,8 @@ protected:
     double islRxSensitivityDbm = -40;
     double islPointingAccuracyDeg = 0.01;
     double islAcquisitionTimeMs = 100;
+    std::string environmentProfile = "suburban";
+    std::vector<double> azimuthHorizonMask;
     
     // Satellite defaults
     std::string satNicType = "space_veins.modules.nic.SatelliteNic";
@@ -141,6 +163,14 @@ protected:
     };
     std::vector<GSConfig> groundStations;
     
+    // Geodetic origin for scenario (WGS84)
+    double originLatitude = 46.538;
+    double originLongitude = 10.453;
+    double originAltitude = 2757.0;
+
+    // Ephemeris cache for high-frequency simulation steps
+    mutable std::vector<EphemerisCacheEntry> m_ephemerisCache;
+
     // Simulation
     double visibilityUpdateInterval = 1.0;  // seconds
     omnetpp::cMessage* visibilityUpdateTimer = nullptr;
@@ -195,14 +225,18 @@ protected:
     void scheduleVisibilityUpdates();
     void updateVisibility();
     void updateSatellitePositions();
+    void computeSatelliteEcefState(const OrbitalElements& el, double time, inet::Coord& posEcef, inet::Coord& velEcef) const;
     inet::Coord computePositionFromElements(const OrbitalElements& el, double time);
+    inet::Coord computeVelocityFromElements(const OrbitalElements& el, double time);
     void computeISLTopology();
+    void computeGridPlusISLTopology();
     void computeGroundStationVisibility();
     void computeUEVisibility();  // For user terminals
     bool checkLOS(const inet::Coord& posA, const inet::Coord& posB, double minElevationDeg = 0);
     double calculateElevation(const inet::Coord& satPos, const inet::Coord& gsPos);
     double calculateRange(const inet::Coord& posA, const inet::Coord& posB);
     double calculateLinkBudget(const ISLLink& link);
+    double calculateEndToEndNTNLatency(int servingSatId, double ueSlantRangeKm, int gatewayIndex = 0);
     
     // ISL management
     void establishISL(int satA, int satB);
@@ -220,7 +254,25 @@ public:
     GroundStationInfo* getGroundStationByName(const std::string& name);
     std::vector<int> findVisibleSatellites(const inet::Coord& observerPos, double minElevationDeg = 10.0);
     inet::Coord getSatellitePosition(const SatelliteInfo& sat);
+    inet::Coord getSatelliteVelocity(const SatelliteInfo& sat);
     inet::Coord getGroundStationPosition(const GroundStationInfo& gs);
+
+    // Coordinate conversions (WGS84 ECEF & Topocentric ENU)
+    static inet::Coord geodeticToEcef(double latDeg, double lonDeg, double altM);
+    static void ecefToGeodetic(const inet::Coord& ecef, double& latDeg, double& lonDeg, double& altM);
+    inet::Coord localToEcef(const inet::Coord& localPos) const;
+    inet::Coord ecefToLocal(const inet::Coord& ecefPos) const;
+    static inet::Coord ecefToEnu(const inet::Coord& rhoEcef, double refLatDeg, double refLonDeg);
+    static bool isAboveHorizonFast(const inet::Coord& ueEcef, const inet::Coord& satEcef);
+
+    TopocentricMetrics calculateTopocentricMetrics(
+        int satId,
+        const inet::Coord& observerPos,
+        const inet::Coord& observerVel = inet::Coord(0, 0, 0),
+        double carrierFreqGhz = 28.0,
+        double minElevationDeg = 10.0
+    );
+    double getAzimuthElevationMask(double azimuthDeg) const;
 
     // Multi-Hop ISL Mesh Routing (Dijkstra)
     void computeISLMeshShortestPaths();

@@ -5,7 +5,7 @@ import { SystemStrip } from './components/layout/SystemStrip';
 import { WorkspaceDock } from './components/dockview/WorkspaceDock';
 import { DataProvenanceModal } from './components/common/DataProvenanceModal';
 import { useStudioStore } from './store/useStudioStore';
-import { fetchScenarios, fetchFleet } from './services/api';
+import { fetchScenarios, fetchFleet, fetchFleetTimeline, fetchCompare } from './services/api';
 import { wsManager } from './services/websocket';
 
 export const App: React.FC = () => {
@@ -14,6 +14,8 @@ export const App: React.FC = () => {
   const selectScenario = useStudioStore((s) => s.selectScenario);
   const currentScenario = useStudioStore((s) => s.currentScenario);
   const setVehicles = useStudioStore((s) => s.setVehicles);
+  const setFleetTimeline = useStudioStore((s) => s.setFleetTimeline);
+  const setCompareData = useStudioStore((s) => s.setCompareData);
 
   const dockApiRef = useRef<DockviewApi | null>(null);
 
@@ -57,10 +59,26 @@ export const App: React.FC = () => {
         console.error('Failed to load fleet snapshot:', err);
       });
 
+    fetchFleetTimeline(currentScenario.id, abortCtrl.signal)
+      .then((tl) => {
+        setFleetTimeline(tl);
+      })
+      .catch((err: unknown) => {
+        if (err instanceof Error && err.name === 'AbortError') return;
+      });
+
+    fetchCompare(currentScenario.id, abortCtrl.signal)
+      .then((cmp) => {
+        setCompareData(cmp);
+      })
+      .catch((err: unknown) => {
+        if (err instanceof Error && err.name === 'AbortError') return;
+      });
+
     return () => {
       abortCtrl.abort();
     };
-  }, [currentScenario?.id, setVehicles]);
+  }, [currentScenario?.id, setVehicles, setFleetTimeline, setCompareData]);
 
   const handleLayoutPreset = (preset: 'dual' | '2d' | '3d' | 'analytics') => {
     const api = dockApiRef.current;

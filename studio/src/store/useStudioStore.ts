@@ -10,6 +10,8 @@ import {
   TelemetrySeries,
   KpiSummary,
   RatType,
+  FleetTimelineResponse,
+  CompareResponse,
 } from '../types/scenario';
 
 export type SelectedNodeType = 'gnb' | 'gs' | 'blind' | 'veh';
@@ -56,6 +58,11 @@ interface StudioState {
   kpis: KpiSummary | null;
   hasRunData: boolean;
 
+  // Time-machine & Multi-Strategy comparison data
+  fleetTimeline: FleetTimelineResponse | null;
+  compareData: CompareResponse | null;
+  compareBaselineEnabled: boolean;
+
   // Actions
   setScenarios: (scenarios: ScenarioSummary[]) => void;
   selectScenario: (scenario: ScenarioSummary) => void;
@@ -68,6 +75,7 @@ interface StudioState {
   setPlaybackSpeed: (speed: number) => void;
   selectNode: (node: SelectedNode | null) => void;
   updateNode: (type: SelectedNodeType, index: number, updatedData: any) => void;
+  updateScenarioParams: (patch: Partial<ScenarioSummary>) => void;
   addNode: (type: Exclude<SelectedNodeType, 'veh'>, data: any) => void;
   removeNode: (type: SelectedNodeType, index: number) => void;
   requestFlyTo: (target: SelectedNodeType, index: number, lat: number, lon: number) => void;
@@ -78,6 +86,9 @@ interface StudioState {
   setKpis: (kpis: KpiSummary) => void;
   setHasRunData: (hasData: boolean) => void;
   setVehicles: (vehicles: VehicleTelemetry[]) => void;
+  setFleetTimeline: (timeline: FleetTimelineResponse | null) => void;
+  setCompareData: (data: CompareResponse | null) => void;
+  toggleCompareBaseline: () => void;
   setFleetAggregates: (agg: {
     throughput_mbps: number | null;
     latency_ms: number | null;
@@ -116,6 +127,9 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   hasRunData: false,
   flyToRequest: null,
   provenanceOpen: false,
+  fleetTimeline: null,
+  compareData: null,
+  compareBaselineEnabled: false,
 
   setScenarios: (scenarios) => set({ scenarios }),
 
@@ -127,6 +141,9 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       telemetrySeries: null,
       kpis: null,
       hasRunData: false,
+      fleetTimeline: null,
+      compareData: null,
+      compareBaselineEnabled: false,
       throughputMbps: null,
       latencyMs: null,
       activeRat: null,
@@ -151,7 +168,60 @@ export const useStudioStore = create<StudioState>((set, get) => ({
 
   clearLogs: () => set({ logs: ['Console cleared.'] }),
 
-  setSimTime: (simTime) => set({ simTime }),
+  setSimTime: (simTime) =>
+    set((state) => {
+      // If we have fleet timeline and simulation is not currently running live,
+      // update vehicle states through O(log N) binary search lookup at simTime!
+      if (!state.status.running && state.fleetTimeline && state.fleetTimeline.timestamps.length > 0) {
+        const ts = state.fleetTimeline.timestamps;
+        let low = 0;
+        let high = ts.length - 1;
+        let sampleIdx = 0;
+        while (low <= high) {
+          const mid = (low + high) >> 1;
+          if (ts[mid] <= simTime) {
+            sampleIdx = mid;
+            low = mid + 1;
+          } else {
+            high = mid - 1;
+          }
+        }
+
+        const updatedVehicles: VehicleTelemetry[] = state.vehicles.map((v) => {
+          const vtl = state.fleetTimeline?.vehicles_timeline[String(v.id)];
+          if (!vtl || !vtl[sampleIdx]) return v;
+          const pt = vtl[sampleIdx];
+          return {
+            ...v,
+            speed_kmh: pt.speed_kmh ?? v.speed_kmh,
+            throughput_mbps: pt.throughput_mbps ?? v.throughput_mbps,
+            mec_latency_ms: pt.mec_latency_ms ?? v.mec_latency_ms,
+            qos_score: pt.qos_score ?? v.qos_score,
+            battery_soc_pct: pt.battery_soc_pct ?? v.battery_soc_pct,
+            vho_count: pt.vho_count ?? v.vho_count,
+            active_rat: pt.active_rat ?? v.active_rat,
+            elevation_deg: pt.elevation_deg ?? v.elevation_deg,
+            slant_range_km: pt.slant_range_km ?? v.slant_range_km,
+            doppler_khz: pt.doppler_khz ?? v.doppler_khz,
+            carrier_ghz: pt.carrier_ghz ?? v.carrier_ghz,
+            heading_deg: pt.heading_deg ?? v.heading_deg,
+            last_updated_s: pt.t,
+          };
+        });
+
+        // Also update selectedNode if it is a vehicle
+        let selectedNode = state.selectedNode;
+        if (selectedNode && selectedNode.type === 'veh') {
+          const currentV = updatedVehicles.find((v) => v.id === selectedNode?.index);
+          if (currentV) {
+            selectedNode = { ...selectedNode, data: currentV };
+          }
+        }
+
+        return { simTime, vehicles: updatedVehicles, selectedNode };
+      }
+      return { simTime };
+    }),
 
   togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
 
@@ -163,17 +233,33 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     set((state) => {
       if (!state.currentScenario) return state;
       const sc = { ...state.currentScenario };
+      let updatedNodeData = updatedData;
       if (type === 'gnb' && sc.gnbs[index]) {
         sc.gnbs = [...sc.gnbs];
         sc.gnbs[index] = { ...sc.gnbs[index], ...updatedData };
+        updatedNodeData = sc.gnbs[index];
       } else if (type === 'gs' && sc.ground_stations[index]) {
         sc.ground_stations = [...sc.ground_stations];
         sc.ground_stations[index] = { ...sc.ground_stations[index], ...updatedData };
+        updatedNodeData = sc.ground_stations[index];
       } else if (type === 'blind' && sc.blind_spots[index]) {
         sc.blind_spots = [...sc.blind_spots];
         sc.blind_spots[index] = { ...sc.blind_spots[index], ...updatedData };
+        updatedNodeData = sc.blind_spots[index];
       }
-      return { currentScenario: sc };
+      const selectedNode =
+        state.selectedNode && state.selectedNode.type === type && state.selectedNode.index === index
+          ? { ...state.selectedNode, data: updatedNodeData }
+          : state.selectedNode;
+      return { currentScenario: sc, selectedNode };
+    }),
+
+  updateScenarioParams: (patch) =>
+    set((state) => {
+      if (!state.currentScenario) return state;
+      const updated = { ...state.currentScenario, ...patch };
+      const scenarios = state.scenarios.map((s) => (s.id === updated.id ? updated : s));
+      return { currentScenario: updated, scenarios };
     }),
 
   addNode: (type, data) =>
@@ -232,6 +318,12 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   setHasRunData: (hasData) => set({ hasRunData: hasData }),
 
   setVehicles: (vehicles) => set({ vehicles }),
+
+  setFleetTimeline: (fleetTimeline) => set({ fleetTimeline }),
+
+  setCompareData: (compareData) => set({ compareData }),
+
+  toggleCompareBaseline: () => set((state) => ({ compareBaselineEnabled: !state.compareBaselineEnabled })),
 
   setFleetAggregates: (agg) =>
     set({

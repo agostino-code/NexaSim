@@ -28,17 +28,34 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-# Earth constants
+# Earth constants (CODATA / IAU / WGS84 - Aligned with ConstellationManager.cc)
 R_EARTH_KM = 6378.137
 MU_EARTH = 398600.4418 # km^3 / s^2
 OMEGA_EARTH = 7.2921159e-5 # rad / s (Earth rotation rate)
+J2_EARTH = 1.08263e-3
+WGS84_A_KM = 6378.137
+WGS84_F = 1.0 / 298.257223563
+WGS84_B_KM = WGS84_A_KM * (1.0 - WGS84_F)
+WGS84_E2 = 2.0 * WGS84_F - WGS84_F * WGS84_F
 
 def ecef_to_geodetic(x: float, y: float, z: float) -> Tuple[float, float, float]:
-    """Convert ECEF (km) to longitude (deg), latitude (deg), altitude (meters)."""
-    lon = math.degrees(math.atan2(y, x))
+    """Convert ECEF (km) to longitude (deg), latitude (deg), altitude (meters) using Bowring's algorithm."""
     p = math.hypot(x, y)
-    lat = math.degrees(math.atan2(z, p))
-    alt_m = (math.hypot(p, z) - R_EARTH_KM) * 1000.0
+    lon = math.degrees(math.atan2(y, x))
+    if p < 1e-6:
+        lat = 90.0 if z >= 0 else -90.0
+        alt_m = (abs(z) - WGS84_B_KM) * 1000.0
+        return lon, lat, alt_m
+    e_prime2 = (WGS84_A_KM * WGS84_A_KM - WGS84_B_KM * WGS84_B_KM) / (WGS84_B_KM * WGS84_B_KM)
+    theta = math.atan2(z * WGS84_A_KM, p * WGS84_B_KM)
+    phi = math.atan2(
+        z + e_prime2 * WGS84_B_KM * (math.sin(theta) ** 3),
+        p - WGS84_E2 * WGS84_A_KM * (math.cos(theta) ** 3)
+    )
+    lat = math.degrees(phi)
+    sin_phi = math.sin(phi)
+    N = WGS84_A_KM / math.sqrt(1.0 - WGS84_E2 * (sin_phi ** 2))
+    alt_m = (p / math.cos(phi) - N) * 1000.0
     return lon, lat, alt_m
 
 def compute_satellite_position(
@@ -48,13 +65,20 @@ def compute_satellite_position(
     mean_anomaly_deg: float,
     t_sec: float
 ) -> Tuple[float, float, float]:
-    """Computes satellite [lon, lat, alt_m] at time t_sec."""
+    """Computes satellite [lon, lat, alt_m] at time t_sec with J2 secular perturbation and Earth rotation."""
     a = R_EARTH_KM + altitude_km
-    n = math.sqrt(MU_EARTH / (a ** 3)) # rad/s
-
-    theta = math.radians(mean_anomaly_deg) + n * t_sec
+    n0 = math.sqrt(MU_EARTH / (a ** 3)) # rad/s
     inc = math.radians(inclination_deg)
-    raan_eff = math.radians(raan_deg) - OMEGA_EARTH * t_sec
+    cos_i = math.cos(inc)
+
+    # Secular J2 nodal precession and mean anomaly correction
+    eta = R_EARTH_KM / a
+    j2_factor = 1.5 * J2_EARTH * (eta ** 2) * n0
+    raan_dot = -j2_factor * cos_i
+    mean_anomaly_dot = n0 * (1.0 + 0.5 * j2_factor * (3.0 * (cos_i ** 2) - 1.0))
+
+    theta = math.radians(mean_anomaly_deg) + mean_anomaly_dot * t_sec
+    raan_eff = math.radians(raan_deg) + (raan_dot - OMEGA_EARTH) * t_sec
 
     # Coordinates in orbital plane
     x_orb = a * math.cos(theta)
@@ -62,7 +86,7 @@ def compute_satellite_position(
 
     # Rotate by inclination
     x1 = x_orb
-    y1 = y_orb * math.cos(inc)
+    y1 = y_orb * cos_i
     z1 = y_orb * math.sin(inc)
 
     # Rotate by effective RAAN into ECEF
@@ -99,18 +123,32 @@ def compute_link_geometry(
     vehicle_paths: Dict[int, List[Any]],
     time_samples: List[float],
     carrier_ghz: float,
-    veh_count: int = 6
+    veh_count: int = 6,
+    results_dir: Optional[Path] = None
 ) -> Optional[Dict[str, Any]]:
     """Ephemeris-derived link geometry between the convoy and the constellation.
 
     For every time sample the geometrically best satellite (maximum elevation
     above the local horizon) is selected per vehicle, and its elevation angle,
     slant range and Doppler shift are computed from the actual propagated
-    coordinates. This is real orbital geometry, not synthesized telemetry:
-    the same numbers a link-budget model would consume at that instant.
+    coordinates.
+
+    When real recorded OMNeT++ vectors exist in results_dir (activeInterface,
+    qosScore, mecTaskLatency), those recorded series are synchronized and
+    associated with the link geometry to ensure 100% mathematical parity with
+    the C++ simulation engine.
     """
     if not sat_positions or not time_samples:
         return None
+
+    # Load recorded series if available in results_dir
+    recorded_series: Dict[str, Any] = {}
+    if results_dir and results_dir.exists():
+        try:
+            from tools.studio import _cached_vector_series
+            recorded_series = _cached_vector_series(results_dir)
+        except Exception:
+            recorded_series = {}
 
     # Pre-compute satellite ECEF tracks aligned with time_samples
     sat_tracks: List[Tuple[str, List[Tuple[float, float, float]]]] = []
@@ -796,7 +834,8 @@ def generate_czml_scene(
         vehicle_paths=vehicle_path_samples,
         time_samples=time_samples,
         carrier_ghz=sat_carrier_ghz,
-        veh_count=min(ue_count, 6)
+        veh_count=min(ue_count, 6),
+        results_dir=output_czml.parent if output_czml.parent.name == 'results' else (output_czml.parent / 'results')
     )
     if link_geometry is not None:
         link_geometry["elevation_mask_deg"] = float(area_cfg.get('elevation_mask_deg', 25.0))

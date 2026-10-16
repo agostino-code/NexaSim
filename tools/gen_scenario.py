@@ -96,7 +96,7 @@ class UserTerminal:
     dual_connectivity: bool = False
 
 class ScenarioGenerator:
-    def __init__(self, config_path: str):
+    def __init__(self, config_path: str, runs: Optional[int] = None):
         with open(config_path, 'r') as f:
             self.config = yaml.safe_load(f)
         
@@ -107,6 +107,7 @@ class ScenarioGenerator:
         self.area = self.scenario.get('area', {})
         self.time = self.scenario.get('time', {})
         self.seed = int(self.scenario.get('seed', 42))
+        self.runs = int(runs if runs is not None else self.scenario.get('runs', 1))
         self.rng = random.Random(self.seed)
         
         self.satellites: List[Satellite] = []
@@ -425,6 +426,7 @@ network GeneratedScenario
         duration = self.time.get('duration_s', 300)
         warmup = self.time.get('warmup_s', 30)
         seed = self.scenario.get('seed', 42)
+        repeat_lines = f"repeat = {self.runs}\nseed-set = ${{repetition}}" if self.runs > 1 else f"seed-set = {seed}"
         
         with open(ini_path, 'w') as f:
             f.write(f"""[General]
@@ -432,7 +434,7 @@ network = {package_name}.GeneratedScenario
 sim-time-limit = {duration}s
 warmup-period = {warmup}s
 rng-class = "cMersenneTwister"
-seed-set = {seed}
+{repeat_lines}
 
 # Constellation Manager
 *.constellationManager.constellationType = "{self.constellation.get('type', 'starlink_shell')}"
@@ -510,6 +512,19 @@ seed-set = {seed}
             )
             rain_rate = self.terrestrial.get('alpine_weather', {}).get('rain_rate_mm_hr', 15.0)
             elev_mask = self.area.get('elevation_mask_deg', 25.0)
+            env_profile = self.area.get('environment_profile') or self.terrestrial.get('environment_profile') or 'suburban'
+            isl_mode = self.constellation.get('isl', {}).get('routing_mode') or self.constellation.get('isl_routing_mode', 'grid_plus')
+            daps_enabled = self.terrestrial.get('ue', {}).get('dual_connectivity', {}).get('daps_enabled', True)
+            ground_mec_mips = self.terrestrial.get('mec_cpu_gflops', 20000.0)
+            sat_mec_mips = self.constellation.get('mec_cpu_gflops', 5000.0)
+
+            f.write(f"*.constellationManager.islRoutingMode = \"{isl_mode}\"\n")
+            f.write(f"*.constellationManager.environmentProfile = \"{env_profile}\"\n")
+
+            azimuth_mask = self.area.get('azimuth_horizon_deg')
+            if azimuth_mask and isinstance(azimuth_mask, list):
+                mask_str = " ".join(str(float(x)) for x in azimuth_mask)
+                f.write(f"*.constellationManager.azimuthHorizonMask = \"{mask_str}\"\n")
 
             blind_spots = self.terrestrial.get('blind_spots', [])
             blind_min_x = 1500.0
@@ -670,12 +685,15 @@ output-scalar-file = "${{resultdir}}/${{configname}}-${{runnumber}}.sca"
 *.node[*].mecClient.taskGenerationInterval = 1.0s
 *.node[*].mecClient.taskInstructions = 10000000
 *.satellite[*].mecServer.localPort = 5000
+*.satellite[*].mecServer.processingSpeedMips = {sat_mec_mips}
 *.groundStation[*].mecServer.localPort = 5000
+*.groundStation[*].mecServer.processingSpeedMips = {ground_mec_mips}
 
 # =========================================================================
 # Multi-RAT Vertical Handover Strategy Configuration (Dynamic & Unambiguous)
 # =========================================================================
 *.node[*].hybridManager.switchingMode = "{switching_mode}"
+*.node[*].hybridManager.makeBeforeBreak = {str(daps_enabled).lower()}
 *.node[*].hybridManager.checkInterval = 0.5s
 *.node[*].hybridManager.elevationMaskDeg = {elev_mask}
 *.node[*].hybridManager.blindSpotMinX = {blind_min_x}
@@ -744,6 +762,7 @@ def main():
     parser.add_argument('config', help='YAML configuration file')
     parser.add_argument('-o', '--output', default='output/scenario', help='Output directory')
     parser.add_argument('--validate', action='store_true', help='Only validate configuration')
+    parser.add_argument('--runs', type=int, default=None, help='Number of Monte Carlo simulation runs (repeat = N)')
     
     args = parser.parse_args()
 
@@ -760,7 +779,7 @@ def main():
             if args.validate:
                 sys.exit(1)
 
-    generator = ScenarioGenerator(args.config)
+    generator = ScenarioGenerator(args.config, runs=args.runs)
     generator.build()
 
     if args.validate:

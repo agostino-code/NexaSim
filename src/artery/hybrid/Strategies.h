@@ -135,6 +135,43 @@ private:
     void evaluatePredictive();
 };
 
+/**
+ * PredictiveMbbStrategy:
+ * 6G/SAGIN Ephemeris and Trajectory Aware Switching Strategy.
+ * Consumes orbital trajectory derivatives (satRemainingVisibility_s, dopplerRate_hz_s)
+ * and vehicle kinematics relative to terrestrial blind-spot zones.
+ * Pre-allocates Make-Before-Break (DAPS Rel-16/17) dual-radio stack when:
+ *   timeToBlindSpot_s < 1.0s OR satRemainingVisibility_s < 2.0s
+ * Preempts link failure, achieving 0 ms HIT and 0 packet loss.
+ * Supports cooperative V2X Sidelink relay when both 5G and LEO are in outage.
+ */
+class PredictiveMbbStrategy : public ISwitchingStrategy {
+private:
+    HybridInterfaceManager* m_manager;
+    omnetpp::cMessage* m_predictTimer;
+    double m_checkInterval;
+    double m_lookaheadTimeS;
+    double m_timeToLossThresholdS;
+    double m_minDwellTimeS;
+    double m_blindSpotMinX;
+    double m_blindSpotMaxX;
+    double m_blindSpotMinY;
+    double m_blindSpotMaxY;
+    omnetpp::simtime_t m_lastSwitchTime;
+
+public:
+    PredictiveMbbStrategy(HybridInterfaceManager* mgr);
+    virtual ~PredictiveMbbStrategy();
+
+    void initialize(int stage) override;
+    void handleMessage(omnetpp::cMessage* msg) override;
+    void finish() override;
+    const char* getStrategyName() const override { return "PredictiveMbb"; }
+
+private:
+    void evaluatePredictiveMbb();
+};
+
 } // namespace hybrid
 } // namespace artery
 

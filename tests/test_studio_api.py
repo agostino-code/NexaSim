@@ -26,6 +26,10 @@ class TestStudioAPI(unittest.TestCase):
     def tearDown(self):
         if self.test_scenario_file.exists():
             self.test_scenario_file.unlink(missing_ok=True)
+        from tools.nexasim import resolve_generated_dir
+        gen_dir = resolve_generated_dir(self.test_scenario_id)
+        if gen_dir.exists():
+            shutil.rmtree(gen_dir, ignore_errors=True)
 
     def test_get_scenarios_list(self):
         """Tests GET /api/scenarios returns available scenarios with metadata."""
@@ -101,6 +105,12 @@ scenario:
         content = self.test_scenario_file.read_text(encoding='utf-8')
         self.assertIn("test_auto_scenario_temp", content)
 
+        # Verify generated scenario directory and omnetpp.ini are immediately synchronized
+        from tools.nexasim import resolve_generated_dir
+        gen_dir = resolve_generated_dir(self.test_scenario_id)
+        self.assertTrue((gen_dir / "omnetpp.ini").exists())
+        self.assertTrue((gen_dir / "scenario.ned").exists())
+
     def test_post_save_invalid_yaml_syntax(self):
         """Tests POST /api/save rejects malformed YAML syntax."""
         payload = {
@@ -134,14 +144,10 @@ scenario:
         self.assertIn("started_at", status)
 
     def test_static_studio_assets_are_served(self):
-        """Studio serves CSS and JavaScript as separate static assets."""
-        css_response = self.client.get("/assets/studio.css")
-        js_response = self.client.get("/assets/studio.js")
-
-        self.assertEqual(css_response.status_code, 200)
-        self.assertEqual(js_response.status_code, 200)
-        self.assertIn("--bg-base", css_response.text)
-        self.assertIn("function boot", js_response.text)
+        """Studio serves compiled React assets or studio index."""
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("NexaSim Studio", response.text)
 
     def test_simulation_log_buffer_is_bounded(self):
         """The in-memory log buffer must not grow without limit."""
@@ -232,6 +238,21 @@ scenario:
             self.assertEqual(data["type"], "telemetry")
             self.assertIn("throughput_mbps", data)
             self.assertIn("latency_ms", data)
+
+    def test_get_fleet_timeline_and_compare_endpoints(self):
+        """Tests /api/fleet_timeline and /api/compare endpoints."""
+        res_tl = self.client.get("/api/fleet_timeline?name=stelvio_pass_hybrid")
+        self.assertEqual(res_tl.status_code, 200)
+        data_tl = res_tl.json()
+        self.assertIn("scenario", data_tl)
+        self.assertIn("timestamps", data_tl)
+        self.assertIn("vehicles_timeline", data_tl)
+
+        res_cmp = self.client.get("/api/compare?name=stelvio_pass_hybrid")
+        self.assertEqual(res_cmp.status_code, 200)
+        data_cmp = res_cmp.json()
+        self.assertIn("available", data_cmp)
+        self.assertIn("scenario", data_cmp)
 
 
 if __name__ == '__main__':

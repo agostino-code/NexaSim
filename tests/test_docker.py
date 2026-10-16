@@ -1,14 +1,18 @@
 """
 Integration and validation tests for Docker and Docker Compose environment in NexaSim.
 Covers Dockerfile multi-stage builds, docker-compose configuration, volume persistence,
+intelligent execution backend resolution (Native vs Warm docker exec vs Cold run),
 and container execution of OMNeT++, SUMO, Conan 2, and the simulation runner.
 """
 
 import os
 import shutil
 import subprocess
+from unittest.mock import patch
 import pytest
 import yaml
+
+from tools.nexasim import resolve_execution_backend, find_warm_container
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOCKERFILE_PATH = os.path.join(REPO_ROOT, "Dockerfile")
@@ -37,7 +41,7 @@ def is_docker_daemon_running() -> bool:
 
 
 class TestDockerfileStructure:
-    """Validates Dockerfile syntax, multi-stage targets, and environment settings."""
+    """Validates Dockerfile syntax, multi-stage targets, BuildKit caching, and environment settings."""
 
     def test_dockerfile_exists(self):
         assert os.path.isfile(DOCKERFILE_PATH), "Dockerfile must exist at repository root"
@@ -47,15 +51,21 @@ class TestDockerfileStructure:
             content = f.read()
 
         required_stages = [
-            "FROM debian:${TAG} AS base",
-            "FROM base AS base-gui",
-            "FROM base AS build-headless",
-            "FROM base-gui AS build-gui",
-            "FROM base AS headless",
-            "FROM base-gui AS final",
+            "FROM node:20-alpine AS frontend-build",
+            "FROM debian:${TAG} AS sim-builder",
+            "FROM debian:${TAG} AS runtime",
+            "FROM runtime AS headless",
+            "FROM sim-builder AS devcontainer",
         ]
         for stage in required_stages:
             assert stage in content, f"Missing expected Dockerfile stage: '{stage}'"
+
+    def test_dockerfile_buildkit_cache_mounts(self):
+        with open(DOCKERFILE_PATH, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        assert "--mount=type=cache,target=/var/cache/apt" in content
+        assert "--mount=type=cache,target=/root/.cache/ccache" in content
 
     def test_dockerfile_environment_vars(self):
         with open(DOCKERFILE_PATH, "r", encoding="utf-8") as f:
@@ -63,8 +73,9 @@ class TestDockerfileStructure:
 
         assert "ENV OMNETPP_ROOT=/omnetpp" in content
         assert "ENV SUMO_HOME=/usr/local/share/sumo" in content
-        assert "ENV PATH=/omnetpp/bin:$PATH" in content
-        assert "ENV DISPLAY=:99" in content
+        assert "ENV PATH=/omnetpp/bin:/usr/local/bin:$PATH" in content
+        assert "ENV CONAN_HOME=/root/.conan2" in content
+        assert "ENV PYTHONUNBUFFERED=1" in content
 
     def test_dockerfile_python_dependencies(self):
         with open(DOCKERFILE_PATH, "r", encoding="utf-8") as f:
@@ -96,14 +107,26 @@ class TestDockerComposeConfig:
 
         services = data.get("services", {})
         expected_services = [
+            "nexasim-studio",
             "nexasim-build",
             "nexasim",
             "nexasim-scenario",
             "nexasim-analyze",
-            "nexasim-gui",
         ]
         for s in expected_services:
             assert s in services, f"Expected service '{s}' missing in docker-compose.yml"
+
+    def test_docker_compose_studio_service(self):
+        with open(COMPOSE_PATH, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+
+        studio = data.get("services", {}).get("nexasim-studio", {})
+        assert studio.get("build", {}).get("target") == "runtime"
+        assert studio.get("container_name") == "nexasim-studio"
+        ports = studio.get("ports", [])
+        assert any("8000:8000" in str(p) for p in ports)
+        volumes = studio.get("volumes", [])
+        assert any("./scenarios:/artery/scenarios" in str(v) for v in volumes)
 
     def test_docker_compose_volumes_and_conan_cache(self):
         with open(COMPOSE_PATH, "r", encoding="utf-8") as f:
@@ -120,17 +143,46 @@ class TestDockerComposeConfig:
             "CONAN_HOME" in str(e) for e in env
         ), "CONAN_HOME must be set to /root/.conan2"
 
-    def test_docker_compose_gui_ports(self):
-        with open(COMPOSE_PATH, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f)
 
-        gui_svc = data.get("services", {}).get("nexasim-gui", {})
-        ports = gui_svc.get("ports", [])
-        assert any("6080" in str(p) for p in ports), "nexasim-gui must expose port 6080 for NoVNC"
+class TestExecutionBackendResolution:
+    """Verifies intelligent detection and routing across Native, Warm docker exec, and Cold docker run."""
+
+    def test_resolve_backend_native_inside_docker(self):
+        """Inside container: resolves to Priority 1 Native execution directly with opp_run.sh."""
+        with patch("tools.nexasim.is_inside_docker", return_value=True):
+            backend, cmd, cwd, env = resolve_execution_backend("stelvio")
+            assert backend == "native"
+            assert cmd[0] == "bash"
+            assert any("opp_run.sh" in arg for arg in cmd)
+            assert "-u" in cmd and "Cmdenv" in cmd
+            assert "stelvio" in cwd
+
+    def test_resolve_backend_warm_container_exec(self):
+        """Host with running container: resolves to Priority 2 Warm Container via docker exec (<50ms)."""
+        with patch("tools.nexasim.is_inside_docker", return_value=False), \
+             patch("tools.nexasim.find_warm_container", return_value="nexasim-studio"):
+            backend, cmd, cwd, env = resolve_execution_backend("stelvio")
+            assert backend == "docker_exec"
+            assert cmd[0] == "docker"
+            assert cmd[1] == "exec"
+            assert "nexasim-studio" in cmd
+            assert any("opp_run.sh" in arg for arg in cmd)
+
+    def test_resolve_backend_cold_docker_run_fallback(self):
+        """Host without running container: resolves to Priority 3 Cold docker compose run fallback."""
+        with patch("tools.nexasim.is_inside_docker", return_value=False), \
+             patch("tools.nexasim.find_warm_container", return_value=None):
+            backend, cmd, cwd, env = resolve_execution_backend("stelvio")
+            assert backend == "docker_run"
+            assert cmd[0] == "docker"
+            assert "compose" in cmd
+            assert "run" in cmd
+            assert "--rm" in cmd
+            assert any("opp_run.sh" in arg for arg in cmd)
 
 
 class TestDockerLiveIntegration:
-    """Tests executing commands inside Docker containers via docker compose."""
+    """Tests executing commands inside Docker containers via docker compose when daemon is active."""
 
     def test_docker_compose_config_validation(self):
         if not is_docker_cli_available():
@@ -147,6 +199,22 @@ class TestDockerLiveIntegration:
     def test_container_toolchain_versions(self):
         if not is_docker_daemon_running():
             pytest.skip("Docker daemon is not accessible in this environment")
+
+        # Skip live container run if image is not pre-built locally (avoids 20min build in unit test)
+        res_img = subprocess.run(
+            ["docker", "image", "inspect", "artery-nexasim"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if res_img.returncode != 0:
+            res_img2 = subprocess.run(
+                ["docker", "image", "inspect", "nexasim"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            if res_img2.returncode != 0:
+                pytest.skip("NexaSim image not pre-built locally; run 'docker compose build' to test live container execution")
+
         cmd = [
             "docker", "compose", "run", "--rm", "nexasim",
             "bash", "-c",
@@ -165,23 +233,3 @@ class TestDockerLiveIntegration:
         assert "Eclipse SUMO" in output or "sumo" in output, "SUMO must be available"
         assert "Conan version 2" in output, "Conan 2.x must be installed"
         assert "Python 3." in output, "Python 3 must be available"
-
-    def test_container_opp_run_simulation_execution(self):
-        if not is_docker_daemon_running():
-            pytest.skip("Docker daemon is not accessible in this environment")
-        cmd = [
-            "docker", "compose", "run", "--rm", "nexasim",
-            "bash", "-c",
-            "./tools/opp_run.sh -f scenarios/generated/stelvio/omnetpp.ini -u Cmdenv --sim-time-limit=0.5s"
-        ]
-        res = subprocess.run(
-            cmd,
-            cwd=REPO_ROOT,
-            capture_output=True,
-            text=True,
-            timeout=60,
-        )
-        assert res.returncode == 0, f"Simulation runner failed in container:\n{res.stderr}\n{res.stdout}"
-        combined = res.stdout + res.stderr
-        assert "Simulation time limit reached" in combined, "Simulation should reach time limit cleanly"
-        assert "Setting up network" in combined

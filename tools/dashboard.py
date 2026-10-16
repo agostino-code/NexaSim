@@ -48,7 +48,9 @@ def parse_vector_file(vec_file: Path) -> Dict[str, Dict[str, Dict[str, Any]]]:
 
     target_metrics = {
         'activeInterface', 'switchCount', 'qosScore',
-        'batterySoC', 'mecTaskLatency', 'datarateSelected'
+        'batterySoC', 'mecTaskLatency', 'datarateSelected',
+        'elevation', 'slantRangeKm', 'dopplerShiftKhz',
+        'carrierFrequencyGhz', 'headingDeg'
     }
 
     with open(vec_path, 'r', encoding='utf-8', errors='ignore') as f:
@@ -123,7 +125,9 @@ def parse_csv_file(csv_file: Path) -> Dict[str, Dict[str, Dict[str, Any]]]:
 
     target_metrics = {
         'activeInterface', 'switchCount', 'qosScore',
-        'batterySoC', 'mecTaskLatency', 'datarateSelected'
+        'batterySoC', 'mecTaskLatency', 'datarateSelected',
+        'elevation', 'slantRangeKm', 'dopplerShiftKhz',
+        'carrierFrequencyGhz', 'headingDeg'
     }
 
     with open(csv_file, 'r', encoding='utf-8', errors='ignore') as f:
@@ -209,9 +213,14 @@ def parse_scalar_rat_map(sca_file: Path) -> Dict[int, str]:
                     value = float(m.group(2))
                 except ValueError:
                     continue
-                if not math.isfinite(value) or not 0.0 <= value <= 1.0:
+                if not math.isfinite(value) or not 0.0 <= value <= 2.0:
                     continue
-                rat_map[int(mn.group(1))] = 'LEO' if value >= 0.5 else '5G'
+                if value >= 1.5:
+                    rat_map[int(mn.group(1))] = 'V2X'
+                elif value >= 0.5:
+                    rat_map[int(mn.group(1))] = 'LEO'
+                else:
+                    rat_map[int(mn.group(1))] = '5G'
     except OSError:
         return {}
     return rat_map

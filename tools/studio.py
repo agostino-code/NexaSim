@@ -269,17 +269,60 @@ def _battery_pct(raw: Optional[float]) -> Optional[float]:
     return round(raw * 100.0, 2) if raw <= 1.0 else raw
 
 
+# Incremental Live Telemetry Streaming (O(1) seek offset)
+_LIVE_STREAM_OFFSETS: Dict[str, int] = {}
+_LAST_LIVE_FRAMES: Dict[str, Dict[str, Any]] = {}
+
+def read_incremental_live_stream(results_dir: Path) -> Optional[Dict[str, Any]]:
+    """O(1) tail of live_stream.jsonl emitted during simulation.
+    Reads only newly appended bytes since last read, without reparsing large .vec files.
+    """
+    stream_file = results_dir / "live_stream.jsonl"
+    if not stream_file.is_file():
+        return None
+    key = str(stream_file.resolve())
+    last_offset = _LIVE_STREAM_OFFSETS.get(key, 0)
+    try:
+        size = stream_file.stat().st_size
+        if size <= last_offset:
+            # No new data appended
+            return _LAST_LIVE_FRAMES.get(key)
+        
+        last_valid_frame = None
+        with open(stream_file, 'r', encoding='utf-8') as f:
+            f.seek(last_offset)
+            for line in f:
+                line = line.strip()
+                if line:
+                    try:
+                        last_valid_frame = json.loads(line)
+                    except Exception:
+                        pass
+            _LIVE_STREAM_OFFSETS[key] = f.tell()
+        
+        if last_valid_frame:
+            _LAST_LIVE_FRAMES[key] = last_valid_frame
+            return last_valid_frame
+    except Exception:
+        pass
+    return _LAST_LIVE_FRAMES.get(key)
+
+
 def build_live_telemetry_frame(scenario_name: str, sim_time: Optional[float] = None) -> Optional[Dict[str, Any]]:
     """Build a live telemetry frame at sim_time from recorded vectors/KPIs.
 
-    Only genuinely recorded values are reported: missing metrics become None
-    (rendered as "not recorded" by the Studio) instead of synthesized defaults.
-    ``sim_time=None`` returns the latest recorded state. Returns None when the
-    scenario has no recordings at all.
+    Prioritizes O(1) incremental live_stream.jsonl if present; falls back to
+    cached vector interpolation. Only genuinely recorded values are reported.
     """
     from tools.nexasim import resolve_generated_dir
     target_dir = resolve_generated_dir(scenario_name)
     results_dir = target_dir / 'results'
+
+    # Check for incremental live stream first (O(1) streaming)
+    live_stream_frame = read_incremental_live_stream(results_dir)
+    if live_stream_frame and sim_time is None:
+        return live_stream_frame
+
     series = _cached_vector_series(results_dir)
 
     kpi_file = results_dir / 'kpi_summary.json'
@@ -312,7 +355,7 @@ def build_live_telemetry_frame(scenario_name: str, sim_time: Optional[float] = N
         latency_raw = _value_at(metrics, 'mecTaskLatency', sim_time)
         latency_typical = _median_of(_series_points(metrics, 'mecTaskLatency'))
 
-        active_rat = None if active_raw is None else ("LEO" if active_raw >= 0.5 else "5G")
+        active_rat = None if active_raw is None else ("V2X" if active_raw >= 1.5 else ("LEO" if active_raw >= 0.5 else "5G"))
         if active_rat is None:
             # Fallback: dominant link from the recorded hybridManager usage
             # ratio scalars (run aggregate) — recorded data, never guessed.
@@ -331,6 +374,12 @@ def build_live_telemetry_frame(scenario_name: str, sim_time: Optional[float] = N
             "vho_count": int(switch_raw) if switch_raw is not None else None,
             "active_rat": active_rat,
             "in_blind": False,
+            "elevation_deg": _value_at(metrics, 'elevation', sim_time),
+            "slant_range_km": _value_at(metrics, 'slantRangeKm', sim_time),
+            "doppler_khz": _value_at(metrics, 'dopplerShiftKhz', sim_time),
+            "carrier_ghz": _value_at(metrics, 'carrierFrequencyGhz', sim_time),
+            "heading_deg": _value_at(metrics, 'headingDeg', sim_time),
+            "last_updated_s": sim_time,
         })
 
     # Without per-vehicle vectors, expose the KPI scalars as a single aggregate row
@@ -488,13 +537,14 @@ class NodeDeleteRequest(BaseModel):
 
 # HTML rendering
 def render_studio_html() -> str:
-    if (STUDIO_DIST_DIR / 'index.html').exists():
-        with open(STUDIO_DIST_DIR / 'index.html', 'r', encoding='utf-8') as f:
-            content = f.read()
-    else:
-        html_file = Path(__file__).resolve().parent / 'studio.html'
+    html_file = STUDIO_DIST_DIR / 'index.html'
+    if not html_file.exists():
+        html_file = REPO_ROOT / 'studio' / 'index.html'
+    if html_file.exists():
         with open(html_file, 'r', encoding='utf-8') as f:
             content = f.read()
+    else:
+        content = "<!doctype html><html><head><title>NexaSim Studio</title></head><body><h1>NexaSim Studio Enterprise</h1><p>Please compile the React Studio: 'cd studio && npm run build'</p></body></html>"
 
     carto_key = os.environ.get('CARTO_API_KEY', '')
     content = content.replace('__CARTO_API_KEY__', carto_key)
@@ -618,21 +668,9 @@ async def get_results(name: str):
         "globe_url": f"/results/{short_name}/results/globe.html" if has_globe else None
     }
 
-@app.get("/api/telemetry")
-async def get_telemetry(name: str):
-    """Fleet-aggregated timeseries for the dashboard charts (real units).
-
-    Throughput is converted to Mbps, MEC latency to ms, QoS is the fleet mean,
-    and handover events are derived from observed interface transitions
-    (falling back to the scalar KPI total when only summary data exists).
-    Unrecorded metrics are returned as null entries, never synthesized.
-    """
-    from tools.nexasim import resolve_generated_dir
-
-    target_dir = resolve_generated_dir(name)
-    results_dir = target_dir / 'results'
+def build_telemetry_payload(results_dir: Path) -> Dict[str, Any]:
+    """Build fleet-aggregated timeseries for the dashboard charts."""
     series = _cached_vector_series(results_dir)
-
     kpi_file = results_dir / 'kpi_summary.json'
     kpis: Dict[str, Any] = {}
     if kpi_file.exists():
@@ -643,7 +681,6 @@ async def get_telemetry(name: str):
             kpis = {}
 
     if series:
-        # Master timeline: the richest per-time axis actually recorded
         master: List[float] = []
         for metric in ('datarateSelected', 'activeInterface', 'qosScore', 'switchCount', 'mecTaskLatency'):
             axis = set()
@@ -749,6 +786,15 @@ async def get_telemetry(name: str):
         "qos_score": [float(kpis['mean_qos_score']) if kpis.get('mean_qos_score') is not None else None],
     }
 
+
+@app.get("/api/telemetry")
+async def get_telemetry(name: str):
+    """Fleet-aggregated timeseries for the dashboard charts (real units)."""
+    from tools.nexasim import resolve_generated_dir
+    target_dir = resolve_generated_dir(name)
+    results_dir = target_dir / 'results' if (target_dir / 'results').exists() else target_dir
+    return build_telemetry_payload(results_dir)
+
 @app.get("/api/fleet")
 async def get_fleet(name: str, t: Optional[float] = None):
     """Latest per-vehicle telemetry snapshot for the Fleet Matrix table."""
@@ -760,6 +806,127 @@ async def get_fleet(name: str, t: Optional[float] = None):
         "sim_time": frame.get("sim_time"),
         "active_rat": frame.get("active_rat"),
         "vehicles": frame.get("vehicles", []),
+    }
+
+@app.get("/api/fleet_timeline")
+async def get_fleet_timeline(name: str, max_points: int = 150):
+    """Sampled per-vehicle timeline entries for time-machine scrubbing."""
+    from tools.nexasim import resolve_generated_dir
+    target_dir = resolve_generated_dir(name)
+    results_dir = target_dir / 'results' if (target_dir / 'results').exists() else target_dir
+    series = _cached_vector_series(results_dir)
+    if not series:
+        return {"scenario": name, "timestamps": [], "vehicles_timeline": {}}
+
+    all_times = set()
+    for node_label, metrics in series.items():
+        for mname in ('activeInterface', 'speedKmh', 'mecTaskLatency', 'qosScore', 'batterySoC', 'elevation'):
+            pts = _series_points(metrics, mname)
+            for pt_t, _ in pts:
+                all_times.add(round(pt_t, 2))
+
+    sorted_times = sorted(all_times)
+    if not sorted_times:
+        return {"scenario": name, "timestamps": [], "vehicles_timeline": {}}
+
+    if len(sorted_times) > max_points:
+        step = len(sorted_times) / max_points
+        sampled_times = [sorted_times[int(i * step)] for i in range(max_points)]
+        if sorted_times[-1] not in sampled_times:
+            sampled_times.append(sorted_times[-1])
+    else:
+        sampled_times = sorted_times
+
+    vehicles_timeline: Dict[str, List[Dict[str, Any]]] = {}
+    scalar_rat = _scalar_rat_map(results_dir)
+
+    for node_label in sorted(series.keys(), key=_vehicle_sort_key):
+        metrics = series[node_label]
+        vidx = 0
+        parts = node_label.split()
+        if len(parts) >= 2 and parts[1].isdigit():
+            vidx = int(parts[1])
+
+        lat_samples = [v for _, v in _series_points(metrics, 'mecTaskLatency')]
+        latency_typical = statistics.median(lat_samples) if lat_samples else None
+        node_timeline = []
+
+        for st in sampled_times:
+            active_raw = _value_at(metrics, 'activeInterface', st)
+            active_rat = None if active_raw is None else ("V2X" if active_raw >= 1.5 else ("LEO" if active_raw >= 0.5 else "5G"))
+            if active_rat is None:
+                active_rat = scalar_rat.get(vidx)
+
+            latency_raw = _value_at(metrics, 'mecTaskLatency', st)
+            switch_raw = _value_at(metrics, 'switchCount', st)
+
+            node_timeline.append({
+                "t": st,
+                "speed_kmh": _value_at(metrics, 'speedKmh', st),
+                "throughput_mbps": _datarate_mbps(_value_at(metrics, 'datarateSelected', st)),
+                "mec_latency_ms": _mec_latency_ms(latency_raw, latency_typical),
+                "qos_score": _value_at(metrics, 'qosScore', st),
+                "battery_soc_pct": _battery_pct(_value_at(metrics, 'batterySoC', st)),
+                "vho_count": int(switch_raw) if switch_raw is not None else None,
+                "active_rat": active_rat,
+                "elevation_deg": _value_at(metrics, 'elevation', st),
+                "slant_range_km": _value_at(metrics, 'slantRangeKm', st),
+                "doppler_khz": _value_at(metrics, 'dopplerShiftKhz', st),
+                "carrier_ghz": _value_at(metrics, 'carrierFrequencyGhz', st),
+                "heading_deg": _value_at(metrics, 'headingDeg', st)
+            })
+        vehicles_timeline[str(vidx)] = node_timeline
+
+    return {
+        "scenario": name,
+        "timestamps": sampled_times,
+        "vehicles_timeline": vehicles_timeline
+    }
+
+@app.get("/api/compare")
+async def get_compare(name: str):
+    """
+    Returns comparative benchmark run (e.g. baseline or alternative strategy) for A/B comparison.
+    """
+    from tools.nexasim import resolve_generated_dir
+    target_dir = resolve_generated_dir(name)
+    results_dir = target_dir / 'results' if (target_dir / 'results').exists() else target_dir
+
+    # 1. Direct compare baseline JSON if saved
+    compare_file = results_dir / 'compare_baseline.json'
+    if compare_file.exists():
+        try:
+            with open(compare_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            pass
+
+    # 2. Check for alternative baseline / comparative directories
+    parent = target_dir.parent
+    baseline_dirs = list(parent.glob(f"{target_dir.name}_baseline*")) + list(parent.glob(f"{name}_baseline*"))
+    for b_dir in baseline_dirs:
+        b_res = b_dir / 'results' if (b_dir / 'results').exists() else b_dir
+        b_kpi_file = b_res / 'kpi_summary.json'
+        if b_kpi_file.exists():
+            try:
+                with open(b_kpi_file, 'r', encoding='utf-8') as f:
+                    b_kpis = json.load(f)
+                return {
+                    "available": True,
+                    "scenario": name,
+                    "baseline_strategy": "Coverage-Based (Hard VHO)",
+                    "kpis": b_kpis,
+                    "telemetry": build_telemetry_payload(b_res)
+                }
+            except Exception:
+                pass
+
+    return {
+        "available": False,
+        "scenario": name,
+        "baseline_strategy": None,
+        "kpis": None,
+        "telemetry": None
     }
 
 @app.get("/api/route")
@@ -804,6 +971,17 @@ async def post_save(req: SaveRequest):
 
     with open(target_file, 'w', encoding='utf-8') as f:
         f.write(content_to_write)
+
+    # Immediately synchronize generated scenario files (scenario.ned, omnetpp.ini, constellation.tle)
+    try:
+        from tools.nexasim import resolve_generated_dir
+        from tools.gen_scenario import ScenarioGenerator
+        out_dir = resolve_generated_dir(req.id)
+        gen = ScenarioGenerator(str(target_file))
+        gen.generate(str(out_dir))
+    except Exception as e:
+        print(f"[!] Warning: Auto-regenerating scenario '{req.id}' failed: {e}")
+
     return {"status": "saved", "path": str(target_file)}
 
 @app.post("/api/scenario/node/delete")
@@ -854,6 +1032,16 @@ async def post_delete_node(req: NodeDeleteRequest):
 
     with open(target_file, 'w', encoding='utf-8') as f:
         yaml.dump(doc, f, sort_keys=False, default_flow_style=False)
+
+    # Immediately synchronize generated scenario files after node deletion
+    try:
+        from tools.nexasim import resolve_generated_dir
+        from tools.gen_scenario import ScenarioGenerator
+        out_dir = resolve_generated_dir(req.id)
+        gen = ScenarioGenerator(str(target_file))
+        gen.generate(str(out_dir))
+    except Exception as e:
+        print(f"[!] Warning: Auto-regenerating scenario '{req.id}' failed after node delete: {e}")
 
     return {"status": "deleted", "type": req.type, "name": req.name}
 
@@ -963,7 +1151,7 @@ async def websocket_telemetry(websocket: WebSocket):
 
 def run_simulation_worker(scenario_id: str, run_id: Optional[str] = None):
     """Background worker to run simulation, record terminal logs and trigger KPI analysis."""
-    from tools.nexasim import resolve_scenario_yaml, resolve_generated_dir, is_inside_docker
+    from tools.nexasim import resolve_scenario_yaml, resolve_generated_dir, is_inside_docker, resolve_execution_backend
 
     proc = None
     exit_code = -1
@@ -980,23 +1168,10 @@ def run_simulation_worker(scenario_id: str, run_id: Optional[str] = None):
             gen = ScenarioGenerator(str(yaml_path))
             gen.generate(str(out_dir))
 
-        in_docker = is_inside_docker()
-        if in_docker:
-            cmd = ['bash', '/artery/tools/opp_run.sh', '-f', f"/artery/scenarios/generated/{short_name}/omnetpp.ini", '-u', 'Cmdenv']
-            cwd = str(out_dir)
-            env = os.environ.copy()
-        else:
-            cmd = [
-                'docker', 'compose', 'run', '--rm',
-                '-w', f"/artery/scenarios/generated/{short_name}",
-                'nexasim', 'bash', '/artery/tools/opp_run.sh', '-f', f"/artery/scenarios/generated/{short_name}/omnetpp.ini", '-u', 'Cmdenv'
-            ]
-            cwd = str(REPO_ROOT)
-            env = os.environ.copy()
-            env['MSYS_NO_PATHCONV'] = '1'
+        backend_type, cmd, cwd, env = resolve_execution_backend(short_name)
 
         with SIM_LOCK:
-            append_sim_log(f"[*] Dispatching simulation for '{scenario_id}'...")
+            append_sim_log(f"[*] Dispatching simulation for '{scenario_id}' (Backend: {backend_type})...")
 
         proc = subprocess.Popen(
             cmd,
@@ -1060,20 +1235,10 @@ if not GENERATED_DIR.exists():
     os.makedirs(GENERATED_DIR, exist_ok=True)
 app.mount("/results", StaticFiles(directory=str(GENERATED_DIR)), name="results")
 
-# Legacy Studio assets stay reachable even when the modern React build is
-# mounted below, so both front-ends can coexist (and tooling/tests keep working).
-@app.get("/assets/studio.css", include_in_schema=False)
-async def legacy_studio_css():
-    return FileResponse(STATIC_DIR / "studio.css", media_type="text/css")
-
-@app.get("/assets/studio.js", include_in_schema=False)
-async def legacy_studio_js():
-    return FileResponse(STATIC_DIR / "studio.js", media_type="application/javascript")
-
-# Support modern React production assets if compiled, otherwise fallback to tools/static
+# Production React Studio assets
 if (STUDIO_DIST_DIR / 'assets').exists():
     app.mount("/assets", StaticFiles(directory=str(STUDIO_DIST_DIR / 'assets')), name="assets")
-else:
+elif STATIC_DIR.exists():
     app.mount("/assets", StaticFiles(directory=str(STATIC_DIR)), name="assets")
 
 def start_studio_server(port: int = 8080, host: str = '127.0.0.1', open_browser: bool = False):

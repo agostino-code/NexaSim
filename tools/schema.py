@@ -29,6 +29,8 @@ class AreaConfig(StrictModel):
     altitude_m: Optional[float] = Field(0.0, description="Mean reference altitude in meters")
     bbox: List[float] = Field(..., min_length=4, max_length=4, description="[min_lon, min_lat, max_lon, max_lat]")
     elevation_mask_deg: Optional[float] = Field(15.0, ge=0.0, le=90.0, description="Orographic terrain elevation mask in degrees")
+    azimuth_horizon_deg: Optional[List[float]] = Field(None, description="Azimuthal elevation mask profile (e.g. 8 or 36 sectors) in degrees")
+    environment_profile: Optional[str] = Field("suburban", description="3GPP propagation profile: urban, suburban, rural, alpine")
 
     @field_validator('bbox')
     @classmethod
@@ -64,6 +66,8 @@ class ISLConfig(StrictModel):
     rx_sensitivity_dbm: Optional[float] = Field(-40.0, description="Receiver sensitivity threshold in dBm")
     pointing_accuracy_deg: Optional[float] = Field(0.01, ge=0, description="Pointing accuracy PAT in degrees")
     acquisition_time_ms: Optional[float] = Field(80.0, ge=0, description="Beam acquisition time in ms")
+    routing_mode: Optional[str] = Field("grid_plus", description="ISL routing topology: grid_plus, shortest_path, all_pairs")
+    switching_delay_ms: Optional[float] = Field(0.050, ge=0, description="Optical switching / OEO delay per hop in ms")
 
 class GroundStationConfig(StrictModel):
     name: str = Field(..., description="Ground Station identifier")
@@ -84,6 +88,8 @@ class ConstellationConfig(StrictModel):
     walkerInclinationDeg: Optional[float] = None
     isl: Optional[ISLConfig] = Field(default_factory=ISLConfig)
     ground_stations: Optional[List[GroundStationConfig]] = Field(default_factory=list)
+    mec_cpu_gflops: Optional[float] = Field(None, description="Satellite onboard edge computing capacity in GFLOPS / MIPS")
+    isl_routing_mode: Optional[str] = Field(None, description="ISL routing topology")
 
 class GNBSiteConfig(StrictModel):
     name: str = Field(..., description="Base station identifier")
@@ -137,6 +143,8 @@ class DualConnectivityConfig(StrictModel):
     primary_rat: Optional[str] = Field("terrestrial_5g")
     fallback_rat: Optional[str] = Field("satellite_ntn")
     seamless_failover: Optional[bool] = Field(True)
+    daps_enabled: Optional[bool] = Field(True, description="Enable 3GPP Rel-16/17 Dual Active Protocol Stack (Make-Before-Break)")
+    make_before_break: Optional[bool] = Field(True, description="Make-Before-Break handover")
 
 class UEConfig(StrictModel):
     count: int = Field(..., ge=1, description="Number of simulated vehicles / user terminals")
@@ -150,10 +158,14 @@ class TerrestrialConfig(StrictModel):
     gnb: Optional[GNBDeploymentConfig] = None
     blind_spots: Optional[List[BlindSpotConfig]] = Field(default_factory=list)
     channel_model: Optional[str] = Field("RMa")
+    environment_profile: Optional[str] = Field(None, description="3GPP propagation profile: urban, suburban, rural, alpine")
     ue: Optional[UEConfig] = None
     integration: Optional[Dict[str, Any]] = None
     alpine_weather: Optional[Dict[str, Any]] = None
     core_network: Optional[Dict[str, Any]] = None
+    mec_cpu_gflops: Optional[float] = Field(None, description="MEC Edge server compute capacity in GFLOPS / MIPS")
+    carrier_aggregation: Optional[Dict[str, Any]] = None
+    switching_mode: Optional[str] = None
 
 class IncidentConfig(StrictModel):
     enabled: bool = Field(False)

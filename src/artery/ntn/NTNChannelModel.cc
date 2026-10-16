@@ -7,6 +7,154 @@
 namespace artery {
 namespace ntn {
 
+namespace {
+// 3GPP TR 38.811 Elevation evaluation grid
+constexpr double ELEV_GRID[6] = {10.0, 20.0, 30.0, 50.0, 70.0, 90.0};
+
+double interpolateTable6(const double xGrid[6], const double yGrid[6], double x) {
+    if (x <= xGrid[0]) return yGrid[0];
+    if (x >= xGrid[5]) return yGrid[5];
+    for (int i = 0; i < 5; ++i) {
+        if (x >= xGrid[i] && x <= xGrid[i + 1]) {
+            double frac = (x - xGrid[i]) / (xGrid[i + 1] - xGrid[i]);
+            return yGrid[i] + frac * (yGrid[i + 1] - yGrid[i]);
+        }
+    }
+    return yGrid[5];
+}
+}
+
+double NTNChannelModel::besselJ1(double x) {
+    if (std::abs(x) < 1e-12) {
+        return 0.0;
+    }
+    double ans = 0.0;
+    double term = x / 2.0;
+    double x2_4 = (x * x) / 4.0;
+    for (int m = 0; m < 25; ++m) {
+        ans += term;
+        term = -term * x2_4 / ((m + 1) * (m + 2));
+        if (std::abs(term) < 1e-15) {
+            break;
+        }
+    }
+    return ans;
+}
+
+double NTNChannelModel::calculateBesselAntennaGain(
+    double offBoresightDeg, double maxGainDbi, double apertureDiameterM, double frequencyGhz) {
+
+    double lambdaM = 0.299792458 / std::max(0.1, frequencyGhz);
+    double psiRad = std::abs(offBoresightDeg) * M_PI / 180.0;
+    double u = M_PI * (apertureDiameterM / lambdaM) * std::sin(psiRad);
+
+    if (std::abs(u) < 1e-5) {
+        return maxGainDbi;
+    }
+
+    double ratio = 2.0 * besselJ1(u) / u;
+    double patternPower = ratio * ratio;
+    double relGainDb = (patternPower > 1e-5) ? 10.0 * std::log10(patternPower) : -50.0;
+
+    // Floor relative sidelobes at -35 dB per 3GPP TR 38.811
+    relGainDb = std::max(-35.0, relGainDb);
+    return maxGainDbi + relGainDb;
+}
+
+double NTNChannelModel::calculateClutterLoss(double elevationDeg, FrequencyBand band, Environment env, bool isLOS) {
+    if (isLOS) return 0.0; // Clutter loss is 0 dB in LOS per 3GPP TR 38.811 Section 6.6.2
+
+    double elev = std::clamp(elevationDeg, 10.0, 90.0);
+
+    // 3GPP TR 38.811 Table 6.6.2-2 (Ka-Band / high frequencies >= 6 GHz)
+    if (band == FrequencyBand::KA_BAND || band == FrequencyBand::Q_V_BAND || band == FrequencyBand::W_BAND || band == FrequencyBand::KU_BAND) {
+        if (env == Environment::URBAN || env == Environment::TROPICAL) {
+            constexpr double clKaUrban[6] = {34.3, 27.2, 21.0, 15.5, 12.0, 10.0};
+            return interpolateTable6(ELEV_GRID, clKaUrban, elev);
+        } else if (env == Environment::SUBURBAN) {
+            constexpr double clKaSuburban[6] = {28.5, 21.6, 16.2, 11.0, 8.0, 6.0};
+            return interpolateTable6(ELEV_GRID, clKaSuburban, elev);
+        } else {
+            // Rural / Desert / Maritime
+            constexpr double clKaRural[6] = {18.0, 13.0, 9.5, 6.0, 4.0, 2.5};
+            return interpolateTable6(ELEV_GRID, clKaRural, elev);
+        }
+    } else {
+        // 3GPP TR 38.811 Table 6.6.2-1 (S-band / sub-6 GHz)
+        if (env == Environment::URBAN || env == Environment::TROPICAL) {
+            constexpr double clSUrban[6] = {19.4, 15.6, 12.5, 8.4, 5.7, 4.0};
+            return interpolateTable6(ELEV_GRID, clSUrban, elev);
+        } else if (env == Environment::SUBURBAN) {
+            constexpr double clSSuburban[6] = {15.2, 11.8, 9.0, 5.6, 3.5, 2.0};
+            return interpolateTable6(ELEV_GRID, clSSuburban, elev);
+        } else {
+            // Rural
+            constexpr double clSRural[6] = {10.5, 7.8, 5.4, 2.8, 1.5, 0.8};
+            return interpolateTable6(ELEV_GRID, clSRural, elev);
+        }
+    }
+}
+
+double NTNChannelModel::getShadowFadingStdDev(double elevationDeg, FrequencyBand band, Environment env, bool isLOS) {
+    double elev = std::clamp(elevationDeg, 10.0, 90.0);
+
+    if (band == FrequencyBand::KA_BAND || band == FrequencyBand::Q_V_BAND || band == FrequencyBand::W_BAND || band == FrequencyBand::KU_BAND) {
+        // 3GPP TR 38.811 Table 6.6.2-2
+        if (env == Environment::URBAN || env == Environment::TROPICAL) {
+            if (isLOS) {
+                constexpr double sfLos[6] = {2.5, 2.0, 1.6, 1.2, 0.8, 0.6};
+                return interpolateTable6(ELEV_GRID, sfLos, elev);
+            } else {
+                constexpr double sfNlos[6] = {7.2, 6.8, 6.0, 5.0, 4.2, 3.5};
+                return interpolateTable6(ELEV_GRID, sfNlos, elev);
+            }
+        } else if (env == Environment::SUBURBAN) {
+            if (isLOS) {
+                constexpr double sfLos[6] = {2.0, 1.5, 1.2, 1.0, 0.7, 0.5};
+                return interpolateTable6(ELEV_GRID, sfLos, elev);
+            } else {
+                constexpr double sfNlos[6] = {6.5, 5.8, 5.0, 4.0, 3.2, 2.5};
+                return interpolateTable6(ELEV_GRID, sfNlos, elev);
+            }
+        } else {
+            if (isLOS) {
+                constexpr double sfLos[6] = {1.8, 1.2, 1.0, 0.8, 0.5, 0.4};
+                return interpolateTable6(ELEV_GRID, sfLos, elev);
+            } else {
+                constexpr double sfNlos[6] = {5.5, 4.8, 4.0, 3.2, 2.5, 2.0};
+                return interpolateTable6(ELEV_GRID, sfNlos, elev);
+            }
+        }
+    } else {
+        // 3GPP TR 38.811 Table 6.6.2-1
+        if (env == Environment::URBAN || env == Environment::TROPICAL) {
+            if (isLOS) {
+                constexpr double sfLos[6] = {3.5, 3.4, 2.9, 3.0, 3.1, 2.7};
+                return interpolateTable6(ELEV_GRID, sfLos, elev);
+            } else {
+                constexpr double sfNlos[6] = {8.5, 8.0, 7.5, 6.5, 5.5, 4.5};
+                return interpolateTable6(ELEV_GRID, sfNlos, elev);
+            }
+        } else if (env == Environment::SUBURBAN) {
+            if (isLOS) {
+                constexpr double sfLos[6] = {2.8, 2.5, 2.0, 1.8, 1.4, 1.0};
+                return interpolateTable6(ELEV_GRID, sfLos, elev);
+            } else {
+                constexpr double sfNlos[6] = {7.5, 6.8, 6.0, 5.0, 4.0, 3.0};
+                return interpolateTable6(ELEV_GRID, sfNlos, elev);
+            }
+        } else {
+            if (isLOS) {
+                constexpr double sfLos[6] = {2.0, 1.6, 1.3, 1.0, 0.7, 0.5};
+                return interpolateTable6(ELEV_GRID, sfLos, elev);
+            } else {
+                constexpr double sfNlos[6] = {6.0, 5.2, 4.5, 3.5, 2.8, 2.0};
+                return interpolateTable6(ELEV_GRID, sfNlos, elev);
+            }
+        }
+    }
+}
+
 NTNChannelModel::PathLossResult NTNChannelModel::calculatePathLoss(
     const ChannelParams& params,
     double satelliteVelocityKmps,
@@ -24,6 +172,32 @@ NTNChannelModel::PathLossResult NTNChannelModel::calculatePathLoss(
     // 3GPP TR 38.811 LOS probability
     result.losProbability = calculateLOSProbability(params.elevationDeg, params.env);
 
+    // Discrete 3GPP LOS / NLOS state decision
+    bool isLOS = true;
+    if (rng) {
+        isLOS = (omnetpp::uniform(rng, 0.0, 1.0) < result.losProbability);
+    } else {
+        uint32_t hash = static_cast<uint32_t>(params.elevationDeg * 100.0) ^ static_cast<uint32_t>(slantRange * 10.0);
+        isLOS = ((hash % 1000) / 1000.0 < result.losProbability);
+    }
+    result.isLOS = isLOS;
+
+    FrequencyBand band = (params.frequencyGhz >= 6.0) ? FrequencyBand::KA_BAND : FrequencyBand::S_BAND;
+
+    // 3GPP TR 38.811 Clutter Loss (CL)
+    result.clutterLossDb = calculateClutterLoss(params.elevationDeg, band, params.env, isLOS);
+
+    // 3GPP TR 38.811 Shadow Fading (SF)
+    double sigmaSF = getShadowFadingStdDev(params.elevationDeg, band, params.env, isLOS);
+    if (rng) {
+        result.shadowingDb = omnetpp::normal(rng, 0.0, sigmaSF);
+    } else {
+        double u1 = std::max(1e-6, ((static_cast<uint32_t>(slantRange * 17.0) % 997) + 1) / 1000.0);
+        double u2 = ((static_cast<uint32_t>(params.elevationDeg * 23.0) % 997) + 1) / 1000.0;
+        double z0 = std::sqrt(-2.0 * std::log(u1)) * std::cos(2.0 * M_PI * u2);
+        result.shadowingDb = z0 * sigmaSF;
+    }
+
     // Atmospheric losses (ITU-R P.676-12)
     result.atmosphericLossDb = calculateGaseousAbsorption(params.elevationDeg, params.frequencyGhz);
 
@@ -40,34 +214,65 @@ NTNChannelModel::PathLossResult NTNChannelModel::calculatePathLoss(
     // Polarization loss
     result.polarizationLossDb = params.polarizationLossDb;
 
-    // Shadowing per 3GPP TR 38.811 (reproducible with OMNeT++ RNG)
-    result.shadowingDb = calculateShadowing(slantRange, params.env, rng);
+    // Phased array antenna patterns (3GPP TR 38.811 Section 6.4.1)
+    result.satAntennaGainDbi = calculateBesselAntennaGain(0.0, 30.0, 0.8, params.frequencyGhz);
+    result.utAntennaGainDbi = calculateBesselAntennaGain(0.0, 34.0, 0.45, params.frequencyGhz);
 
     // Doppler shift
     result.dopplerShiftHz = calculateDopplerShift(satelliteVelocityKmps, groundVelocityKmps,
                                                    params.frequencyGhz, params.elevationDeg, 0.0);
 
-    // Discrete 3GPP LOS / NLOS state decision
-    bool isLOS = true;
-    if (rng) {
-        isLOS = (omnetpp::uniform(rng, 0.0, 1.0) < result.losProbability);
+    // 3D Obstacle & Azimuthal Horizon Masking (ITU-R P.526)
+    if (params.obstacleElevationMaskDeg > 0.0 && params.elevationDeg < params.obstacleElevationMaskDeg) {
+        result.isObstacleBlocked = true;
+        result.isLOS = false;
+        result.diffractionLossDb = calculateObstacleDiffractionLoss(
+            params.elevationDeg, params.obstacleElevationMaskDeg, params.frequencyGhz, slantRange);
     } else {
-        uint32_t hash = static_cast<uint32_t>(params.elevationDeg * 100.0) ^ static_cast<uint32_t>(slantRange * 10.0);
-        isLOS = ((hash % 1000) / 1000.0 < result.losProbability);
+        result.diffractionLossDb = 0.0;
+        result.isObstacleBlocked = false;
     }
 
-    double baseLoss = result.freeSpaceLossDb + result.atmosphericLossDb + result.rainLossDb +
-                      result.cloudLossDb + result.scintillationLossDb + result.polarizationLossDb;
-
-    if (isLOS) {
-        result.totalLossDb = baseLoss + result.shadowingDb;
-    } else {
-        // NLOS diffraction penalty (3GPP TR 38.811 Table 6.6.2-1)
-        double nlosDiffractionDb = (params.env == Environment::URBAN || params.env == Environment::TROPICAL) ? 20.0 : 15.0;
-        result.totalLossDb = baseLoss + nlosDiffractionDb + result.shadowingDb * 1.2;
-    }
+    // 3GPP TR 38.811 Section 6.6 total path loss equation:
+    // PL = FSPL + SF + CL + A_g + A_r + A_c + A_s + L_pol + L_diff
+    result.totalLossDb = result.freeSpaceLossDb + result.clutterLossDb + result.shadowingDb +
+                         result.atmosphericLossDb + result.rainLossDb + result.cloudLossDb +
+                         result.scintillationLossDb + result.polarizationLossDb + result.diffractionLossDb;
 
     return result;
+}
+
+double NTNChannelModel::calculateKnifeEdgeDiffractionLoss(double v)
+{
+    // ITU-R P.526-15 Section 4.1
+    if (v <= -0.78) {
+        return 0.0;
+    }
+    double term = std::sqrt((v - 0.1) * (v - 0.1) + 1.0) + v - 0.1;
+    if (term <= 0.0) return 0.0;
+    double j_v = 6.9 + 20.0 * std::log10(term);
+    return std::max(0.0, j_v);
+}
+
+double NTNChannelModel::calculateObstacleDiffractionLoss(double elevationDeg, double obstacleMaskDeg, double frequencyGhz, double slantRangeKm)
+{
+    if (elevationDeg >= obstacleMaskDeg) {
+        return 0.0;
+    }
+
+    constexpr double c0 = 299792458.0;
+    double lambda = c0 / (frequencyGhz * 1e9);
+    double angularDeficitRad = (obstacleMaskDeg - elevationDeg) * M_PI / 180.0;
+
+    // Effective obstacle distance: assuming typical terrain ridge at d1 = 2000m, satellite at d2 = slantRangeKm * 1000m
+    double d1 = 2000.0;
+    double d2 = std::max(10000.0, slantRangeKm * 1000.0);
+    double dEff = (d1 * d2) / (d1 + d2);
+
+    // Knife edge parameter v = theta * sqrt(2 * dEff / lambda)
+    double v = angularDeficitRad * std::sqrt(2.0 * dEff / lambda);
+
+    return calculateKnifeEdgeDiffractionLoss(v);
 }
 
 double NTNChannelModel::calculateLOSProbability(double elevationDeg, Environment env) {

@@ -61,14 +61,14 @@ void CollectivePerceptionMockService::initialize(int stage)
         mHostId = getFacilities().get_const<Identity>().host->getId();
     } else if (stage == InitStages::Propagate) {
         for (const Sensor* sensor : mEnvironmentModel->getSensors()) {
-            // consider only sensors with a field of view
+            mSensors.insert(sensor);
+            // consider FOV containers for sensors with a field of view
             if (auto fovSensor = dynamic_cast<const FovSensor*>(sensor)) {
                 CollectivePerceptionMockMessage::FovContainer fovContainer;
                 fovContainer.sensorId = sensor->getId();
                 fovContainer.position = sensor->position();
                 fovContainer.fov = fovSensor->getFieldOfView();
                 mFovContainers.emplace_back(std::move(fovContainer));
-                mSensors.insert(sensor);
             }
         }
     }
@@ -141,16 +141,18 @@ void CollectivePerceptionMockService::generatePacket()
         }
 
         for (const auto& sensor : tracking.sensors()) {
-            if (mSensors.find(sensor.first) != mSensors.end()) {
+            if (mSensors.empty() || mSensors.find(sensor.first) != mSensors.end()) {
                 CollectivePerceptionMockMessage::ObjectContainer objectContainer;
                 objectContainer.object = object.first;
                 objectContainer.objectId = tracking.id();
-                objectContainer.sensorId = sensor.first->getId();
+                objectContainer.sensorId = sensor.first ? sensor.first->getId() : 0;
                 objectContainer.timeOfMeasurement = sensor.second.last();
                 objectContainers.emplace_back(std::move(objectContainer));
+                break; // One perceived object container per unique tracked physical object
             }
         }
     }
+    // Dynamic CPM sizing: ETSI TS 103 324 standard payload based on actual perceived obstacles/vehicles
     packet->addByteLength(mLengthObjectContainer * objectContainers.size());
     packet->setObjectContainers(std::move(objectContainers));
     packet->setSourceStation(mHostId);

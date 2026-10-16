@@ -31,10 +31,34 @@ option(VSCODE_LAUNCH_INTEGRATION "Generate VS Code configuration for debugging (
 # Artery build configuration #
 ##############################
 
-# use "Release" as default build type for maximum performance
+# Use "Release" as default build type for maximum performance
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "CMake build type" FORCE)
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
+
+# Automatic ccache integration for accelerated compilation
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    message(STATUS "NexaSim: ccache enabled -> ${CCACHE_PROGRAM}")
+endif()
+
+# Compiler optimization flags for Release (-O3 -DNDEBUG)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    string(APPEND CMAKE_CXX_FLAGS_RELEASE " -O3 -DNDEBUG -mtune=generic")
+    string(APPEND CMAKE_C_FLAGS_RELEASE " -O3 -DNDEBUG -mtune=generic")
+endif()
+
+# Interprocedural Optimization (LTO / IPO) for maximum simulation throughput (ev/s)
+include(CheckIPOSupported)
+check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error)
+if(ipo_supported)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+    message(STATUS "NexaSim: Interprocedural Optimization (IPO/LTO) enabled for Release")
+else()
+    message(STATUS "NexaSim: IPO/LTO not enabled: ${ipo_error}")
 endif()
 
 # running simulations with opp_run requires shared libraries
