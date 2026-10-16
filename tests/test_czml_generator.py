@@ -134,6 +134,79 @@ class TestCZMLGenerator(unittest.TestCase):
         num_samples = len(cartographic) // 4
         self.assertLessEqual(num_samples, 25, "Time step was not adaptively throttled for dense constellation")
 
+    def test_link_geometry_ephmeris_packet(self):
+        """The generator must emit ephemeris-derived link geometry for the HUD/beams."""
+        config = {
+            'scenario': {
+                'name': 'Link_Geometry_Test',
+                'time': {'start': '2026-08-26T10:00:00Z', 'duration_s': 120.0},
+                'area': {'center_lat': 46.5, 'center_lon': 10.4, 'elevation_mask_deg': 25.0},
+                'constellation': {
+                    'shells': [{
+                        'name': 'shell_a',
+                        'altitude_km': 550.0,
+                        'inclination_deg': 53.0,
+                        'num_planes': 2,
+                        'sats_per_plane': 3
+                    }],
+                    'ground_stations': [{'name': 'gs0', 'lat': 46.4, 'lon': 10.6, 'altitude_m': 200.0, 'frequency_ghz': 28.0}]
+                },
+                'terrestrial': {
+                    'gnb': {'sites': [{'name': 'g0', 'lat': 46.5, 'lon': 10.4}]},
+                    'ue': {'count': 2}
+                }
+            }
+        }
+        output_path = self.temp_dir / 'geometry.czml'
+        czml_packets = generate_czml_scene(config, output_czml=output_path, duration_s=120.0, time_step=5.0)
+
+        geometry_packets = [p for p in czml_packets if p.get('id') == 'nexasim_link_geometry']
+        self.assertEqual(len(geometry_packets), 1, "Link geometry packet missing from CZML output")
+        geo = geometry_packets[0]['nexasim']
+
+        self.assertEqual(geo['carrier_ghz'], 28.0)
+        self.assertIn('0', geo['beams'])
+        self.assertIn('1', geo['beams'])
+
+        leader = geo['leader']
+        n_samples = len(geo['times_s'])
+        self.assertEqual(len(leader['server']), n_samples)
+        self.assertEqual(len(leader['elevation_deg']), n_samples)
+        self.assertEqual(len(leader['slant_km']), n_samples)
+        self.assertEqual(len(leader['doppler_khz']), n_samples)
+
+        for elev in leader['elevation_deg']:
+            self.assertGreaterEqual(elev, -90.0)
+            self.assertLessEqual(elev, 90.0)
+        for slant in leader['slant_km']:
+            # 550 km shell: the preferred satellite is above the horizon, so
+            # the slant stays below the geometric horizon; sparse test
+            # constellations degrade to a best-effort far satellite (< 6000 km).
+            self.assertGreater(slant, 400.0)
+            self.assertLess(slant, 6000.0)
+        self.assertTrue(any(abs(d) > 0.1 for d in leader['doppler_khz']), "Doppler track is flat")
+
+    def test_gnb_lobe_entities_separate_from_sites(self):
+        """5G coverage lobes must be separate entities so the layer toggle can hide them."""
+        config = {
+            'scenario': {
+                'name': 'Lobe_Split_Test',
+                'time': {'duration_s': 30.0},
+                'constellation': {'shells': [{'name': 's', 'altitude_km': 550.0, 'inclination_deg': 53.0, 'num_planes': 1, 'sats_per_plane': 1}]},
+                'terrestrial': {
+                    'gnb': {'sites': [{'name': 'g0', 'lat': 46.5, 'lon': 10.4, 'coverage_radius_m': 1500.0}]},
+                    'ue': {'count': 1}
+                }
+            }
+        }
+        output_path = self.temp_dir / 'lobes.czml'
+        czml_packets = generate_czml_scene(config, output_czml=output_path, duration_s=30.0, time_step=5.0)
+        ids = [p.get('id') for p in czml_packets]
+        self.assertIn('gnb_0', ids)
+        self.assertIn('gnb_lobe_0', ids)
+        lobe = next(p for p in czml_packets if p.get('id') == 'gnb_lobe_0')
+        self.assertLess(lobe['cylinder']['topRadius'], lobe['cylinder']['bottomRadius'])
+
 
 if __name__ == '__main__':
     unittest.main()

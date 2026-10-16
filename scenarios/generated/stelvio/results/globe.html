@@ -4,6 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NexaSim 3D Space-Ground Digital Twin | Stelvio Pass Alpine Hybrid</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- CesiumJS Official CDN -->
     <script src="https://cesium.com/downloads/cesiumjs/releases/1.119/Build/Cesium/Cesium.js"></script>
     <link href="https://cesium.com/downloads/cesiumjs/releases/1.119/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
@@ -12,52 +16,96 @@
 <body>
     <div id="cesiumContainer"></div>
 
-    <div class="hud-panel">
+    <div class="hud-panel" id="hudPanel">
         <div class="hud-header">
-            <span class="hud-title">🛰️ NexaSim 3D Digital Twin</span>
-            <span class="hud-badge">NexaSphere</span>
-        </div>
-        <div class="hud-scenario">Scenario: <strong>Stelvio Pass Alpine Hybrid</strong></div>
-
-        <!-- Cockpit Telemetry -->
-        <div class="telemetry-grid">
-            <div class="telem-item">
-                <span class="telem-label">Active RAT</span>
-                <span class="telem-val" id="telemRat" style="color: #38bdf8;">Satellite LEO</span>
-            </div>
-            <div class="telem-item">
-                <span class="telem-label">Overhead Sat</span>
-                <span class="telem-val" id="telemSat">Sat 0-0 (550km)</span>
-            </div>
-            <div class="telem-item">
-                <span class="telem-label">Vehicle Speed</span>
-                <span class="telem-val" id="telemSpeed">48.5 km/h</span>
-            </div>
-            <div class="telem-item">
-                <span class="telem-label">MEC Latency</span>
-                <span class="telem-val" id="telemLatency" style="color: #ec4899;">24.2 ms</span>
+            <span class="hud-title">🛰️ 3D Digital Twin</span>
+            <div>
+                <span class="hud-badge">NexaSphere</span>
+                <button class="hud-toggle-btn" id="hudToggleBtn" onclick="toggleHud()" title="Collapse / Expand HUD">—</button>
             </div>
         </div>
+        <div class="hud-body" id="hudBody">
+            <div class="hud-scenario">Scenario: <strong>Stelvio Pass Alpine Hybrid</strong></div>
 
-        <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Camera View Presets</div>
-        <div class="cam-controls" style="grid-template-columns: repeat(3, 1fr);">
-            <button class="hud-btn" onclick="viewTactical()">🎯 Tactical</button>
-            <button class="hud-btn" onclick="viewVehicle()">🏎️ Chase Cam</button>
-            <button class="hud-btn" onclick="viewConstellation()">🛰️ Orbit LEO</button>
-        </div>
+            <!-- Studio sync status -->
+            <div class="link-status">
+                <span class="link-dot" id="linkDot"></span>
+                <span id="linkText" style="font-size:10px; color:#94a3b8;">Studio Link: <strong id="linkStatusText">INIT</strong></span>
+            </div>
 
-        <select class="basemap-select" onchange="switchBasemap(this.value)">
-            <option value="default">🗺️ Cesium Ion World Satellite</option>
-            <option value="esri">🗺️ ESRI World Satellite HD</option>
-            <option value="osm">🗺️ OpenStreetMap Standard</option>
-            <option value="carto">🗺️ CartoDB Dark Canvas</option>
-        </select>
+            <!-- Cockpit Telemetry (values filled from real telemetry / ephemeris; "—" = not recorded) -->
+            <div class="telemetry-grid">
+                <div class="telem-item">
+                    <span class="telem-label">Active RAT</span>
+                    <span class="telem-val" id="telemRat" style="color: #38bdf8;">—</span>
+                </div>
+                <div class="telem-item">
+                    <span class="telem-label">Overhead Sat</span>
+                    <span class="telem-val" id="telemSat">—</span>
+                </div>
+                <div class="telem-item">
+                    <span class="telem-label">Vehicle Speed</span>
+                    <span class="telem-val" id="telemSpeed">—</span>
+                </div>
+                <div class="telem-item">
+                    <span class="telem-label">MEC Latency</span>
+                    <span class="telem-val" id="telemLatency" style="color: #ec4899;">—</span>
+                </div>
+                <div class="telem-item">
+                    <span class="telem-label">Elevation (Zenith)</span>
+                    <span class="telem-val" id="telemElev">—</span>
+                </div>
+                <div class="telem-item">
+                    <span class="telem-label">Slant Range</span>
+                    <span class="telem-val" id="telemRange">—</span>
+                </div>
+                <div class="telem-item">
+                    <span class="telem-label">Doppler Shift</span>
+                    <span class="telem-val" id="telemDoppler" class="warn">—</span>
+                </div>
+                <div class="telem-item">
+                    <span class="telem-label">Carrier Freq</span>
+                    <span class="telem-val" id="telemCarrier">—</span>
+                </div>
+                <div class="telem-item">
+                    <span class="telem-label">QoS Score</span>
+                    <span class="telem-val" id="telemQos">—</span>
+                </div>
+                <div class="telem-item">
+                    <span class="telem-label">Battery SoC</span>
+                    <span class="telem-val" id="telemBatt">—</span>
+                </div>
+            </div>
 
-        <div class="legend">
-            <div class="legend-item"><span class="dot" style="background:#38bdf8;"></span> LEO Satellites</div>
-            <div class="legend-item"><span class="dot" style="background:#10b981;"></span> 5G-NR gNodeB</div>
-            <div class="legend-item"><span class="dot" style="background:#ec4899;"></span> Phased Array</div>
-            <div class="legend-item"><span class="dot" style="background:#f59e0b;"></span> Ground Gateway</div>
+            <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; font-family:'IBM Plex Mono', monospace; letter-spacing:0.5px;">Camera View Presets</div>
+            <div class="cam-controls">
+                <button class="hud-btn" onclick="viewTactical()">🎯 Tactical</button>
+                <button class="hud-btn" onclick="viewVehicle()">🏎️ Chase</button>
+                <button class="hud-btn" onclick="viewConstellation()">🛰️ Orbit</button>
+            </div>
+
+            <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; font-family:'IBM Plex Mono', monospace; letter-spacing:0.5px;">Layer Controls</div>
+            <div class="layer-controls">
+                <button class="hud-btn active" id="btnLayerIsl" onclick="toggleLayer('isl')" title="Inter-satellite laser links (dimmed mesh)">ISL</button>
+                <button class="hud-btn active" id="btnLayerLobes" onclick="toggleLayer('lobes')" title="Volumetric 5G cell coverage lobes">Lobes</button>
+                <button class="hud-btn active" id="btnLayerFootprints" onclick="toggleLayer('footprints')" title="Coverage footprint of the serving satellite only (auto)">Footprints</button>
+            </div>
+
+            <select class="basemap-select" onchange="switchBasemap(this.value)">
+                <option value="default">🗺️ Cesium Ion Satellite</option>
+                <option value="esri">🗺️ ESRI World Satellite HD</option>
+                <option value="osm">🗺️ OpenStreetMap Standard</option>
+                <option value="carto">🗺️ CartoDB Dark Canvas</option>
+            </select>
+
+            <div class="legend">
+                <div class="legend-item"><span class="dot" style="background:#38bdf8;"></span> LEO sat / ISL / beam</div>
+                <div class="legend-item"><span class="dot" style="background:#10b981;"></span> 5G-NR gNodeB</div>
+                <div class="legend-item"><span class="dot" style="background:#fb923c;"></span> Ground gateway</div>
+                <div class="legend-item"><span class="dot" style="background:#10b981;"></span> Vehicle — 5G link</div>
+                <div class="legend-item"><span class="dot" style="background:#38bdf8;"></span> Vehicle — LEO link</div>
+                <div class="legend-item"><span class="dot" style="background:#64748b;"></span> Vehicle — link n/r</div>
+            </div>
         </div>
     </div>
 

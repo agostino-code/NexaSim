@@ -14,10 +14,19 @@ Define_Module(HybridInterfaceManager);
 HybridInterfaceManager::HybridInterfaceManager() :
     m_isSatelliteActive(false),
     m_strategy(nullptr),
+    m_hysteresisMarginDb(3.0),
+    m_timeToTrigger(0.5),
+    m_candidateInterface(-1),
+    m_candidateTriggerTime(SIMTIME_ZERO),
     m_totalSwitches(0),
     m_lastSwitchTime(SIMTIME_ZERO),
     m_satTotalDuration(SIMTIME_ZERO),
-    m_cellTotalDuration(SIMTIME_ZERO)
+    m_cellTotalDuration(SIMTIME_ZERO),
+    m_mobilityModule(nullptr),
+    m_lastQoSScore(ntn::NOT_AVAILABLE),
+    m_lastBatterySoC(ntn::NOT_AVAILABLE),
+    m_satelliteCarrierGhz(20.0),
+    m_cellularCarrierGhz(3.5)
 {
 }
 
@@ -30,7 +39,25 @@ void HybridInterfaceManager::initialize(int stage)
         m_satInterfaceName = par("satInterfaceName").stdstringValue();
         m_cellInterfaceName = par("cellInterfaceName").stdstringValue();
         m_isSatelliteActive = par("initialSatelliteActive").boolValue();
-        
+        if (hasPar("hysteresisMarginDb")) {
+            m_hysteresisMarginDb = par("hysteresisMarginDb").doubleValue();
+        }
+        if (hasPar("timeToTrigger")) {
+            m_timeToTrigger = par("timeToTrigger").doubleValue();
+        }
+        if (hasPar("satelliteCarrierGhz")) {
+            m_satelliteCarrierGhz = par("satelliteCarrierGhz").doubleValue();
+        }
+        if (hasPar("cellularCarrierGhz")) {
+            m_cellularCarrierGhz = par("cellularCarrierGhz").doubleValue();
+        }
+
+        // Resolve the hosting node's mobility module once; INET stays confined
+        // to this adapter, strategies only see ntn::INetworkMobilityProvider.
+        omnetpp::cModule* parent = getParentModule();
+        omnetpp::cModule* mobility = parent ? parent->getSubmodule("mobility") : nullptr;
+        m_mobilityModule = mobility ? dynamic_cast<inet::IMobility*>(mobility) : nullptr;
+
         m_sigActiveInterface = registerSignal("activeInterface");
         m_sigSwitchCount = registerSignal("switchCount");
         m_sigQoSScore = registerSignal("qosScore");
@@ -98,12 +125,98 @@ void HybridInterfaceManager::performSwitch(bool toSatellite)
 
 void HybridInterfaceManager::emitQoSScore(double score)
 {
+    m_lastQoSScore = score;
     emit(m_sigQoSScore, score);
 }
 
 void HybridInterfaceManager::emitBatterySoC(double soc)
 {
+    m_lastBatterySoC = soc;
     emit(m_sigBatterySoC, soc);
+}
+
+// =========================================================================
+// ntn::INetworkMobilityProvider adapter
+// =========================================================================
+
+bool HybridInterfaceManager::hasMobility() const
+{
+    if (m_mobilityModule) {
+        return true;
+    }
+    // Static deployment: mobility module exposing only initial coordinates
+    omnetpp::cModule* parent = getParentModule();
+    omnetpp::cModule* mobility = parent ? parent->getSubmodule("mobility") : nullptr;
+    return mobility && mobility->hasPar("initialX") && mobility->hasPar("initialY");
+}
+
+ntn::MobilitySample HybridInterfaceManager::getMobilitySample() const
+{
+    if (m_mobilityModule) {
+        const inet::Coord position = m_mobilityModule->getCurrentPosition();
+        const inet::Coord velocity = m_mobilityModule->getCurrentVelocity();
+
+        ntn::MobilitySample sample;
+        sample.x = position.x;
+        sample.y = position.y;
+        sample.z = position.z;
+        sample.vx = velocity.x;
+        sample.vy = velocity.y;
+        sample.vz = velocity.z;
+        sample.speedMps = std::hypot(sample.vx, sample.vy);
+        if (sample.speedMps > 1e-6) {
+            // Compass bearing: clockwise from north
+            const double heading = std::atan2(sample.vx, sample.vy) * 180.0 / M_PI;
+            sample.headingDeg = std::fmod(heading + 360.0, 360.0);
+        }
+        sample.timestampS = omnetpp::simTime().dbl();
+        return sample;
+    }
+
+    omnetpp::cModule* parent = getParentModule();
+    omnetpp::cModule* mobility = parent ? parent->getSubmodule("mobility") : nullptr;
+    if (mobility && mobility->hasPar("initialX") && mobility->hasPar("initialY")) {
+        ntn::MobilitySample sample;
+        sample.x = mobility->par("initialX").doubleValue();
+        sample.y = mobility->par("initialY").doubleValue();
+        sample.timestampS = omnetpp::simTime().dbl();
+        return sample;
+    }
+
+    return ntn::MobilitySample::notAvailable();
+}
+
+const char* HybridInterfaceManager::getMobilityProviderName() const
+{
+    return "HybridInterfaceManager/INET-mobility";
+}
+
+// =========================================================================
+// ntn::IRadioLinkMetricsProvider adapter
+// =========================================================================
+
+bool HybridInterfaceManager::hasRadioLinkMetrics() const
+{
+    return true; // RAT state (5G-NR / LEO NTN) is always tracked by this module
+}
+
+ntn::RadioLinkMetrics HybridInterfaceManager::getRadioLinkMetrics() const
+{
+    ntn::RadioLinkMetrics metrics;
+    metrics.activeInterface = m_isSatelliteActive
+        ? ntn::ActiveRadioInterface::NTN_LEO
+        : ntn::ActiveRadioInterface::TERRESTRIAL_NR;
+    metrics.servingNodeId = m_isSatelliteActive ? m_satInterfaceName : m_cellInterfaceName;
+    metrics.carrierGhz = m_isSatelliteActive ? m_satelliteCarrierGhz : m_cellularCarrierGhz;
+    metrics.switchCount = m_totalSwitches;
+    metrics.qosScore = m_lastQoSScore;
+    metrics.batterySoc = m_lastBatterySoC;
+    return metrics;
+}
+
+const char* HybridInterfaceManager::getRadioLinkMetricsProviderName() const
+{
+    return "HybridInterfaceManager/VHO";
 }
 
 void HybridInterfaceManager::finish()
@@ -187,30 +300,13 @@ void CoverageBasedStrategy::evaluate()
 {
     double simSec = omnetpp::simTime().dbl();
 
-    // Check spatial coordinates dynamically from IMobility or initial position
+    // Spatial test through the framework-neutral mobility interface
     bool inBlindSpot = false;
-    omnetpp::cModule* parent = m_manager->getParentModule();
-    if (parent) {
-        omnetpp::cModule* mob = parent->getSubmodule("mobility");
-        if (mob) {
-            double posX = 0.0, posY = 0.0;
-            bool hasPos = false;
-            auto* iMob = dynamic_cast<inet::IMobility*>(mob);
-            if (iMob) {
-                inet::Coord p = iMob->getCurrentPosition();
-                posX = p.x;
-                posY = p.y;
-                hasPos = true;
-            } else if (mob->hasPar("initialX") && mob->hasPar("initialY")) {
-                posX = mob->par("initialX").doubleValue();
-                posY = mob->par("initialY").doubleValue();
-                hasPos = true;
-            }
-            if (hasPos && posX >= m_blindSpotMinX && posX <= m_blindSpotMaxX &&
-                posY >= m_blindSpotMinY && posY <= m_blindSpotMaxY) {
-                inBlindSpot = true;
-            }
-        }
+    const ntn::MobilitySample sample = m_manager->getMobilitySample();
+    if (sample.isValid() &&
+        sample.x >= m_blindSpotMinX && sample.x <= m_blindSpotMaxX &&
+        sample.y >= m_blindSpotMinY && sample.y <= m_blindSpotMaxY) {
+        inBlindSpot = true;
     }
 
     // Dynamic channel and terrain evaluation
@@ -449,30 +545,12 @@ void PredictiveLookaheadStrategy::evaluatePredictive()
     omnetpp::simtime_t now = omnetpp::simTime();
     double simSec = now.dbl();
 
-    // Query live vehicle position and kinematics from mobility submodule
-    omnetpp::cModule* parent = m_manager->getParentModule();
-    double posX = 0.0, posY = 0.0, velX = 0.0, velY = 0.0;
-    bool hasPosition = false;
-
-    if (parent) {
-        omnetpp::cModule* mob = parent->getSubmodule("mobility");
-        if (mob) {
-            auto* iMob = dynamic_cast<inet::IMobility*>(mob);
-            if (iMob) {
-                inet::Coord p = iMob->getCurrentPosition();
-                inet::Coord v = iMob->getCurrentVelocity();
-                posX = p.x;
-                posY = p.y;
-                velX = v.x;
-                velY = v.y;
-                hasPosition = true;
-            } else if (mob->hasPar("initialX") && mob->hasPar("initialY")) {
-                posX = mob->par("initialX").doubleValue();
-                posY = mob->par("initialY").doubleValue();
-                hasPosition = true;
-            }
-        }
-    }
+    // Query live vehicle kinematics through the framework-neutral interface
+    const ntn::MobilitySample sample = m_manager->getMobilitySample();
+    const double posX = sample.isValid() ? sample.x : 0.0;
+    const double posY = sample.isValid() ? sample.y : 0.0;
+    const double velX = sample.isValid() ? sample.vx : 0.0;
+    const double velY = sample.isValid() ? sample.vy : 0.0;
 
     // Extrapolate position over look-ahead horizon
     double speed = std::hypot(velX, velY);

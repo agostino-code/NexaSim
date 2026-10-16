@@ -53,7 +53,8 @@ services:
         python3 tools/nexasim.py all stelvio
       "
     depends_on:
-      - nexasim-build
+      nexasim-build:
+        condition: service_completed_successfully
 
   # NexaSim Analysis service
   nexasim-analyze:
@@ -81,7 +82,8 @@ services:
     command: >
       bash tools/start_gui.sh -f /artery/scenarios/generated/stelvio/omnetpp.ini
     depends_on:
-      - nexasim-build
+      nexasim-build:
+        condition: service_completed_successfully
 
 volumes:
   artery-conan2-cache:

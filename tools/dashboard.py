@@ -9,6 +9,7 @@ with tabs, vehicle filtering, KPI stat cards, time-window zoom, and printable ex
 
 import os
 import sys
+import re
 import json
 import csv
 import math
@@ -20,14 +21,25 @@ try:
 except ImportError:
     from html_assets import externalize_html_assets
 
+_VECTOR_CACHE: Dict[Tuple[str, float, int], Dict[str, Dict[str, Dict[str, Any]]]] = {}
+
 def parse_vector_file(vec_file: Path) -> Dict[str, Dict[str, Dict[str, Any]]]:
     """
-    Parses OMNeT++ .vec file directly in pure Python.
+    Parses OMNeT++ .vec file directly in pure Python with caching and high-speed scanning.
     Returns: { vehicle_id: { metric_name: { 'x': [...], 'y': [...] } } }
     """
     vec_path = Path(vec_file)
     if not vec_path.exists():
         return {}
+
+    cache_key = None
+    try:
+        st = vec_path.stat()
+        cache_key = (str(vec_path.resolve()), st.st_mtime, st.st_size)
+        if cache_key in _VECTOR_CACHE:
+            return _VECTOR_CACHE[cache_key]
+    except Exception:
+        pass
 
     # 1. Read vector declarations
     # Format: vector <id> <module> <name> ...
@@ -98,6 +110,9 @@ def parse_vector_file(vec_file: Path) -> Dict[str, Dict[str, Dict[str, Any]]]:
         downsampled = downsample_series(pts, max_points=200, is_step=is_step)
         structured[node][metric] = downsampled
 
+    if cache_key is not None:
+        _VECTOR_CACHE[cache_key] = structured
+
     return structured
 
 def parse_csv_file(csv_file: Path) -> Dict[str, Dict[str, Dict[str, Any]]]:
@@ -158,6 +173,49 @@ def parse_csv_file(csv_file: Path) -> Dict[str, Dict[str, Dict[str, Any]]]:
                 structured[node_label][clean_name] = downsampled
 
     return structured
+
+def parse_scalar_rat_map(sca_file: Path) -> Dict[int, str]:
+    """Per-vehicle link state from the recorded ``activeInterface`` statistic.
+
+    Fallback for runs where the ``activeInterface`` vectors were not recorded:
+    the hybrid manager also emits an ``activeInterface:last`` scalar per node
+    in the ``.sca`` file (same semantics as the vector: 0 = 5G-NR cell,
+    1 = LEO satellite). Only finite in-range values are trusted — short or
+    aborted runs record ``nan`` there, and those nodes stay absent (rendered
+    as "not recorded"); the link state is never guessed.
+
+    Returns: { vehicle_index: '5G' | 'LEO' }
+    """
+    sca_path = Path(sca_file)
+    if not sca_path.exists():
+        return {}
+
+    node_re = re.compile(r'node\[(\d+)\]\.hybridManager')
+    scalar_re = re.compile(r'^scalar\s+(\S+)\s+activeInterface:last\s+(\S+)\s*$')
+    rat_map: Dict[int, str] = {}
+    try:
+        with open(sca_path, 'r', encoding='utf-8', errors='ignore') as f:
+            for line in f:
+                line = line.strip()
+                if 'activeInterface:last' not in line:
+                    continue
+                m = scalar_re.match(line)
+                if not m:
+                    continue
+                mn = node_re.search(m.group(1))
+                if not mn:
+                    continue
+                try:
+                    value = float(m.group(2))
+                except ValueError:
+                    continue
+                if not math.isfinite(value) or not 0.0 <= value <= 1.0:
+                    continue
+                rat_map[int(mn.group(1))] = 'LEO' if value >= 0.5 else '5G'
+    except OSError:
+        return {}
+    return rat_map
+
 
 def downsample_series(pts: List[Tuple[float, float]], max_points: int = 200, is_step: bool = False) -> Dict[str, List[float]]:
     """
@@ -297,138 +355,150 @@ def generate_dashboard(scenario_dir: Path, output_path: Optional[Path] = None) -
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NexaSim 3D TN-NTN Executive Dashboard | {scenario_name}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {{
-            --bg-page: #0b1120;
-            --surface-card: #131d31;
-            --surface-hover: #1c2a45;
-            --border-subtle: #233554;
-            --border-strong: #334e7a;
+            --bg-page: #06090e;
+            --surface-card: #0b1118;
+            --surface-hover: #131c28;
+            --border-subtle: #1c2838;
+            --border-strong: #27374d;
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
             --text-muted: #64748b;
+            --brand-cyan: #38bdf8;
+            --brand-blue: #3b82f6;
             --accent-5g: #10b981;
             --accent-sat: #38bdf8;
             --accent-vho: #f59e0b;
             --accent-qos: #a855f7;
             --accent-mec: #ec4899;
             --accent-danger: #ef4444;
-            --radius-md: 8px;
-            --radius-lg: 12px;
-            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+            --radius-xs: 2px;
+            --radius-sm: 4px;
+            --radius-md: 7px;
+            --font-ui: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'IBM Plex Mono', monospace;
         }}
-        [data-theme="light"] {{
-            --bg-page: #f8fafc;
-            --surface-card: #ffffff;
-            --surface-hover: #f1f5f9;
-            --border-subtle: #e2e8f0;
-            --border-strong: #cbd5e1;
-            --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --text-muted: #94a3b8;
-            --accent-5g: #059669;
-            --accent-sat: #0284c7;
-            --accent-vho: #d97706;
-            --accent-qos: #9333ea;
-            --accent-mec: #db2777;
+        * {{
+            box-sizing: border-box;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-strong) transparent;
         }}
-        * {{ box-sizing: border-box; }}
+        *::-webkit-scrollbar {{ width: 6px; height: 6px; }}
+        *::-webkit-scrollbar-track {{ background: transparent; }}
+        *::-webkit-scrollbar-thumb {{ background: var(--border-strong); border-radius: var(--radius-xs); }}
+        *::-webkit-scrollbar-thumb:hover {{ background: var(--brand-cyan); }}
+
         body {{
             margin: 0;
             padding: 0;
-            font-family: var(--font-family);
+            font-family: var(--font-ui);
             background-color: var(--bg-page);
             color: var(--text-primary);
             line-height: 1.5;
-            transition: background-color 0.2s ease, color 0.2s ease;
+            -webkit-font-smoothing: antialiased;
         }}
         .container {{
-            max-width: 1440px;
-            margin: 0 auto;
-            padding: 24px;
+            max-width: 100%;
+            margin: 0;
+            padding: 12px 14px;
         }}
 
-        /* Header & Navigation Bar */
+        /* Compact Header Navbar */
         .top-navbar {{
             display: flex;
             justify-content: space-between;
             align-items: center;
             background: var(--surface-card);
             border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-lg);
-            padding: 16px 24px;
-            margin-bottom: 24px;
+            border-radius: var(--radius-sm);
+            padding: 8px 12px;
+            margin-bottom: 12px;
         }}
         .brand {{
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }}
         .brand-badge {{
-            background: linear-gradient(135deg, #0284c7, #2563eb);
-            color: #fff;
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--brand-cyan);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            font-family: var(--font-mono);
             font-weight: 700;
-            font-size: 13px;
-            padding: 4px 10px;
-            border-radius: 6px;
-            letter-spacing: 0.5px;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: var(--radius-xs);
+            letter-spacing: 0.8px;
         }}
         .brand-title h1 {{
             margin: 0;
-            font-size: 20px;
+            font-size: 14px;
             font-weight: 700;
             letter-spacing: -0.2px;
+            color: var(--text-primary);
         }}
         .brand-title p {{
-            margin: 0;
-            font-size: 13px;
-            color: var(--text-secondary);
+            margin: 2px 0 0;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }}
+        .brand-title strong {{
+            color: var(--accent-amber);
         }}
         .header-actions {{
             display: flex;
-            gap: 10px;
+            gap: 6px;
             align-items: center;
         }}
         .btn {{
             background: var(--surface-hover);
             color: var(--text-primary);
             border: 1px solid var(--border-subtle);
-            padding: 8px 14px;
-            border-radius: var(--radius-md);
-            font-size: 13px;
-            font-weight: 500;
+            padding: 5px 10px;
+            border-radius: var(--radius-xs);
+            font-size: 11px;
+            font-weight: 600;
+            font-family: inherit;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             transition: all 0.15s ease;
         }}
         .btn:hover {{
-            background: var(--border-strong);
-            border-color: var(--border-strong);
+            background: var(--border-subtle);
+            border-color: var(--brand-cyan);
+            color: var(--brand-cyan);
         }}
         .btn-primary {{
-            background: #0284c7;
-            color: #fff;
-            border-color: #0284c7;
+            background: var(--accent-amber);
+            color: #1a1205;
+            border-color: var(--accent-amber);
         }}
         .btn-primary:hover {{
-            background: #0369a1;
+            background: #fbbf24;
+            color: #000;
         }}
 
         /* KPI Highlights Grid */
         .kpi-row {{
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
         }}
         .kpi-tile {{
             background: var(--surface-card);
             border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-lg);
-            padding: 18px;
+            border-radius: var(--radius-sm);
+            padding: 10px 12px;
             position: relative;
             overflow: hidden;
         }}
@@ -438,41 +508,42 @@ def generate_dashboard(scenario_dir: Path, output_path: Optional[Path] = None) -
             top: 0;
             left: 0;
             right: 0;
-            height: 3px;
+            height: 2px;
             background: var(--tile-accent, var(--border-subtle));
         }}
         .kpi-header {{
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            margin-bottom: 8px;
-        }}
-        .kpi-label {{
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-secondary);
-        }}
-        .kpi-value {{
-            font-size: 26px;
-            font-weight: 700;
-            color: var(--text-primary);
             margin-bottom: 4px;
         }}
-        .kpi-meta {{
-            font-size: 12px;
+        .kpi-label {{
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
             color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            font-family: var(--font-mono);
+        }}
+        .kpi-value {{
+            font-size: 20px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            font-variant-numeric: tabular-nums;
+            color: var(--text-primary);
+            margin: 2px 0;
+        }}
+        .kpi-meta {{
+            font-size: 10px;
+            color: var(--text-secondary);
         }}
         .status-pill {{
-            font-size: 11px;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 9999px;
-            background: rgba(16, 185, 129, 0.15);
+            font-size: 9px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            padding: 1px 5px;
+            border-radius: var(--radius-xs);
+            background: rgba(16, 185, 129, 0.12);
             color: var(--accent-5g);
         }}
 
@@ -482,126 +553,98 @@ def generate_dashboard(scenario_dir: Path, output_path: Optional[Path] = None) -
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 8px;
             background: var(--surface-card);
             border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-lg);
-            padding: 12px 18px;
-            margin-bottom: 20px;
+            border-radius: var(--radius-sm);
+            padding: 8px 12px;
+            margin-bottom: 12px;
         }}
         .toolbar-group {{
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }}
         .toolbar-label {{
-            font-size: 13px;
+            font-size: 11px;
             font-weight: 600;
-            color: var(--text-secondary);
+            color: var(--text-muted);
+            font-family: var(--font-mono);
         }}
         select.filter-select {{
-            background: var(--surface-hover);
+            background: var(--bg-page);
             color: var(--text-primary);
             border: 1px solid var(--border-subtle);
-            padding: 7px 12px;
-            border-radius: var(--radius-md);
-            font-size: 13px;
+            padding: 4px 8px;
+            border-radius: var(--radius-xs);
+            font-family: var(--font-mono);
+            font-size: 11px;
             outline: none;
             cursor: pointer;
         }}
+        select.filter-select:focus {{
+            border-color: var(--brand-cyan);
+        }}
         .chip-group {{
             display: flex;
-            gap: 6px;
+            gap: 4px;
         }}
         .chip {{
             background: var(--surface-hover);
             border: 1px solid var(--border-subtle);
             color: var(--text-secondary);
-            padding: 6px 12px;
-            border-radius: var(--radius-md);
-            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: var(--radius-xs);
+            font-family: var(--font-mono);
+            font-size: 10px;
             cursor: pointer;
             transition: all 0.15s ease;
+        }}
+        .chip:hover {{
+            color: var(--text-primary);
+            border-color: var(--border-strong);
         }}
         .chip.active {{
-            background: var(--border-strong);
-            color: var(--text-primary);
-            border-color: var(--accent-sat);
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--brand-cyan);
+            border-color: var(--brand-cyan);
         }}
 
-        /* Domain Tabs */
-        .tab-nav {{
-            display: flex;
-            gap: 8px;
-            border-bottom: 1px solid var(--border-subtle);
-            margin-bottom: 20px;
-            overflow-x: auto;
-        }}
-        .tab-btn {{
-            background: none;
-            border: none;
-            border-bottom: 2px solid transparent;
-            color: var(--text-secondary);
-            font-size: 14px;
-            font-weight: 600;
-            padding: 10px 16px;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.15s ease;
-        }}
-        .tab-btn:hover {{
-            color: var(--text-primary);
-        }}
-        .tab-btn.active {{
-            color: var(--accent-sat);
-            border-bottom-color: var(--accent-sat);
-        }}
-        .tab-content {{
-            display: none;
-        }}
-        .tab-content.active {{
-            display: block;
-        }}
-
-        /* Charts Layout */
+        /* Charts Layout (2x2 Grid) */
         .chart-grid {{
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(580px, 1fr));
-            gap: 20px;
-            margin-bottom: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
         }}
         .chart-card {{
             background: var(--surface-card);
             border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-lg);
-            padding: 20px;
-            min-height: 380px;
-            position: relative;
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
         }}
         .chart-header {{
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
+            align-items: flex-start;
+            margin-bottom: 6px;
         }}
         .chart-title {{
-            font-size: 15px;
-            font-weight: 600;
+            font-size: 12px;
+            font-weight: 700;
             color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            letter-spacing: -0.1px;
         }}
         .chart-badge {{
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 4px;
-            background: var(--surface-hover);
-            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 5px;
+            border-radius: var(--radius-xs);
         }}
         .chart-canvas-wrapper {{
             position: relative;
-            height: 300px;
+            height: 200px;
             width: 100%;
         }}
 
@@ -609,55 +652,52 @@ def generate_dashboard(scenario_dir: Path, output_path: Optional[Path] = None) -
         .table-card {{
             background: var(--surface-card);
             border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-lg);
-            padding: 20px;
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
             overflow-x: auto;
+            margin-bottom: 12px;
         }}
         table.data-table {{
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
+            font-size: 11px;
             text-align: left;
         }}
         table.data-table th {{
-            background: var(--surface-hover);
-            color: var(--text-secondary);
+            background: #06090e;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
             font-weight: 600;
-            padding: 10px 14px;
+            font-size: 10px;
+            text-transform: uppercase;
+            padding: 8px 10px;
             border-bottom: 1px solid var(--border-subtle);
         }}
         table.data-table td {{
-            padding: 10px 14px;
-            border-bottom: 1px solid var(--border-subtle);
-            color: var(--text-primary);
+            padding: 8px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
         }}
         table.data-table tr:hover td {{
-            background: var(--surface-hover);
+            background: rgba(255, 255, 255, 0.025);
+            color: var(--text-primary);
         }}
 
         /* Footer */
         .footer {{
             text-align: center;
-            font-size: 13px;
+            font-size: 11px;
             color: var(--text-muted);
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border-subtle);
+            padding: 10px 0;
+            font-family: var(--font-mono);
         }}
 
         @media print {{
             body {{ background: #fff !important; color: #000 !important; }}
-            .top-navbar, .toolbar, .tab-nav, .header-actions {{ display: none !important; }}
-            .tab-content {{ display: block !important; }}
+            .top-navbar, .toolbar, .header-actions {{ display: none !important; }}
             .chart-card {{ break-inside: avoid; border: 1px solid #ccc; }}
         }}
-
-        html {{ scrollbar-color: #3a4b5e #0a1017; scrollbar-width: thin; }}
-        * {{ scrollbar-width: thin; scrollbar-color: #3a4b5e transparent; }}
-        *::-webkit-scrollbar {{ width: 8px; height: 8px; }}
-        *::-webkit-scrollbar-track {{ background: transparent; }}
-        *::-webkit-scrollbar-thumb {{ background: #344659; border: 2px solid transparent; background-clip: padding-box; border-radius: 6px; }}
-        *::-webkit-scrollbar-thumb:hover {{ background: #6ee7d4; border-color: transparent; }}
     </style>
 </head>
 <body>
@@ -665,16 +705,15 @@ def generate_dashboard(scenario_dir: Path, output_path: Optional[Path] = None) -
         <!-- Top Navbar -->
         <header class="top-navbar">
             <div class="brand">
-                <span class="brand-badge">NexaSphere</span>
+                <span class="brand-badge">NEXASPHERE</span>
                 <div class="brand-title">
                     <h1>NexaSim 3D TN-NTN Executive Dashboard</h1>
-                    <p>Scenario: <strong>{scenario_name}</strong> | Multi-Tier 3D Simulation</p>
+                    <p>Scenario: <strong>{scenario_name}</strong> • Multi-Tier 3D Simulation Performance</p>
                 </div>
             </div>
             <div class="header-actions">
-                <button class="btn" onclick="toggleTheme()" id="themeBtn">🌓 Theme</button>
-                <button class="btn" onclick="downloadJSON()">💾 JSON</button>
-                <button class="btn btn-primary" onclick="window.print()">🖨️ PDF Report</button>
+                <button class="btn" onclick="downloadJSON()" title="Export raw JSON summary">💾 Export JSON</button>
+                <button class="btn btn-primary" onclick="window.print()" title="Print Printable PDF">🖨️ PDF Report</button>
             </div>
         </header>
 
@@ -967,12 +1006,12 @@ def generate_dashboard(scenario_dir: Path, output_path: Optional[Path] = None) -
                     scales: {{
                         x: {{
                             type: 'linear',
-                            title: {{ display: true, text: 'Simulation Time (s)', color: '#94a3b8' }},
-                            grid: {{ color: 'rgba(51, 65, 85, 0.4)' }}
+                            title: {{ display: true, text: 'Simulation Time (s)', color: '#64748b' }},
+                            grid: {{ color: 'rgba(28, 40, 56, 0.7)' }}
                         }},
                         y: {{
-                            title: {{ display: true, text: yTitle, color: '#94a3b8' }},
-                            grid: {{ color: 'rgba(51, 65, 85, 0.4)' }}
+                            title: {{ display: true, text: yTitle, color: '#64748b' }},
+                            grid: {{ color: 'rgba(28, 40, 56, 0.7)' }}
                         }}
                     }}
                 }}

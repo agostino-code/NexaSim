@@ -1,8 +1,9 @@
 #ifndef ARTERY_NTN_UNIFIED_MOBILITY_MANAGER_H
 #define ARTERY_NTN_UNIFIED_MOBILITY_MANAGER_H
 
-#include <inet/common/geometry/common/Coord.h>
+#include "artery/ntn/interfaces/INetworkMobilityProvider.h"
 #include <omnetpp.h>
+#include <cmath>
 #include <vector>
 #include <map>
 #include <string>
@@ -49,11 +50,19 @@ public:
         MAKE_BEFORE_BREAK,  // Dual connectivity handover
         HARD_HANDOVER       // Break before make
     };
-    
+
+    enum class HandoverState {
+        IDLE = 0,
+        MEASUREMENT_REPORTED = 1,
+        COMMAND_RECEIVED = 2,
+        RACH_PREAMBLE_SENT = 3,
+        HANDOVER_COMPLETED = 4
+    };
+
     struct NetworkNode {
         std::string id;
         NetworkType type;
-        inet::Coord position;
+        MobilitySample position;  //!< Last known kinematic state (or notAvailable())
         double altitude = 0;
         // Capabilities
         double maxThroughputMbps = 0;
@@ -89,11 +98,13 @@ public:
         
         // Handover state
         bool handoverInProgress = false;
+        HandoverState handoverState = HandoverState::IDLE;
         HandoverType handoverType = HandoverType::HARD_HANDOVER;
         HandoverTrigger trigger = HandoverTrigger::SIGNAL_STRENGTH;
         omnetpp::simtime_t handoverStartTime = -1;
         int preparationPhase = 0;  // 0=not started, 1=measurement, 2=decision, 3=execution
-        
+        double propagationDelayMs = 0.0;
+
         // Dual connectivity
         bool dualConnectivityActive = false;
         double nrRatio = 1.0;  // 0=all NTN, 1=all NR
@@ -132,6 +143,14 @@ public:
         bool qosBasedSteering = true;
     };
 
+    /**
+     * @brief Inject a framework-neutral mobility source used for UE kinematic
+     * queries (optional). Concrete adapters such as ntn::InetMobilityProvider
+     * live in the NTN feature; this manager stays decoupled from INET.
+     */
+    void setMobilityProvider(INetworkMobilityProvider* provider) { mobilityProvider = provider; }
+    INetworkMobilityProvider* getMobilityProvider() const { return mobilityProvider; }
+
 protected:
     // Configuration
     HandoverPolicy policy;
@@ -144,6 +163,9 @@ protected:
     // References to other managers
     ConstellationManager* constellationManager = nullptr;
     nr::NRManager* nrManager = nullptr;
+
+    // Framework-neutral mobility source (optional, set via setMobilityProvider)
+    INetworkMobilityProvider* mobilityProvider = nullptr;
     
     // Timers
     omnetpp::cMessage* evaluationTimer = nullptr;
@@ -210,7 +232,15 @@ protected:
     NetworkNode* findBestTargetNode(const UEContext& ue, NetworkType preferredType = NetworkType::TERRESTRIAL_NR);
     double calculateHandoverCost(const UEContext& ue, const NetworkNode& target);
     void notifyNetworkNodes(const UEContext& ue, const std::string& event);
-    
+    static double computeSlantRangePropagationDelayMs(double altitudeM, double elevationDeg) {
+        constexpr double R_E = 6378137.0;
+        constexpr double C_LIGHT = 299792458.0;
+        double theta = elevationDeg * M_PI / 180.0;
+        double sinTheta = std::sin(theta);
+        double d = std::sqrt(R_E * R_E * sinTheta * sinTheta + 2.0 * R_E * altitudeM + altitudeM * altitudeM) - R_E * sinTheta;
+        return (d / C_LIGHT) * 1000.0;
+    }
+
     // Configuration
     void configureFromYAML(const std::string& yamlContent);
 };

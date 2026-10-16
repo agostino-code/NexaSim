@@ -4,6 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NexaSim 3D TN-NTN Executive Dashboard | Emergency Corridor</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="dashboard.css">
 </head>
@@ -12,16 +16,15 @@
         <!-- Top Navbar -->
         <header class="top-navbar">
             <div class="brand">
-                <span class="brand-badge">NexaSphere</span>
+                <span class="brand-badge">NEXASPHERE</span>
                 <div class="brand-title">
                     <h1>NexaSim 3D TN-NTN Executive Dashboard</h1>
-                    <p>Scenario: <strong>Emergency Corridor</strong> | Multi-Tier 3D Simulation</p>
+                    <p>Scenario: <strong>Emergency Corridor</strong> • Multi-Tier 3D Simulation Performance</p>
                 </div>
             </div>
             <div class="header-actions">
-                <button class="btn" onclick="toggleTheme()" id="themeBtn">🌓 Theme</button>
-                <button class="btn" onclick="downloadJSON()">💾 JSON</button>
-                <button class="btn btn-primary" onclick="window.print()">🖨️ PDF Report</button>
+                <button class="btn" onclick="downloadJSON()" title="Export raw JSON summary">💾 Export JSON</button>
+                <button class="btn btn-primary" onclick="window.print()" title="Print Printable PDF">🖨️ PDF Report</button>
             </div>
         </header>
 

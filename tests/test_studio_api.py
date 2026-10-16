@@ -170,6 +170,69 @@ scenario:
         self.assertEqual(len(data["timestamps"]), len(data["throughput_mbps"]))
         self.assertEqual(len(data["timestamps"]), len(data["rtt_ms"]))
 
+    def test_post_delete_scenario_node(self):
+        """Tests POST /api/scenario/node/delete removes specified node and updates YAML."""
+        # 1. First save a scenario with 2 gNodeB sites
+        valid_yaml = """
+scenario:
+  name: "test_auto_scenario_temp"
+  description: "Temporary scenario for node deletion test"
+  version: "1.0"
+  time:
+    start: "2026-08-26T10:00:00Z"
+    duration_s: 60.0
+  area:
+    name: "Test Area"
+    center_lat: 46.5
+    center_lon: 10.4
+    bbox: [10.3, 46.4, 10.5, 46.6]
+  constellation:
+    shells: []
+  terrestrial:
+    gnb:
+      count: 2
+      sites:
+        - name: "gnb_keep"
+          lat: 46.5
+          lon: 10.4
+          height_m: 30.0
+        - name: "gnb_to_delete"
+          lat: 46.52
+          lon: 10.42
+          height_m: 25.0
+    ue:
+      count: 2
+"""
+        save_res = self.client.post("/api/save", json={"id": self.test_scenario_id, "yaml": valid_yaml})
+        self.assertEqual(save_res.status_code, 200)
+
+        # 2. Call delete endpoint for gnb_to_delete
+        del_res = self.client.post("/api/scenario/node/delete", json={
+            "id": self.test_scenario_id,
+            "type": "gnb",
+            "name": "gnb_to_delete"
+        })
+        self.assertEqual(del_res.status_code, 200)
+        self.assertEqual(del_res.json()["status"], "deleted")
+
+        # 3. Verify scenario file on disk has only gnb_keep
+        content = self.test_scenario_file.read_text(encoding='utf-8')
+        self.assertIn("gnb_keep", content)
+        self.assertNotIn("gnb_to_delete", content)
+
+    def test_websocket_telemetry_and_logs(self):
+        """Tests WebSocket connections for live logs and telemetry stream."""
+        with self.client.websocket_connect("/ws/logs") as ws_logs:
+            # Client connects and receives any buffered log
+            pass
+
+        with self.client.websocket_connect("/ws/telemetry") as ws_telem:
+            ws_telem.send_text("ping")
+            data = ws_telem.receive_json()
+            self.assertEqual(data["type"], "telemetry")
+            self.assertIn("throughput_mbps", data)
+            self.assertIn("latency_ms", data)
+
 
 if __name__ == '__main__':
     unittest.main()

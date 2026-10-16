@@ -1,7 +1,7 @@
 version 2
-run General-0-20260930-03:11:08-370
+run General-0-20261016-14:14:38-370
 attr configname General
-attr datetime 20260930-03:11:08
+attr datetime 20261016-14:14:38
 attr experiment General
 attr inifile omnetpp.ini
 attr iterationvars ""
@@ -459,280 +459,280 @@ param *.groundStation[0].latitude 46.4983
 param *.groundStation[0].longitude 11.3548
 param *.groundStation[0].altitude 262
 param *.groundStation[0].elevationMaskDeg 15.0
-param *.groundStation[0].mobility.initialX 1260382.7999999998m
-param *.groundStation[0].mobility.initialY 5161311.3m
+param *.groundStation[0].mobility.initialX 68860.26583257449m
+param *.groundStation[0].mobility.initialY -3363.299999999654m
 param *.groundStation[0].mobility.initialZ 262m
 param *.groundStation[1].latitude 46.1691
 param *.groundStation[1].longitude 9.8708
 param *.groundStation[1].altitude 300
 param *.groundStation[1].elevationMaskDeg 15.0
-param *.groundStation[1].mobility.initialX 1095658.7999999998m
-param *.groundStation[1].mobility.initialY 5124770.1m
+param *.groundStation[1].mobility.initialX -44468.59575724534m
+param *.groundStation[1].mobility.initialY -39904.49999999967m
 param *.groundStation[1].mobility.initialZ 300m
 param *.gnb[0].gnbType 0
 param *.gnb[0].txPowerDbm 46
 param *.gnb[0].frequencyGhz 3.5
 param *.gnb[0].bandwidthMhz 100
 param *.gnb[0].mimoLayers 4
-param *.gnb[0].mobility.initialX 1166610.0m
-param *.gnb[0].mobility.initialY 5167494.0m
+param *.gnb[0].mobility.initialX 4345.291256375214m
+param *.gnb[0].mobility.initialY 2819.4000000005276m
 param *.gnb[0].mobility.initialZ 30m
 param *.gnb[1].gnbType 0
 param *.gnb[1].txPowerDbm 43
 param *.gnb[1].frequencyGhz 3.5
 param *.gnb[1].bandwidthMhz 100
 param *.gnb[1].mimoLayers 4
-param *.gnb[1].mobility.initialX 1162392.0m
-param *.gnb[1].mobility.initialY 5165718.0m
+param *.gnb[1].mobility.initialX 1443.339274964714m
+param *.gnb[1].mobility.initialY 1043.3999999999344m
 param *.gnb[1].mobility.initialZ 25m
 param *.gnb[2].gnbType 0
 param *.gnb[2].txPowerDbm 46
 param *.gnb[2].frequencyGhz 3.5
 param *.gnb[2].bandwidthMhz 100
 param *.gnb[2].mimoLayers 4
-param *.gnb[2].mobility.initialX 1160294.0999999999m
-param *.gnb[2].mobility.initialY 5164674.6m
+param *.gnb[2].mobility.initialX 0.0m
+param *.gnb[2].mobility.initialY 0.0m
 param *.gnb[2].mobility.initialZ 20m
 param *.userTerminal[0].terminal.terminalId 0
 param *.userTerminal[0].terminal.terminalType "\"residential\""
 param *.userTerminal[0].terminal.arrayNumElements 64
 param *.userTerminal[0].terminal.dualConnectivityEnabled true
-param *.userTerminal[0].mobility.initialX 1154677.6193829717m
-param *.userTerminal[0].mobility.initialY 5165758.58247773m
-param *.userTerminal[0].mobility.initialZ 0m
-param *.ue[0].mobility.initialX 1154677.6193829717m
-param *.ue[0].mobility.initialY 5165758.58247773m
-param *.ue[0].mobility.initialZ 0m
+param *.userTerminal[0].mobility.initialX -3864.096030141977m
+param *.userTerminal[0].mobility.initialY 1083.9824777297551m
+param *.userTerminal[0].mobility.initialZ 0.0m
+param *.ue[0].mobility.initialX -3864.096030141977m
+param *.ue[0].mobility.initialY 1083.9824777297551m
+param *.ue[0].mobility.initialZ 0.0m
 param *.userTerminal[1].terminal.terminalId 1
 param *.userTerminal[1].terminal.terminalType "\"residential\""
 param *.userTerminal[1].terminal.arrayNumElements 64
 param *.userTerminal[1].terminal.dualConnectivityEnabled true
-param *.userTerminal[1].mobility.initialX 1156877.639193452m
-param *.userTerminal[1].mobility.initialY 5163331.6952603385m
-param *.userTerminal[1].mobility.initialZ 0m
-param *.ue[1].mobility.initialX 1156877.639193452m
-param *.ue[1].mobility.initialY 5163331.6952603385m
-param *.ue[1].mobility.initialZ 0m
+param *.userTerminal[1].mobility.initialX -2350.4991007522112m
+param *.userTerminal[1].mobility.initialY -1342.9047396612575m
+param *.userTerminal[1].mobility.initialZ 0.0m
+param *.ue[1].mobility.initialX -2350.4991007522112m
+param *.ue[1].mobility.initialY -1342.9047396612575m
+param *.ue[1].mobility.initialZ 0.0m
 param *.userTerminal[2].terminal.terminalId 2
 param *.userTerminal[2].terminal.terminalType "\"residential\""
 param *.userTerminal[2].terminal.arrayNumElements 64
 param *.userTerminal[2].terminal.dualConnectivityEnabled true
-param *.userTerminal[2].mobility.initialX 1161911.3643103943m
-param *.userTerminal[2].mobility.initialY 5166404.898286332m
-param *.userTerminal[2].mobility.initialZ 0m
-param *.ue[2].mobility.initialX 1161911.3643103943m
-param *.ue[2].mobility.initialY 5166404.898286332m
-param *.ue[2].mobility.initialZ 0m
+param *.userTerminal[2].mobility.initialX 1112.6655689932225m
+param *.userTerminal[2].mobility.initialY 1730.298286333003m
+param *.userTerminal[2].mobility.initialZ 0.0m
+param *.ue[2].mobility.initialX 1112.6655689932225m
+param *.ue[2].mobility.initialY 1730.298286333003m
+param *.ue[2].mobility.initialZ 0.0m
 param *.userTerminal[3].terminal.terminalId 3
 param *.userTerminal[3].terminal.terminalType "\"residential\""
 param *.userTerminal[3].terminal.arrayNumElements 64
 param *.userTerminal[3].terminal.dualConnectivityEnabled true
-param *.userTerminal[3].mobility.initialX 1155365.0210421865m
-param *.userTerminal[3].mobility.initialY 5167441.915920915m
-param *.userTerminal[3].mobility.initialZ 0m
-param *.ue[3].mobility.initialX 1155365.0210421865m
-param *.ue[3].mobility.initialY 5167441.915920915m
-param *.ue[3].mobility.initialZ 0m
+param *.userTerminal[3].mobility.initialX -3391.168906627627m
+param *.userTerminal[3].mobility.initialY 2767.3159209150954m
+param *.userTerminal[3].mobility.initialZ 0.0m
+param *.ue[3].mobility.initialX -3391.168906627627m
+param *.ue[3].mobility.initialY 2767.3159209150954m
+param *.ue[3].mobility.initialZ 0.0m
 param *.userTerminal[4].terminal.terminalId 4
 param *.userTerminal[4].terminal.terminalType "\"residential\""
 param *.userTerminal[4].terminal.arrayNumElements 64
 param *.userTerminal[4].terminal.dualConnectivityEnabled true
-param *.userTerminal[4].mobility.initialX 1154730.7491357627m
-param *.userTerminal[4].mobility.initialY 5164309.999319104m
-param *.userTerminal[4].mobility.initialZ 0m
-param *.ue[4].mobility.initialX 1154730.7491357627m
-param *.ue[4].mobility.initialY 5164309.999319104m
-param *.ue[4].mobility.initialZ 0m
+param *.userTerminal[4].mobility.initialX -3827.543163526528m
+param *.userTerminal[4].mobility.initialY -364.6006808956983m
+param *.userTerminal[4].mobility.initialZ 0.0m
+param *.ue[4].mobility.initialX -3827.543163526528m
+param *.ue[4].mobility.initialY -364.6006808956983m
+param *.ue[4].mobility.initialZ 0.0m
 param *.userTerminal[5].terminal.terminalId 5
 param *.userTerminal[5].terminal.terminalType "\"residential\""
 param *.userTerminal[5].terminal.arrayNumElements 64
 param *.userTerminal[5].terminal.dualConnectivityEnabled true
-param *.userTerminal[5].mobility.initialX 1160009.4436979473m
-param *.userTerminal[5].mobility.initialY 5162956.128912192m
-param *.userTerminal[5].mobility.initialZ 0m
-param *.ue[5].mobility.initialX 1160009.4436979473m
-param *.ue[5].mobility.initialY 5162956.128912192m
-param *.ue[5].mobility.initialZ 0m
+param *.userTerminal[5].mobility.initialX -195.8413750029529m
+param *.userTerminal[5].mobility.initialY -1718.4710878079202m
+param *.userTerminal[5].mobility.initialZ 0.0m
+param *.ue[5].mobility.initialX -195.8413750029529m
+param *.ue[5].mobility.initialY -1718.4710878079202m
+param *.ue[5].mobility.initialZ 0.0m
 param *.userTerminal[6].terminal.terminalId 6
 param *.userTerminal[6].terminal.terminalType "\"residential\""
 param *.userTerminal[6].terminal.arrayNumElements 64
 param *.userTerminal[6].terminal.dualConnectivityEnabled true
-param *.userTerminal[6].mobility.initialX 1156607.0979226218m
-param *.userTerminal[6].mobility.initialY 5161676.729558094m
-param *.userTerminal[6].mobility.initialZ 0m
-param *.ue[6].mobility.initialX 1156607.0979226218m
-param *.ue[6].mobility.initialY 5161676.729558094m
-param *.ue[6].mobility.initialZ 0m
+param *.userTerminal[6].mobility.initialX -2536.629441420568m
+param *.userTerminal[6].mobility.initialY -2997.8704419050146m
+param *.userTerminal[6].mobility.initialZ 0.0m
+param *.ue[6].mobility.initialX -2536.629441420568m
+param *.ue[6].mobility.initialY -2997.8704419050146m
+param *.ue[6].mobility.initialZ 0.0m
 param *.userTerminal[7].terminal.terminalId 7
 param *.userTerminal[7].terminal.terminalType "\"residential\""
 param *.userTerminal[7].terminal.arrayNumElements 64
 param *.userTerminal[7].terminal.dualConnectivityEnabled true
-param *.userTerminal[7].mobility.initialX 1160448.8504346956m
-param *.userTerminal[7].mobility.initialY 5165828.230355611m
-param *.userTerminal[7].mobility.initialZ 0m
-param *.ue[7].mobility.initialX 1160448.8504346956m
-param *.ue[7].mobility.initialY 5165828.230355611m
-param *.ue[7].mobility.initialZ 0m
+param *.userTerminal[7].mobility.initialX 106.4671243692801m
+param *.userTerminal[7].mobility.initialY 1153.6303556117105m
+param *.userTerminal[7].mobility.initialZ 0.0m
+param *.ue[7].mobility.initialX 106.4671243692801m
+param *.ue[7].mobility.initialY 1153.6303556117105m
+param *.ue[7].mobility.initialZ 0.0m
 param *.userTerminal[8].terminal.terminalId 8
 param *.userTerminal[8].terminal.terminalType "\"residential\""
 param *.userTerminal[8].terminal.arrayNumElements 64
 param *.userTerminal[8].terminal.dualConnectivityEnabled true
-param *.userTerminal[8].mobility.initialX 1160940.8490910225m
-param *.userTerminal[8].mobility.initialY 5162968.134542791m
-param *.userTerminal[8].mobility.initialZ 0m
-param *.ue[8].mobility.initialX 1160940.8490910225m
-param *.ue[8].mobility.initialY 5162968.134542791m
-param *.ue[8].mobility.initialZ 0m
+param *.userTerminal[8].mobility.initialX 444.95846518937486m
+param *.userTerminal[8].mobility.initialY -1706.4654572083668m
+param *.userTerminal[8].mobility.initialZ 0.0m
+param *.ue[8].mobility.initialX 444.95846518937486m
+param *.ue[8].mobility.initialY -1706.4654572083668m
+param *.ue[8].mobility.initialZ 0.0m
 param *.userTerminal[9].terminal.terminalId 9
 param *.userTerminal[9].terminal.terminalType "\"residential\""
 param *.userTerminal[9].terminal.arrayNumElements 64
 param *.userTerminal[9].terminal.dualConnectivityEnabled true
-param *.userTerminal[9].mobility.initialX 1154472.1362324264m
-param *.userTerminal[9].mobility.initialY 5166890.806841475m
-param *.userTerminal[9].mobility.initialZ 0m
-param *.ue[9].mobility.initialX 1154472.1362324264m
-param *.ue[9].mobility.initialY 5166890.806841475m
-param *.ue[9].mobility.initialZ 0m
+param *.userTerminal[9].mobility.initialX -4005.4668779065128m
+param *.userTerminal[9].mobility.initialY 2216.2068414749356m
+param *.userTerminal[9].mobility.initialZ 0.0m
+param *.ue[9].mobility.initialX -4005.4668779065128m
+param *.ue[9].mobility.initialY 2216.2068414749356m
+param *.ue[9].mobility.initialZ 0.0m
 param *.userTerminal[10].terminal.terminalId 10
 param *.userTerminal[10].terminal.terminalType "\"residential\""
 param *.userTerminal[10].terminal.arrayNumElements 64
 param *.userTerminal[10].terminal.dualConnectivityEnabled true
-param *.userTerminal[10].mobility.initialX 1162149.3472843692m
-param *.userTerminal[10].mobility.initialY 5166866.756217207m
-param *.userTerminal[10].mobility.initialZ 0m
-param *.ue[10].mobility.initialX 1162149.3472843692m
-param *.ue[10].mobility.initialY 5166866.756217207m
-param *.ue[10].mobility.initialZ 0m
+param *.userTerminal[10].mobility.initialX 1276.3960485732662m
+param *.userTerminal[10].mobility.initialY 2192.1562172066942m
+param *.userTerminal[10].mobility.initialZ 0.0m
+param *.ue[10].mobility.initialX 1276.3960485732662m
+param *.ue[10].mobility.initialY 2192.1562172066942m
+param *.ue[10].mobility.initialZ 0.0m
 param *.userTerminal[11].terminal.terminalId 11
 param *.userTerminal[11].terminal.terminalType "\"residential\""
 param *.userTerminal[11].terminal.arrayNumElements 64
 param *.userTerminal[11].terminal.dualConnectivityEnabled true
-param *.userTerminal[11].mobility.initialX 1156125.822447911m
-param *.userTerminal[11].mobility.initialY 5163766.06844001m
-param *.userTerminal[11].mobility.initialZ 0m
-param *.ue[11].mobility.initialX 1156125.822447911m
-param *.ue[11].mobility.initialY 5163766.06844001m
-param *.ue[11].mobility.initialZ 0m
+param *.userTerminal[11].mobility.initialX -2867.7433146879675m
+param *.userTerminal[11].mobility.initialY -908.5315599896476m
+param *.userTerminal[11].mobility.initialZ 0.0m
+param *.ue[11].mobility.initialX -2867.7433146879675m
+param *.ue[11].mobility.initialY -908.5315599896476m
+param *.ue[11].mobility.initialZ 0.0m
 param *.userTerminal[12].terminal.terminalId 12
 param *.userTerminal[12].terminal.terminalType "\"residential\""
 param *.userTerminal[12].terminal.arrayNumElements 64
 param *.userTerminal[12].terminal.dualConnectivityEnabled true
-param *.userTerminal[12].mobility.initialX 1158136.1994507501m
-param *.userTerminal[12].mobility.initialY 5167875.039060897m
-param *.userTerminal[12].mobility.initialZ 0m
-param *.ue[12].mobility.initialX 1158136.1994507501m
-param *.ue[12].mobility.initialY 5167875.039060897m
-param *.ue[12].mobility.initialZ 0m
+param *.userTerminal[12].mobility.initialX -1484.6191973878658m
+param *.userTerminal[12].mobility.initialY 3200.439060897324m
+param *.userTerminal[12].mobility.initialZ 0.0m
+param *.ue[12].mobility.initialX -1484.6191973878658m
+param *.ue[12].mobility.initialY 3200.439060897324m
+param *.ue[12].mobility.initialZ 0.0m
 param *.userTerminal[13].terminal.terminalId 13
 param *.userTerminal[13].terminal.terminalType "\"residential\""
 param *.userTerminal[13].terminal.arrayNumElements 64
 param *.userTerminal[13].terminal.dualConnectivityEnabled true
-param *.userTerminal[13].mobility.initialX 1155473.5517828516m
-param *.userTerminal[13].mobility.initialY 5162117.687316911m
-param *.userTerminal[13].mobility.initialZ 0m
-param *.ue[13].mobility.initialX 1155473.5517828516m
-param *.ue[13].mobility.initialY 5162117.687316911m
-param *.ue[13].mobility.initialZ 0m
+param *.userTerminal[13].mobility.initialX -3316.500580900526m
+param *.userTerminal[13].mobility.initialY -2556.912683088008m
+param *.userTerminal[13].mobility.initialZ 0.0m
+param *.ue[13].mobility.initialX -3316.500580900526m
+param *.ue[13].mobility.initialY -2556.912683088008m
+param *.ue[13].mobility.initialZ 0.0m
 param *.userTerminal[14].terminal.terminalId 14
 param *.userTerminal[14].terminal.terminalType "\"residential\""
 param *.userTerminal[14].terminal.arrayNumElements 64
 param *.userTerminal[14].terminal.dualConnectivityEnabled true
-param *.userTerminal[14].mobility.initialX 1161101.3589481725m
-param *.userTerminal[14].mobility.initialY 5167144.312479874m
-param *.userTerminal[14].mobility.initialZ 0m
-param *.ue[14].mobility.initialX 1161101.3589481725m
-param *.ue[14].mobility.initialY 5167144.312479874m
-param *.ue[14].mobility.initialZ 0m
+param *.userTerminal[14].mobility.initialX 555.3880284875778m
+param *.userTerminal[14].mobility.initialY 2469.71247987446m
+param *.userTerminal[14].mobility.initialZ 0.0m
+param *.ue[14].mobility.initialX 555.3880284875778m
+param *.ue[14].mobility.initialY 2469.71247987446m
+param *.ue[14].mobility.initialZ 0.0m
 param *.userTerminal[15].terminal.terminalId 15
 param *.userTerminal[15].terminal.terminalType "\"residential\""
 param *.userTerminal[15].terminal.arrayNumElements 64
 param *.userTerminal[15].terminal.dualConnectivityEnabled true
-param *.userTerminal[15].mobility.initialX 1162500.0228323012m
-param *.userTerminal[15].mobility.initialY 5166875.474300007m
-param *.userTerminal[15].mobility.initialZ 0m
-param *.ue[15].mobility.initialX 1162500.0228323012m
-param *.ue[15].mobility.initialY 5166875.474300007m
-param *.ue[15].mobility.initialZ 0m
+param *.userTerminal[15].mobility.initialX 1517.6581635930934m
+param *.userTerminal[15].mobility.initialY 2200.8743000080317m
+param *.userTerminal[15].mobility.initialZ 0.0m
+param *.ue[15].mobility.initialX 1517.6581635930934m
+param *.ue[15].mobility.initialY 2200.8743000080317m
+param *.ue[15].mobility.initialZ 0.0m
 param *.userTerminal[16].terminal.terminalId 16
 param *.userTerminal[16].terminal.terminalType "\"residential\""
 param *.userTerminal[16].terminal.arrayNumElements 64
 param *.userTerminal[16].terminal.dualConnectivityEnabled true
-param *.userTerminal[16].mobility.initialX 1165201.584980171m
-param *.userTerminal[16].mobility.initialY 5165071.279089089m
-param *.userTerminal[16].mobility.initialZ 0m
-param *.ue[16].mobility.initialX 1165201.584980171m
-param *.ue[16].mobility.initialY 5165071.279089089m
-param *.ue[16].mobility.initialZ 0m
+param *.userTerminal[16].mobility.initialX 3376.3124139283464m
+param *.userTerminal[16].mobility.initialY 396.6790890891261m
+param *.userTerminal[16].mobility.initialZ 0.0m
+param *.ue[16].mobility.initialX 3376.3124139283464m
+param *.ue[16].mobility.initialY 396.6790890891261m
+param *.ue[16].mobility.initialZ 0.0m
 param *.userTerminal[17].terminal.terminalId 17
 param *.userTerminal[17].terminal.terminalType "\"residential\""
 param *.userTerminal[17].terminal.arrayNumElements 64
 param *.userTerminal[17].terminal.dualConnectivityEnabled true
-param *.userTerminal[17].mobility.initialX 1160527.6510071328m
-param *.userTerminal[17].mobility.initialY 5164021.038952207m
-param *.userTerminal[17].mobility.initialZ 0m
-param *.ue[17].mobility.initialX 1160527.6510071328m
-param *.ue[17].mobility.initialY 5164021.038952207m
-param *.ue[17].mobility.initialZ 0m
+param *.userTerminal[17].mobility.initialX 160.68132003546842m
+param *.userTerminal[17].mobility.initialY -653.5610477921593m
+param *.userTerminal[17].mobility.initialZ 0.0m
+param *.ue[17].mobility.initialX 160.68132003546842m
+param *.ue[17].mobility.initialY -653.5610477921593m
+param *.ue[17].mobility.initialZ 0.0m
 param *.userTerminal[18].terminal.terminalId 18
 param *.userTerminal[18].terminal.terminalType "\"residential\""
 param *.userTerminal[18].terminal.arrayNumElements 64
 param *.userTerminal[18].terminal.dualConnectivityEnabled true
-param *.userTerminal[18].mobility.initialX 1161265.569251243m
-param *.userTerminal[18].mobility.initialY 5167023.835063925m
-param *.userTerminal[18].mobility.initialZ 0m
-param *.ue[18].mobility.initialX 1161265.569251243m
-param *.ue[18].mobility.initialY 5167023.835063925m
-param *.ue[18].mobility.initialZ 0m
+param *.userTerminal[18].mobility.initialX 668.3634704894566m
+param *.userTerminal[18].mobility.initialY 2349.2350639255337m
+param *.userTerminal[18].mobility.initialZ 0.0m
+param *.ue[18].mobility.initialX 668.3634704894566m
+param *.ue[18].mobility.initialY 2349.2350639255337m
+param *.ue[18].mobility.initialZ 0.0m
 param *.userTerminal[19].terminal.terminalId 19
 param *.userTerminal[19].terminal.terminalType "\"residential\""
 param *.userTerminal[19].terminal.arrayNumElements 64
 param *.userTerminal[19].terminal.dualConnectivityEnabled true
-param *.userTerminal[19].mobility.initialX 1160808.60881235m
-param *.userTerminal[19].mobility.initialY 5167238.96795607m
-param *.userTerminal[19].mobility.initialZ 0m
-param *.ue[19].mobility.initialX 1160808.60881235m
-param *.ue[19].mobility.initialY 5167238.96795607m
-param *.ue[19].mobility.initialZ 0m
+param *.userTerminal[19].mobility.initialX 353.9781572908627m
+param *.userTerminal[19].mobility.initialY 2564.3679560703704m
+param *.userTerminal[19].mobility.initialZ 0.0m
+param *.ue[19].mobility.initialX 353.9781572908627m
+param *.ue[19].mobility.initialY 2564.3679560703704m
+param *.ue[19].mobility.initialZ 0.0m
 param *.userTerminal[20].terminal.terminalId 20
 param *.userTerminal[20].terminal.terminalType "\"residential\""
 param *.userTerminal[20].terminal.arrayNumElements 64
 param *.userTerminal[20].terminal.dualConnectivityEnabled true
-param *.userTerminal[20].mobility.initialX 1154908.650658578m
-param *.userTerminal[20].mobility.initialY 5166192.4484291915m
-param *.userTerminal[20].mobility.initialZ 0m
-param *.ue[20].mobility.initialX 1154908.650658578m
-param *.ue[20].mobility.initialY 5166192.4484291915m
-param *.ue[20].mobility.initialZ 0m
+param *.userTerminal[20].mobility.initialX -3705.1482662695894m
+param *.userTerminal[20].mobility.initialY 1517.8484291921704m
+param *.userTerminal[20].mobility.initialZ 0.0m
+param *.ue[20].mobility.initialX -3705.1482662695894m
+param *.ue[20].mobility.initialY 1517.8484291921704m
+param *.ue[20].mobility.initialZ 0.0m
 param *.userTerminal[21].terminal.terminalId 21
 param *.userTerminal[21].terminal.terminalType "\"residential\""
 param *.userTerminal[21].terminal.arrayNumElements 64
 param *.userTerminal[21].terminal.dualConnectivityEnabled true
-param *.userTerminal[21].mobility.initialX 1157612.2063959832m
-param *.userTerminal[21].mobility.initialY 5163017.802515839m
-param *.userTerminal[21].mobility.initialZ 0m
-param *.ue[21].mobility.initialX 1157612.2063959832m
-param *.ue[21].mobility.initialY 5163017.802515839m
-param *.ue[21].mobility.initialZ 0m
+param *.userTerminal[21].mobility.initialX -1845.1224414670405m
+param *.userTerminal[21].mobility.initialY -1656.7974841600303m
+param *.userTerminal[21].mobility.initialZ 0.0m
+param *.ue[21].mobility.initialX -1845.1224414670405m
+param *.ue[21].mobility.initialY -1656.7974841600303m
+param *.ue[21].mobility.initialZ 0.0m
 param *.userTerminal[22].terminal.terminalId 22
 param *.userTerminal[22].terminal.terminalType "\"residential\""
 param *.userTerminal[22].terminal.arrayNumElements 64
 param *.userTerminal[22].terminal.dualConnectivityEnabled true
-param *.userTerminal[22].mobility.initialX 1156983.9788386074m
-param *.userTerminal[22].mobility.initialY 5162031.414566311m
-param *.userTerminal[22].mobility.initialZ 0m
-param *.ue[22].mobility.initialX 1156983.9788386074m
-param *.ue[22].mobility.initialY 5162031.414566311m
-param *.ue[22].mobility.initialZ 0m
+param *.userTerminal[22].mobility.initialX -2277.3382321032273m
+param *.userTerminal[22].mobility.initialY -2643.1854336885435m
+param *.userTerminal[22].mobility.initialZ 0.0m
+param *.ue[22].mobility.initialX -2277.3382321032273m
+param *.ue[22].mobility.initialY -2643.1854336885435m
+param *.ue[22].mobility.initialZ 0.0m
 param *.userTerminal[23].terminal.terminalId 23
 param *.userTerminal[23].terminal.terminalType "\"residential\""
 param *.userTerminal[23].terminal.arrayNumElements 64
 param *.userTerminal[23].terminal.dualConnectivityEnabled true
-param *.userTerminal[23].mobility.initialX 1157485.506994522m
-param *.userTerminal[23].mobility.initialY 5162172.669519869m
-param *.userTerminal[23].mobility.initialZ 0m
-param *.ue[23].mobility.initialX 1157485.506994522m
-param *.ue[23].mobility.initialY 5162172.669519869m
-param *.ue[23].mobility.initialZ 0m
+param *.userTerminal[23].mobility.initialX -1932.2906679047148m
+param *.userTerminal[23].mobility.initialY -2501.9304801312146m
+param *.userTerminal[23].mobility.initialZ 0.0m
+param *.ue[23].mobility.initialX -1932.2906679047148m
+param *.ue[23].mobility.initialY -2501.9304801312146m
+param *.ue[23].mobility.initialZ 0.0m
 param *.nrManager.channelModel "\"RMa\""
 param *.nrManager.carrierAggregationEnabled true
 param *.nrManager.beamformingEnabled true
@@ -850,10 +850,10 @@ param *.groundStation[*].mecServer.localPort 5000
 param *.node[*].hybridManager.switchingMode "\"coverage-based\""
 param *.node[*].hybridManager.checkInterval 0.5s
 param *.node[*].hybridManager.elevationMaskDeg 28.0
-param *.node[*].hybridManager.blindSpotMinX 1500.0
-param *.node[*].hybridManager.blindSpotMaxX 2800.0
-param *.node[*].hybridManager.blindSpotMinY 800.0
-param *.node[*].hybridManager.blindSpotMaxY 2200.0
+param *.node[*].hybridManager.blindSpotMinX 145.09759907059285
+param *.node[*].hybridManager.blindSpotMaxX 1290.6049601537206
+param *.node[*].hybridManager.blindSpotMinY 155.40000000042653
+param *.node[*].hybridManager.blindSpotMaxY 932.4000000001931
 param *.node[*].hybridManager.blindSpotAttenuationDb 45.0
 param *.visualizer.dataLinkVisualizer.displayLinks true
 param *.visualizer.dataLinkVisualizer.lineColor "\"darkcyan\""
@@ -868,7 +868,7 @@ param *.visualizer.mobilityVisualizer.displayVelocities true
 param *.visualizer.mobilityVisualizer.displayMovementTrails true
 param *.visualizer.mobilityVisualizer.trailLength 20
 
-scalar GeneratedScenario.traci.launcher port 42115
+scalar GeneratedScenario.traci.launcher port 46623
 scalar GeneratedScenario.node[1].wlan[0].agent dropConfirm:count 0
 attr title "dropped confirms, count"
 scalar GeneratedScenario.node[1].wlan[0].agent acceptConfirm:count 0
@@ -2798,15 +2798,15 @@ bin	1	0
 scalar GeneratedScenario.node[1].userTerminal totalHandovers 0
 scalar GeneratedScenario.node[1].userTerminal successfulHandovers 0
 scalar GeneratedScenario.node[1].userTerminal failedHandovers 0
-scalar GeneratedScenario.node[1].userTerminal totalDataGb 4.32e-05
-scalar GeneratedScenario.node[1].userTerminal connectedTime 0.4
+scalar GeneratedScenario.node[1].userTerminal totalDataGb 1.92e-05
+scalar GeneratedScenario.node[1].userTerminal connectedTime 0
 scalar GeneratedScenario.node[1].userTerminal handoverSuccessRate 0
-scalar GeneratedScenario.node[1].userTerminal packetsSent 9
-scalar GeneratedScenario.node[1].userTerminal packetsReceived 9
+scalar GeneratedScenario.node[1].userTerminal packetsSent 4
+scalar GeneratedScenario.node[1].userTerminal packetsReceived 4
 scalar GeneratedScenario.node[1].userTerminal packetsDropped 0
 scalar GeneratedScenario.node[1].userTerminal packetDeliveryRatio 1
-scalar GeneratedScenario.node[1].userTerminal avgLatencyMs 2.2212691902565
-scalar GeneratedScenario.node[1].userTerminal avgJitterMs 0.21
+scalar GeneratedScenario.node[1].userTerminal avgLatencyMs 2.1346025235898
+scalar GeneratedScenario.node[1].userTerminal avgJitterMs 0.12
 scalar GeneratedScenario.node[1].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -2982,7 +2982,7 @@ bin	0	0
 bin	1	0
 scalar GeneratedScenario.node[1].hybridManager totalSwitches 0
 scalar GeneratedScenario.node[1].hybridManager satTotalDuration 0
-scalar GeneratedScenario.node[1].hybridManager cellTotalDuration 1
+scalar GeneratedScenario.node[1].hybridManager cellTotalDuration 0.5
 scalar GeneratedScenario.node[1].hybridManager satUsageRatio 0
 scalar GeneratedScenario.node[1].hybridManager cellUsageRatio 1
 scalar GeneratedScenario.node[1].hybridManager timeToLoss:min -nan
@@ -4931,15 +4931,15 @@ bin	1	0
 scalar GeneratedScenario.node[0].userTerminal totalHandovers 0
 scalar GeneratedScenario.node[0].userTerminal successfulHandovers 0
 scalar GeneratedScenario.node[0].userTerminal failedHandovers 0
-scalar GeneratedScenario.node[0].userTerminal totalDataGb 4.32e-05
-scalar GeneratedScenario.node[0].userTerminal connectedTime 0.4
+scalar GeneratedScenario.node[0].userTerminal totalDataGb 1.92e-05
+scalar GeneratedScenario.node[0].userTerminal connectedTime 0
 scalar GeneratedScenario.node[0].userTerminal handoverSuccessRate 0
-scalar GeneratedScenario.node[0].userTerminal packetsSent 9
-scalar GeneratedScenario.node[0].userTerminal packetsReceived 9
+scalar GeneratedScenario.node[0].userTerminal packetsSent 4
+scalar GeneratedScenario.node[0].userTerminal packetsReceived 4
 scalar GeneratedScenario.node[0].userTerminal packetsDropped 0
 scalar GeneratedScenario.node[0].userTerminal packetDeliveryRatio 1
-scalar GeneratedScenario.node[0].userTerminal avgLatencyMs 2.2212691902565
-scalar GeneratedScenario.node[0].userTerminal avgJitterMs 0.21
+scalar GeneratedScenario.node[0].userTerminal avgLatencyMs 2.1346025235898
+scalar GeneratedScenario.node[0].userTerminal avgJitterMs 0.12
 scalar GeneratedScenario.node[0].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -5115,7 +5115,7 @@ bin	0	0
 bin	1	0
 scalar GeneratedScenario.node[0].hybridManager totalSwitches 0
 scalar GeneratedScenario.node[0].hybridManager satTotalDuration 0
-scalar GeneratedScenario.node[0].hybridManager cellTotalDuration 1
+scalar GeneratedScenario.node[0].hybridManager cellTotalDuration 0.5
 scalar GeneratedScenario.node[0].hybridManager satUsageRatio 0
 scalar GeneratedScenario.node[0].hybridManager cellUsageRatio 1
 scalar GeneratedScenario.node[0].hybridManager timeToLoss:min -nan
@@ -5137,7 +5137,7 @@ attr title "MEC Task Latency (RTT + Compute), max"
 attr unit s
 scalar GeneratedScenario.constellationManager totalSatellites 72
 scalar GeneratedScenario.constellationManager totalGroundStations 0
-scalar GeneratedScenario.constellationManager totalISLLinks 96
+scalar GeneratedScenario.constellationManager totalISLLinks 0
 scalar GeneratedScenario.constellationManager totalHandovers 0
 scalar GeneratedScenario.constellationManager totalISLHandoffs 0
 scalar GeneratedScenario.constellationManager islMeshOutage:count 0
@@ -25986,15 +25986,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[0].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[0].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[0].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[0].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[0].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[0].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[0].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[0].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[0].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[0].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[0].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[0].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[0].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[0].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[0].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[0].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[0].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[0].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[0].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -26171,15 +26171,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[1].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[1].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[1].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[1].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[1].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[1].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[1].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[1].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[1].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[1].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[1].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[1].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[1].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[1].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[1].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[1].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[1].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[1].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[1].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -26356,15 +26356,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[2].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[2].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[2].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[2].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[2].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[2].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[2].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[2].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[2].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[2].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[2].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[2].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[2].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[2].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[2].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[2].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[2].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[2].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[2].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -26541,15 +26541,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[3].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[3].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[3].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[3].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[3].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[3].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[3].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[3].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[3].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[3].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[3].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[3].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[3].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[3].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[3].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[3].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[3].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[3].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[3].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -26726,15 +26726,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[4].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[4].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[4].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[4].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[4].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[4].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[4].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[4].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[4].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[4].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[4].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[4].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[4].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[4].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[4].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[4].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[4].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[4].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[4].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -26911,15 +26911,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[5].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[5].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[5].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[5].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[5].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[5].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[5].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[5].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[5].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[5].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[5].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[5].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[5].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[5].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[5].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[5].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[5].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[5].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[5].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -27096,15 +27096,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[6].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[6].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[6].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[6].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[6].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[6].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[6].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[6].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[6].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[6].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[6].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[6].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[6].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[6].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[6].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[6].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[6].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[6].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[6].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -27281,15 +27281,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[7].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[7].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[7].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[7].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[7].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[7].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[7].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[7].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[7].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[7].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[7].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[7].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[7].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[7].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[7].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[7].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[7].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[7].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[7].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -27466,15 +27466,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[8].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[8].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[8].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[8].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[8].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[8].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[8].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[8].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[8].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[8].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[8].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[8].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[8].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[8].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[8].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[8].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[8].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[8].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[8].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -27651,15 +27651,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[9].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[9].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[9].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[9].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[9].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[9].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[9].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[9].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[9].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[9].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[9].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[9].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[9].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[9].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[9].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[9].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[9].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[9].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[9].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -27836,15 +27836,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[10].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[10].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[10].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[10].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[10].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[10].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[10].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[10].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[10].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[10].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[10].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[10].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[10].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[10].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[10].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[10].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[10].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[10].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[10].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -28021,15 +28021,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[11].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[11].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[11].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[11].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[11].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[11].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[11].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[11].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[11].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[11].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[11].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[11].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[11].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[11].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[11].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[11].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[11].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[11].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[11].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -28206,15 +28206,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[12].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[12].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[12].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[12].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[12].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[12].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[12].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[12].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[12].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[12].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[12].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[12].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[12].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[12].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[12].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[12].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[12].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[12].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[12].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -28391,15 +28391,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[13].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[13].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[13].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[13].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[13].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[13].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[13].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[13].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[13].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[13].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[13].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[13].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[13].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[13].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[13].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[13].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[13].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[13].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[13].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -28576,15 +28576,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[14].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[14].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[14].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[14].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[14].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[14].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[14].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[14].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[14].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[14].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[14].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[14].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[14].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[14].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[14].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[14].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[14].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[14].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[14].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -28761,15 +28761,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[15].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[15].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[15].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[15].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[15].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[15].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[15].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[15].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[15].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[15].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[15].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[15].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[15].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[15].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[15].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[15].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[15].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[15].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[15].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -28946,15 +28946,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[16].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[16].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[16].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[16].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[16].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[16].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[16].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[16].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[16].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[16].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[16].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[16].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[16].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[16].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[16].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[16].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[16].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[16].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[16].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -29131,15 +29131,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[17].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[17].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[17].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[17].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[17].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[17].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[17].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[17].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[17].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[17].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[17].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[17].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[17].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[17].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[17].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[17].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[17].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[17].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[17].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -29316,15 +29316,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[18].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[18].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[18].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[18].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[18].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[18].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[18].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[18].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[18].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[18].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[18].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[18].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[18].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[18].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[18].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[18].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[18].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[18].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[18].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -29501,15 +29501,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[19].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[19].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[19].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[19].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[19].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[19].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[19].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[19].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[19].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[19].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[19].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[19].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[19].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[19].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[19].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[19].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[19].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[19].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[19].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -29686,15 +29686,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[20].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[20].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[20].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[20].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[20].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[20].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[20].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[20].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[20].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[20].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[20].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[20].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[20].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[20].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[20].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[20].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[20].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[20].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[20].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -29871,15 +29871,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[21].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[21].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[21].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[21].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[21].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[21].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[21].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[21].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[21].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[21].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[21].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[21].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[21].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[21].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[21].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[21].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[21].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[21].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[21].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -30056,15 +30056,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[22].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[22].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[22].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[22].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[22].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[22].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[22].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[22].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[22].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[22].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[22].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[22].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[22].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[22].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[22].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[22].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[22].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[22].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[22].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"
@@ -30241,15 +30241,15 @@ bin	1	0
 scalar GeneratedScenario.userTerminal[23].terminal totalHandovers 0
 scalar GeneratedScenario.userTerminal[23].terminal successfulHandovers 0
 scalar GeneratedScenario.userTerminal[23].terminal failedHandovers 0
-scalar GeneratedScenario.userTerminal[23].terminal totalDataGb 4.8e-05
-scalar GeneratedScenario.userTerminal[23].terminal connectedTime 1.3
+scalar GeneratedScenario.userTerminal[23].terminal totalDataGb 2.4e-05
+scalar GeneratedScenario.userTerminal[23].terminal connectedTime 0.4
 scalar GeneratedScenario.userTerminal[23].terminal handoverSuccessRate 0
-scalar GeneratedScenario.userTerminal[23].terminal packetsSent 10
-scalar GeneratedScenario.userTerminal[23].terminal packetsReceived 10
+scalar GeneratedScenario.userTerminal[23].terminal packetsSent 5
+scalar GeneratedScenario.userTerminal[23].terminal packetsReceived 5
 scalar GeneratedScenario.userTerminal[23].terminal packetsDropped 0
 scalar GeneratedScenario.userTerminal[23].terminal packetDeliveryRatio 1
-scalar GeneratedScenario.userTerminal[23].terminal avgLatencyMs 2.2066025235898
-scalar GeneratedScenario.userTerminal[23].terminal avgJitterMs 0.2
+scalar GeneratedScenario.userTerminal[23].terminal avgLatencyMs 2.1946025235898
+scalar GeneratedScenario.userTerminal[23].terminal avgJitterMs 0.12
 scalar GeneratedScenario.userTerminal[23].satNic.mac.queue packetPopped:count 0
 attr interpolationmode none
 attr title "packet popped, count"

@@ -1,7 +1,7 @@
 version 2
-run General-0-20261001-23:39:36-369
+run General-0-20261002-00:31:10-369
 attr configname General
-attr datetime 20261001-23:39:36
+attr datetime 20261002-00:31:10
 attr experiment General
 attr inifile omnetpp.ini
 attr iterationvars ""
@@ -489,7 +489,7 @@ param **.hybridManager.switchingMode "\"qos-based\""
 param **.hybridManager.checkInterval 0.5s
 param **.hybridManager.elevationMaskDeg 25.0
 
-scalar GeneratedScenario.traci.launcher port 54791
+scalar GeneratedScenario.traci.launcher port 33543
 scalar GeneratedScenario.node[0].wlan[0].agent dropConfirm:count 0
 attr title "dropped confirms, count"
 scalar GeneratedScenario.node[0].wlan[0].agent acceptConfirm:count 0

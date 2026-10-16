@@ -3,8 +3,14 @@
 
 #include <omnetpp.h>
 #include "artery/hybrid/ISwitchingStrategy.h"
+#include "artery/ntn/interfaces/INetworkMobilityProvider.h"
+#include "artery/ntn/interfaces/IRadioLinkMetricsProvider.h"
 #include <string>
 #include <memory>
+
+namespace inet {
+class IMobility;
+}
 
 namespace artery {
 namespace hybrid {
@@ -13,8 +19,16 @@ namespace hybrid {
  * HybridInterfaceManager - Orchestrates vertical handover (VHO) between
  * Terrestrial Cellular (5G-NR) and Non-Terrestrial Satellite (LEO NTN).
  * Inspired by squidslab/simu-scs-hybrid.
+ *
+ * Besides driving the VHO state machine, this module is the concrete adapter
+ * of the framework-neutral ntn::INetworkMobilityProvider and
+ * ntn::IRadioLinkMetricsProvider contracts. Switching strategies consume
+ * mobility and link state through these interfaces instead of touching
+ * inet::IMobility directly, keeping the decision logic framework-agnostic.
  */
-class HybridInterfaceManager : public omnetpp::cSimpleModule {
+class HybridInterfaceManager : public omnetpp::cSimpleModule,
+                               public ntn::INetworkMobilityProvider,
+                               public ntn::IRadioLinkMetricsProvider {
 private:
     std::string m_switchingMode;
     std::string m_satInterfaceName;
@@ -34,7 +48,14 @@ private:
     omnetpp::simtime_t m_lastSwitchTime;
     omnetpp::simtime_t m_satTotalDuration;
     omnetpp::simtime_t m_cellTotalDuration;
-    
+
+    // Adapter state exposed through the abstract NTN interfaces
+    inet::IMobility* m_mobilityModule;
+    double m_lastQoSScore;
+    double m_lastBatterySoC;
+    double m_satelliteCarrierGhz;
+    double m_cellularCarrierGhz;
+
     omnetpp::simsignal_t m_sigActiveInterface;
     omnetpp::simsignal_t m_sigSwitchCount;
     omnetpp::simsignal_t m_sigQoSScore;
@@ -61,6 +82,16 @@ public:
     
     void emitQoSScore(double score);
     void emitBatterySoC(double soc);
+
+    // --- ntn::INetworkMobilityProvider -------------------------------------
+    bool hasMobility() const override;
+    ntn::MobilitySample getMobilitySample() const override;
+    const char* getMobilityProviderName() const override;
+
+    // --- ntn::IRadioLinkMetricsProvider ------------------------------------
+    bool hasRadioLinkMetrics() const override;
+    ntn::RadioLinkMetrics getRadioLinkMetrics() const override;
+    const char* getRadioLinkMetricsProviderName() const override;
 };
 
 } // namespace hybrid

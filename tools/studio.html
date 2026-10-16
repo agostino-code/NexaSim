@@ -8,7 +8,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -21,8 +21,12 @@
     <script>window.NEXASIM_CONFIG = { cartoApiKey: '__CARTO_API_KEY__' };</script>
 </head>
 <body>
+    <!-- Top Mission Control Header -->
     <header>
         <div class="brand-box">
+            <button class="icon-toggle-btn" id="sidebarToggleBtn" onclick="toggleSidebar()" title="Toggle Scenario Catalog">
+                <i data-lucide="panel-left" size="16"></i>
+            </button>
             <span class="brand-badge">NEXASPHERE</span>
             <div>
                 <span class="brand-name">NexaSim Studio</span>
@@ -30,97 +34,151 @@
             </div>
         </div>
 
-        <div class="view-switcher">
-            <button class="view-btn active" data-mode="2d" onclick="switchView('2d')">
-                <i data-lucide="map" size="14"></i> 2D Tactical Map
+        <!-- Viewport Switcher -->
+        <div class="view-switcher" role="tablist" aria-label="Viewport display mode">
+            <button class="view-btn active" data-mode="2d" onclick="switchView('2d')" title="Tactical 2D Leaflet Map">
+                <i data-lucide="map" size="13"></i> 2D Map
             </button>
-            <button class="view-btn" data-mode="dual" onclick="switchView('dual')">
-                <i data-lucide="split-square-horizontal" size="14"></i> Dual 2D/3D
+            <button class="view-btn" data-mode="dual" onclick="switchView('dual')" title="Side-by-side 2D and 3D view with draggable splitter">
+                <i data-lucide="split-square-horizontal" size="13"></i> Dual 2D/3D
             </button>
-            <button class="view-btn" data-mode="3d" onclick="switchView('3d')">
-                <i data-lucide="globe" size="14"></i> 3D Digital Twin
+            <button class="view-btn" data-mode="3d" onclick="switchView('3d')" title="Full 3D Geospatial Digital Twin (CesiumJS)">
+                <i data-lucide="globe" size="13"></i> 3D Twin
             </button>
         </div>
 
+        <!-- Simulation Playback & Run Controls -->
+        <div class="sim-player-bar">
+            <div class="player-controls">
+                <button class="player-btn" id="playerPlayBtn" onclick="togglePlayback()" title="Play / Pause Virtual Timeline">
+                    <i data-lucide="play" size="13" id="playerPlayIcon"></i>
+                </button>
+                <button class="player-btn" id="playerStepBtn" onclick="stepPlayback(2.0)" title="Step Forward +2s">
+                    <i data-lucide="step-forward" size="13"></i>
+                </button>
+                <div class="player-time" id="playerTimeDisplay" title="Simulation Time (simTime)">T+00:00.0s</div>
+                <select class="player-speed" id="playerSpeedSelect" onchange="setPlaybackSpeed(this.value)" title="Playback Speed Multiplier">
+                    <option value="1">1x</option>
+                    <option value="2" selected>2x</option>
+                    <option value="5">5x</option>
+                    <option value="10">10x</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Primary Action Triggers -->
         <div class="header-actions">
-            <button class="btn btn-outline" id="sync3dBtn" onclick="buildDigitalTwin3D()">
-                <i data-lucide="refresh-cw" size="14"></i> Sync 3D Twin
+            <button class="btn btn-outline" id="sync3dBtn" onclick="buildDigitalTwin3D()" title="Regenerate 3D CZML orbital digital twin">
+                <i data-lucide="refresh-cw" size="14"></i> <span class="btn-text">Sync 3D Twin</span>
             </button>
-            <button class="btn btn-primary" id="runBtn" onclick="runSimulation()">
-                <i data-lucide="play" size="14"></i> Run Simulation
+            <button class="btn btn-primary" id="runBtn" onclick="runSimulation()" title="Execute discrete event simulation in Docker">
+                <i data-lucide="play" size="14"></i> <span class="btn-text">Run Simulation</span>
             </button>
         </div>
     </header>
 
+    <!-- Tactical System Information Strip -->
     <div class="system-strip" id="systemStrip" aria-label="Simulation system status">
         <div class="system-state">
             <span class="state-dot" id="systemStateDot"></span>
             <strong id="systemStatus">READY FOR DISPATCH</strong>
         </div>
         <div class="system-context">
-            <span id="systemScenario">No scenario selected</span>
+            <span class="system-scenario-name" id="mapScenarioTitle">No scenario selected</span>
             <span class="system-divider"></span>
-            <span id="systemRunId">LOCAL CONTROL PLANE</span>
+            <span id="mapScenarioMeta">LOCAL CONTROL PLANE</span>
+            <span id="systemScenario" style="display:none;"></span>
+            <span id="systemRunId" style="display:none;"></span>
         </div>
         <div class="system-metrics">
-            <span><i data-lucide="satellite" size="12"></i> NTN ONLINE</span>
-            <span><i data-lucide="radio-tower" size="12"></i> TN READY</span>
+            <span class="telemetry-pill" id="pillThroughput" title="Average Network Throughput">
+                <i data-lucide="activity" size="11"></i> <b id="valThroughput">-- Mbps</b>
+            </span>
+            <span class="telemetry-pill" id="pillLatency" title="Mean End-to-End Latency">
+                <i data-lucide="clock" size="11"></i> <b id="valLatency">-- ms</b>
+            </span>
+            <span class="telemetry-pill" id="pillRat" title="Current Dominant RAT">
+                <i data-lucide="radio" size="11"></i> <b id="valActiveRat">TN/5G</b>
+            </span>
+            <span class="telemetry-badge-link" id="pillWsStatus" title="WebSocket telemetry stream status">
+                <span class="ws-dot online" id="wsDot"></span> WS LIVE
+            </span>
         </div>
     </div>
 
-    <aside>
-        <div class="sidebar-section-title">
-            <span>Scenario Library</span>
-            <span id="scCount" style="color:var(--brand-cyan);">0</span>
-        </div>
-        <div class="scenario-list" id="scenarioList">
-            <div style="color:var(--text-muted); font-size:12px; text-align:center; margin-top:20px;">
-                Loading scenario library...
-            </div>
-        </div>
-
-        <div class="sidebar-section-title">Active Scenario Specs</div>
-        <div class="scenario-details-pane" id="scDetails">
-            Select a scenario to view parameters.
-        </div>
-    </aside>
-
-    <main>
-        <div class="canvas-deck" id="canvasDeck">
-            <div class="map-command-card" aria-live="polite">
-                <div class="map-command-kicker"><span class="live-pulse"></span> ACTIVE SCENARIO</div>
-                <strong id="mapScenarioTitle">Select a scenario</strong>
-                <span id="mapScenarioMeta">Awaiting scenario selection</span>
+    <!-- Workspace Container (Sidebar + Main Viewport Deck) -->
+    <div class="workspace-container" id="workspaceContainer">
+        <!-- Collapsible Scenario Sidebar -->
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-section-title">
+                    <span>Scenario Catalog</span>
+                    <span id="scCount" class="badge-count">0</span>
+                </div>
+                <div class="search-box">
+                    <i data-lucide="search" size="12" class="search-icon"></i>
+                    <input type="text" id="scSearchInput" class="search-input" placeholder="Filter scenarios..." oninput="filterScenarios(this.value)">
+                </div>
             </div>
 
-            <!-- 2D Leaflet Tactical Map -->
-            <div id="map2d"></div>
+            <div class="scenario-list" id="scenarioList">
+                <div class="sidebar-loading">
+                    <i data-lucide="loader" class="spin" size="16"></i> Loading scenario library...
+                </div>
+            </div>
 
-            <!-- 2D Map Editor Tools -->
-            <div class="map-toolbar" id="mapTools">
-                <span class="tool-label">TOOLS:</span>
-                <button class="tool-btn" id="toolGnbBtn" onclick="toggleTool('gnb')">
-                    <i data-lucide="radio" size="13"></i> +5G gNodeB
+            <div class="sidebar-section-title">
+                <span>Scenario Parameters</span>
+                <button class="mini-btn" onclick="saveYamlChanges()" title="Save edits to disk">
+                    <i data-lucide="save" size="11"></i> Save
                 </button>
-                <button class="tool-btn" id="toolGsBtn" onclick="toggleTool('gs')">
-                    <i data-lucide="satellite-dish" size="13"></i> +Gateway
-                </button>
-                <button class="tool-btn" id="toolBlindBtn" onclick="toggleTool('blind')">
-                    <i data-lucide="shield-alert" size="13"></i> +Blind Spot
-                </button>
-                <div style="width:1px; height:18px; background:var(--border-subtle); margin:0 4px;"></div>
-                <button class="tool-btn" style="color:var(--accent-green);" onclick="saveYamlChanges()">
-                    <i data-lucide="save" size="13"></i> Save YAML
-                </button>
+            </div>
+            <div class="scenario-details-pane" id="scDetails">
+                Select a scenario to view parameters.
+            </div>
+        </aside>
+
+        <!-- Main Deck: 2D/3D Split Viewport + Node Inspector -->
+        <main id="mainContainer">
+            <div class="canvas-deck" id="canvasDeck">
+                <!-- 2D Leaflet Viewport Wrapper -->
+                <div id="map2d-wrapper" class="viewport-pane">
+                <div id="map2d"></div>
+
+                <!-- Map Tools Floating Bar -->
+                <div class="map-toolbar" id="mapTools">
+                    <span class="tool-label">TOOLS:</span>
+                    <button class="tool-btn" id="toolSelectBtn" onclick="toggleTool('select')" title="Select & Drag Nodes">
+                        <i data-lucide="mouse-pointer" size="13"></i> Select
+                    </button>
+                    <button class="tool-btn" id="toolGnbBtn" onclick="toggleTool('gnb')" title="Click map to deploy 5G-NR gNodeB">
+                        <i data-lucide="radio" size="13"></i> +5G gNodeB
+                    </button>
+                    <button class="tool-btn" id="toolGsBtn" onclick="toggleTool('gs')" title="Click map to deploy NTN Satellite Gateway">
+                        <i data-lucide="satellite-dish" size="13"></i> +Gateway
+                    </button>
+                    <button class="tool-btn" id="toolBlindBtn" onclick="toggleTool('blind')" title="Click map to define RF Blind Spot">
+                        <i data-lucide="shield-alert" size="13"></i> +Blind Spot
+                    </button>
+                    <div class="tool-divider"></div>
+                    <button class="tool-btn save-tool-btn" onclick="saveYamlChanges()" title="Persist scenario changes to YAML">
+                        <i data-lucide="save" size="13"></i> Save YAML
+                    </button>
+                </div>
+            </div>
+
+            <!-- Vertical Resizer Splitter (Dual Mode) -->
+            <div id="viewportSplitter" class="viewport-splitter" title="Drag to adjust 2D/3D split width">
+                <div class="splitter-grip"></div>
             </div>
 
             <!-- 3D Cesium Digital Twin Container -->
-            <div id="globe3d-container">
+            <div id="globe3d-container" class="viewport-pane">
                 <iframe id="globe3d-frame" src="about:blank"></iframe>
 
                 <!-- 3D Empty State -->
                 <div class="globe-empty-state" id="globeEmptyState" style="display:none;">
-                    <i data-lucide="globe-2" size="56" class="globe-empty-icon"></i>
+                    <i data-lucide="globe-2" size="48" class="globe-empty-icon"></i>
                     <div class="globe-empty-title">3D Space-Ground Twin Not Generated</div>
                     <div class="globe-empty-desc">
                         The CZML orbital and terrestrial digital twin for this scenario has not been generated yet.
@@ -130,19 +188,51 @@
                     </button>
                 </div>
             </div>
+
+            <!-- Node Property Inspector (Floating Dockable Panel) -->
+            <div class="node-inspector-pane" id="nodeInspector" style="display:none;">
+                <div class="inspector-header">
+                    <div class="inspector-title" id="inspectorTitle">
+                        <i data-lucide="settings-2" size="14" style="color:var(--brand-cyan);"></i>
+                        <span id="inspectorHeading">Node Inspector</span>
+                    </div>
+                    <button class="close-btn" onclick="closeNodeInspector()" title="Close Inspector">
+                        <i data-lucide="x" size="14"></i>
+                    </button>
+                </div>
+                <div class="inspector-body" id="inspectorBody">
+                    <!-- Populated dynamically on node select -->
+                </div>
+                <div class="inspector-actions">
+                    <button class="btn btn-danger-outline" type="button" onclick="deleteSelectedNode()">
+                        <i data-lucide="trash-2" size="13"></i> Delete Node
+                    </button>
+                    <button class="btn btn-primary" type="button" onclick="applyNodeInspectorChanges()">
+                        <i data-lucide="check" size="13"></i> Apply
+                    </button>
+                </div>
+            </div>
         </div>
 
-        <!-- Lower Drawer Toggle Button -->
-        <div class="drawer-handle-bar" onclick="toggleDrawer()">
-            <i data-lucide="chevron-up" id="drawerChevron" size="15"></i>
+        <!-- Continuous Vertical Drawer Resizer Handle -->
+        <div class="drawer-resizer-handle" id="drawerResizer" title="Drag to resize dashboard & console height">
+            <div class="resizer-bar"></div>
+        </div>
+
+        <!-- Lower Drawer Toggle Handle Bar -->
+        <div class="drawer-handle-bar" id="drawerHandleBar" onclick="toggleDrawer()">
+            <i data-lucide="chevron-up" id="drawerChevron" size="14"></i>
             <span id="drawerHandleText">Open Dashboard & Console</span>
         </div>
 
-        <!-- Lower Drawer -->
+        <!-- Lower Drawer Cockpit -->
         <div class="lower-drawer" id="lowerDrawer">
             <div class="drawer-nav">
                 <button class="drawer-tab active" data-pane="pane-dash" onclick="switchDrawerTab('pane-dash')">
                     <i data-lucide="bar-chart-2" size="14"></i> Executive Dashboard
+                </button>
+                <button class="drawer-tab" data-pane="pane-fleet" onclick="switchDrawerTab('pane-fleet')">
+                    <i data-lucide="car" size="14"></i> Fleet Telemetry
                 </button>
                 <button class="drawer-tab" data-pane="pane-config" onclick="switchDrawerTab('pane-config')">
                     <i data-lucide="sliders" size="14"></i> Scenario Parameters
@@ -150,6 +240,11 @@
                 <button class="drawer-tab" data-pane="pane-console" onclick="switchDrawerTab('pane-console')">
                     <i data-lucide="terminal" size="14"></i> Simulation Console
                 </button>
+                <div class="drawer-actions-right">
+                    <button class="mini-btn" onclick="toggleDrawerMax()" id="drawerMaxBtn" title="Maximize / Restore Drawer">
+                        <i data-lucide="maximize-2" size="12" id="drawerMaxIcon"></i>
+                    </button>
+                </div>
             </div>
             <div class="drawer-body">
                 <!-- Tab: KPI Dashboard -->
@@ -157,48 +252,104 @@
                     <iframe id="dashFrame" src="about:blank"></iframe>
                 </div>
 
-                <!-- Tab: Config -->
+                <!-- Tab: Fleet Multi-RAT Telemetry -->
+                <div class="drawer-pane" id="pane-fleet">
+                    <div class="fleet-telemetry-container">
+                        <div class="pane-sub-header">
+                            <div>
+                                <strong style="color:var(--text-primary); font-size:13px;">Connected Vehicle Fleet & Multi-RAT Telemetry</strong>
+                                <span style="color:var(--text-muted); font-size:11px; margin-left:8px;">Real-time per-vehicle link budget and handover tracking</span>
+                            </div>
+                            <span class="badge badge-ue" id="fleetVehicleCountBadge">4 Vehicles</span>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="data-table" id="fleetDataTable">
+                                <thead>
+                                    <tr>
+                                        <th>Vehicle ID</th>
+                                        <th>Active Link</th>
+                                        <th>Status</th>
+                                        <th>Speed (km/h)</th>
+                                        <th>MEC Latency</th>
+                                        <th>QoS Score</th>
+                                        <th>Battery SoC</th>
+                                        <th>VHO Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="fleetTableBody">
+                                    <tr>
+                                        <td colspan="8" style="text-align:center; color:var(--text-muted); padding:20px;">
+                                            Select a scenario to inspect fleet telemetry.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Config Parameters -->
                 <div class="drawer-pane" id="pane-config">
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label" title="Determines when vehicles switch between 5G and Satellite networks">
-                                Vertical Handover (VHO) Strategy <i data-lucide="info" size="12" style="vertical-align: middle; color: var(--brand-cyan);"></i>
+                                Vertical Handover (VHO) Strategy <i data-lucide="info" size="12" class="info-icon"></i>
                             </label>
-                            <select class="form-select" id="cfgStrategy" onchange="markYamlDirty()" title="Select the strategy algorithm used for switching between Terrestrial and Non-Terrestrial Networks.">
+                            <select class="form-select" id="cfgStrategy" onchange="markYamlDirty()">
                                 <option value="coverage-based">Coverage-Based (Blind spot failover)</option>
                                 <option value="qos-based">QoS-Based (Multi-criteria utility score)</option>
                                 <option value="energy-aware">Energy-Aware (Battery SoC preservation)</option>
+                                <option value="predictive">Predictive-Lookahead (3GPP Rel 17 Lookahead)</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label" title="Atmospheric rain attenuation for Ka-band satellite links (ITU-R P.618)">
-                                Ka-Band Rain Rate (mm/h) <i data-lucide="info" size="12" style="vertical-align: middle; color: var(--brand-cyan);"></i>
+                                Ka-Band Rain Rate (mm/h) <i data-lucide="info" size="12" class="info-icon"></i>
                             </label>
-                            <input type="number" class="form-input" id="cfgRain" value="15" onchange="markYamlDirty()" title="Higher rain rates significantly degrade high-frequency satellite link budgets.">
+                            <input type="number" class="form-input" id="cfgRain" value="15" onchange="markYamlDirty()">
                         </div>
                         <div class="form-group">
                             <label class="form-label" title="Minimum angle above horizon required for satellite visibility">
-                                Orographic Elevation Mask (°) <i data-lucide="info" size="12" style="vertical-align: middle; color: var(--brand-cyan);"></i>
+                                Orographic Elevation Mask (°) <i data-lucide="info" size="12" class="info-icon"></i>
                             </label>
-                            <input type="number" class="form-input" id="cfgElevMask" value="25" onchange="markYamlDirty()" title="Higher angles simulate mountain valleys or urban canyons, reducing satellite availability.">
+                            <input type="number" class="form-input" id="cfgElevMask" value="25" onchange="markYamlDirty()">
                         </div>
                         <div class="form-group">
                             <label class="form-label" title="Total simulated time in seconds">
-                                Simulation Duration (s) <i data-lucide="info" size="12" style="vertical-align: middle; color: var(--brand-cyan);"></i>
+                                Simulation Duration (s) <i data-lucide="info" size="12" class="info-icon"></i>
                             </label>
-                            <input type="number" class="form-input" id="cfgDuration" value="200" onchange="markYamlDirty()" title="Time to run the OMNeT++ scenario (longer duration = more data points).">
+                            <input type="number" class="form-input" id="cfgDuration" value="200" onchange="markYamlDirty()">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" title="Target vehicle convoy speed">
+                                Convoy Target Speed (km/h) <i data-lucide="info" size="12" class="info-icon"></i>
+                            </label>
+                            <input type="number" class="form-input" id="cfgSpeed" value="50" onchange="markYamlDirty()">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" title="Number of mobile vehicles in simulation">
+                                Fleet UE Count <i data-lucide="info" size="12" class="info-icon"></i>
+                            </label>
+                            <input type="number" class="form-input" id="cfgUeCount" value="4" min="1" max="50" onchange="markYamlDirty()">
                         </div>
                     </div>
                 </div>
 
                 <!-- Tab: Terminal Console -->
                 <div class="drawer-pane" id="pane-console">
-                    <div class="terminal-box" id="termLogs">NexaSim Simulation Engine v2.0
+                    <div class="console-wrapper">
+                        <div class="console-toolbar">
+                            <span class="console-status"><span class="ws-dot online"></span> Live Stream Active</span>
+                            <button class="mini-btn" onclick="clearConsole()"><i data-lucide="eraser" size="11"></i> Clear</button>
+                        </div>
+                        <div class="terminal-box" id="termLogs">NexaSim Simulation Engine v3.0
 Ready for dispatch.</div>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
+    </div>
 
     <!-- Node Editor Modal Dialog -->
     <div class="node-modal-backdrop" id="nodeModalBackdrop">
@@ -216,6 +367,9 @@ Ready for dispatch.</div>
             </div>
         </div>
     </div>
+
+    <!-- Mouse Event Drag Overlay (Prevents iframes stealing mouse events while dragging) -->
+    <div id="dragShield" class="drag-shield" style="display:none;"></div>
 
     <!-- Toast Notification Container -->
     <div class="toast-container" id="toastContainer"></div>

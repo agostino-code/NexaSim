@@ -247,7 +247,17 @@ void UnifiedMobilityManager::initiateHandover(int ueId, const std::string& targe
     ue.trigger = trigger;
     ue.handoverStartTime = omnetpp::simTime();
     ue.preparationPhase = 1;
-    
+    ue.handoverState = HandoverState::MEASUREMENT_REPORTED;
+
+    if (ue.targetNetwork == NetworkType::NTN_LEO) {
+        auto nodeIt = networkNodes.find(targetNodeId);
+        double alt = (nodeIt != networkNodes.end() && nodeIt->second.altitude > 0) ? nodeIt->second.altitude : 550000.0;
+        double elev = std::max(5.0, ue.targetElevationDeg);
+        ue.propagationDelayMs = computeSlantRangePropagationDelayMs(alt, elev);
+    } else {
+        ue.propagationDelayMs = 0.5;
+    }
+
     totalHandovers++;
     emit(handoverTriggeredSignal, ueId);
     
@@ -288,6 +298,7 @@ void UnifiedMobilityManager::executeHandover(int ueId) {
     ue.currentNodeId = newNodeId;
     ue.currentNetwork = ue.targetNetwork;
     ue.handoverInProgress = false;
+    ue.handoverState = HandoverState::HANDOVER_COMPLETED;
     ue.preparationPhase = 0;
     
     successfulHandovers++;
@@ -308,13 +319,15 @@ void UnifiedMobilityManager::completeHandover(int ueId, bool success) {
     if (success) {
         successfulHandovers++;
         emit(handoverCompletedSignal, ueId);
+        ue.handoverState = HandoverState::HANDOVER_COMPLETED;
     } else {
         failedHandovers++;
         emit(handoverFailedSignal, ueId);
         ue.currentNodeId = ue.previousNodeId;
         ue.currentNetwork = ue.previousNetwork;
+        ue.handoverState = HandoverState::IDLE;
     }
-    
+
     ue.handoverInProgress = false;
     ue.preparationPhase = 0;
 }
@@ -322,10 +335,11 @@ void UnifiedMobilityManager::completeHandover(int ueId, bool success) {
 void UnifiedMobilityManager::abortHandover(int ueId, const std::string& reason) {
     auto it = ueContexts.find(ueId);
     if (it == ueContexts.end()) return;
-    
+
     UEContext& ue = it->second;
     failedHandovers++;
     ue.handoverInProgress = false;
+    ue.handoverState = HandoverState::IDLE;
     ue.preparationPhase = 0;
     
     emit(handoverFailedSignal, ueId);

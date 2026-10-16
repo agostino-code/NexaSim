@@ -109,12 +109,12 @@ const rawSeries = {"Vehicle 1": {"mecTaskLatency": {"x": [10.26, 11.26, 12.26, 1
                     scales: {
                         x: {
                             type: 'linear',
-                            title: { display: true, text: 'Simulation Time (s)', color: '#94a3b8' },
-                            grid: { color: 'rgba(51, 65, 85, 0.4)' }
+                            title: { display: true, text: 'Simulation Time (s)', color: '#64748b' },
+                            grid: { color: 'rgba(28, 40, 56, 0.7)' }
                         },
                         y: {
-                            title: { display: true, text: yTitle, color: '#94a3b8' },
-                            grid: { color: 'rgba(51, 65, 85, 0.4)' }
+                            title: { display: true, text: yTitle, color: '#64748b' },
+                            grid: { color: 'rgba(28, 40, 56, 0.7)' }
                         }
                     }
                 }

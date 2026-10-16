@@ -1,106 +1,191 @@
 html, body, #cesiumContainer {
             width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
-            background-color: #030712; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #030712; font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
         .hud-panel {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(15, 23, 42, 0.88);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            border-radius: 12px;
-            padding: 18px 22px;
+            top: 14px;
+            left: 14px;
+            background: rgba(11, 17, 24, 0.94);
+            border: 1px solid #1c2838;
+            border-top: 3px solid #38bdf8;
+            border-radius: 6px;
+            padding: 12px 14px;
             color: #f8fafc;
             backdrop-filter: blur(12px);
             z-index: 999;
-            width: 340px;
-            box-shadow: 0 12px 24px -4px rgba(0,0,0,0.5);
+            width: 330px;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.6);
+            transition: all 0.2s ease;
         }
+        .hud-panel.collapsed .hud-body { display: none; }
         .hud-header {
             display: flex;
             justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 6px;
+            align-items: center;
+            margin-bottom: 4px;
         }
         .hud-title {
-            font-size: 16px;
+            font-size: 13px;
             font-weight: 700;
             color: #38bdf8;
-            letter-spacing: -0.2px;
+            letter-spacing: -0.1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
         .hud-badge {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
-            background: #0284c7;
-            color: #fff;
-            padding: 2px 8px;
-            border-radius: 4px;
+            font-family: 'IBM Plex Mono', monospace;
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 1px 6px;
+            border-radius: 3px;
         }
-        .hud-scenario {
-            font-size: 13px;
+        .hud-toggle-btn {
+            background: transparent;
+            border: 1px solid #1c2838;
             color: #94a3b8;
-            margin-bottom: 14px;
+            border-radius: 3px;
+            padding: 1px 6px;
+            font-size: 11px;
+            cursor: pointer;
+            font-family: monospace;
+            margin-left: 6px;
+        }
+        .hud-toggle-btn:hover { color: #f8fafc; border-color: #38bdf8; }
+        .hud-scenario {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-bottom: 10px;
+            font-family: 'IBM Plex Mono', monospace;
         }
         .telemetry-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            background: rgba(30, 41, 59, 0.6);
-            border: 1px solid rgba(51, 65, 85, 0.5);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 14px;
+            gap: 8px;
+            background: rgba(19, 28, 40, 0.6);
+            border: 1px solid #1c2838;
+            border-radius: 4px;
+            padding: 8px 10px;
+            margin-bottom: 10px;
         }
         .telem-item { display: flex; flex-direction: column; }
-        .telem-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 600; }
-        .telem-val { font-size: 15px; font-weight: 700; color: #f8fafc; }
+        .telem-label { font-size: 9px; color: #64748b; text-transform: uppercase; font-weight: 700; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.5px; }
+        .telem-val { font-size: 13px; font-weight: 700; color: #f8fafc; font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
+        .telem-val.warn { color: #f59e0b; }
+        .telem-val.caution { color: #ef4444; }
 
         .cam-controls {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 10px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-top: 6px;
+        }
+        .layer-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-top: 6px;
         }
         .hud-btn {
-            background: rgba(30, 41, 59, 0.85);
-            border: 1px solid rgba(51, 65, 85, 0.8);
+            background: #131c28;
+            border: 1px solid #1c2838;
             color: #f8fafc;
-            padding: 9px 12px;
-            border-radius: 6px;
-            font-size: 12px;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 11px;
             font-weight: 600;
+            font-family: inherit;
             cursor: pointer;
             transition: all 0.15s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 4px;
         }
         .hud-btn:hover {
-            background: #0284c7;
+            background: #1a2636;
             border-color: #38bdf8;
+            color: #38bdf8;
         }
+        .hud-btn.active { background: rgba(56,189,248,0.15); border-color: #38bdf8; color: #38bdf8; }
         .basemap-select {
             width: 100%;
-            background: rgba(30, 41, 59, 0.85);
-            border: 1px solid rgba(51, 65, 85, 0.8);
+            background: #131c28;
+            border: 1px solid #1c2838;
             color: #f8fafc;
-            padding: 8px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            margin-top: 10px;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: inherit;
+            margin-top: 8px;
             outline: none;
             cursor: pointer;
         }
+        .basemap-select:focus { border-color: #38bdf8; }
         .legend {
-            margin-top: 14px;
-            font-size: 11px;
-            color: #cbd5e1;
-            border-top: 1px solid rgba(51, 65, 85, 0.6);
-            padding-top: 12px;
+            margin-top: 10px;
+            font-size: 10px;
+            color: #94a3b8;
+            font-family: 'IBM Plex Mono', monospace;
+            border-top: 1px solid #1c2838;
+            padding-top: 8px;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            gap: 6px;
         }
-        .legend-item { display: flex; align-items: center; gap: 6px; }
-        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+        /* Link status indicator */
+        .link-status {
+            margin-top: 10px;
+            font-size: 10px;
+            font-family: 'IBM Plex Mono', monospace;
+            padding: 6px 8px;
+            background: rgba(19, 28, 40, 0.6);
+            border: 1px solid #1c2838;
+            border-radius: 4px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .link-dot { width: 6px; height: 6px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 6px #ef4444; animation: pulse 2s infinite; }
+        .link-dot.online { background: #10b981; box-shadow: 0 0 6px #10b981; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        /* Dark-theme the stock Cesium widgets (timeline / animation / infoBox) */
+        .cesium-viewer .cesium-button {
+            background-color: #131c28;
+            color: #e2e8f0;
+            border: 1px solid #1c2838;
+            fill: #e2e8f0;
+        }
+        .cesium-viewer .cesium-button:hover {
+            background-color: #1a2636;
+            color: #38bdf8;
+            fill: #38bdf8;
+        }
+        .cesium-viewer-animationContainer, .cesium-viewer-timelineContainer {
+            background: rgba(11, 17, 24, 0.88);
+        }
+        .cesium-viewer-bottom { background: transparent; }
+        .cesium-timeline-main { border-color: #1c2838; }
+        .cesium-timeline-trackContainer { border-top-color: #1c2838; }
+        .cesium-timeline-ticLabel { color: #94a3b8; font-family: 'IBM Plex Mono', monospace; font-size: 10px; }
+        .cesium-timeline-ticMain { background: #475569; }
+        .cesium-timeline-ticSub { background: #334155; }
+        .cesium-timeline-ticTiny { background: #293548; }
+        .cesium-timeline-icon { fill: #94a3b8; }
+        .cesium-timeline-needle { background: #38bdf8; }
+        .cesium-infoBox {
+            background: rgba(11, 17, 24, 0.96);
+            border: 1px solid #27374d;
+            color: #e2e8f0;
+        }
+        .cesium-infoBox-title { background: #0f1620; color: #f8fafc; }
+        .cesium-infoBox-description { color: #cbd5e1; }
+        .cesium-infoBox-close { background: #1c2838; color: #e2e8f0; }
+        .cesium-selection-wrapper svg { fill: #38bdf8; }

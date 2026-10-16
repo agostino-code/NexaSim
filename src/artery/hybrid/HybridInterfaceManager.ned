@@ -14,6 +14,8 @@ simple HybridInterfaceManager
         string satInterfaceName = default("wlan0");
         string cellInterfaceName = default("cellular");
         bool initialSatelliteActive = default(false);
+        double satelliteCarrierGhz = default(20.0); // Ka-band carrier of the NTN link [GHz]
+        double cellularCarrierGhz = default(3.5);   // 5G-NR carrier of the terrestrial link [GHz]
         double checkInterval @unit(s) = default(1.0s);
         double elevationMaskDeg = default(25.0);
         double lookaheadTimeS @unit(s) = default(3.0s);

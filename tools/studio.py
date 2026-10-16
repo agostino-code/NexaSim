@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-NexaSim Studio - Aerospace-Grade 2D/3D Control Center & Visual Scenario Builder
+NexaSim Studio Next-Gen - Aerospace-Grade 2D/3D Control Center & Visual Scenario Builder
 Horizon Europe NexaSphere Research Project
 
 Features:
-- Dual-Engine View: Interactive 2D Tactical Map (Leaflet) + 3D Space-Ground Globe (CesiumJS)
-- Visual No-Code Editor: Point-and-click placement of 5G-NR gNodeBs, Ground Gateways, and Blind Spots
-- Multi-Tab Lower Deck: Parameters Customizer, Live Telemetry Cockpit, Terminal Stream, Analytics
+- Dual-Engine View: Interactive 2D Tactical Map (Leaflet) + 3D Space-Ground Globe (CesiumJS) with continuous draggable split
+- Visual No-Code Editor: Point-and-click placement, drag-and-drop repositioning, and Inspector for 5G-NR gNodeBs, Gateways, Blind Spots
+- Multi-Tab Lower Deck: Executive Dashboard, Fleet Multi-RAT Telemetry, Scenario Parameters, Terminal Stream
+- Real-time WebSocket Log and Telemetry Streaming (/ws/logs, /ws/telemetry)
 - In-Studio Simulation Runner with real-time log streaming and automatic results integration
 - Powered by FastAPI for high performance and security
 """
@@ -15,21 +16,24 @@ import os
 import sys
 import json
 import yaml
+import bisect
 import asyncio
 import argparse
+import statistics
 import threading
 import subprocess
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
 load_dotenv()
 
 try:
     import uvicorn
-    from fastapi import FastAPI, BackgroundTasks, HTTPException
+    from fastapi import FastAPI, BackgroundTasks, HTTPException, WebSocket, WebSocketDisconnect
     from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
     from fastapi.staticfiles import StaticFiles
     from fastapi.middleware.cors import CORSMiddleware
@@ -44,6 +48,7 @@ if str(REPO_ROOT) not in sys.path:
 LIBRARY_DIR = REPO_ROOT / 'scenarios' / 'library'
 GENERATED_DIR = REPO_ROOT / 'scenarios' / 'generated'
 STATIC_DIR = REPO_ROOT / 'tools' / 'static'
+STUDIO_DIST_DIR = REPO_ROOT / 'studio' / 'dist'
 
 # Application State
 SIM_STATE = {
@@ -57,13 +62,407 @@ SIM_STATE = {
 SIM_LOCK = threading.Lock()
 MAX_LOG_LINES = 2000
 
+# WebSocket Telemetry & Log Broadcaster
+class TelemetryBroadcaster:
+    def __init__(self):
+        self.log_clients: List[WebSocket] = []
+        self.telemetry_clients: List[WebSocket] = []
+
+    async def connect_logs(self, ws: WebSocket):
+        await ws.accept()
+        self.log_clients.append(ws)
+
+    def disconnect_logs(self, ws: WebSocket):
+        if ws in self.log_clients:
+            self.log_clients.remove(ws)
+
+    async def connect_telemetry(self, ws: WebSocket):
+        await ws.accept()
+        self.telemetry_clients.append(ws)
+
+    def disconnect_telemetry(self, ws: WebSocket):
+        if ws in self.telemetry_clients:
+            self.telemetry_clients.remove(ws)
+
+    async def broadcast_log(self, text: str):
+        dead = []
+        for ws in self.log_clients:
+            try:
+                await ws.send_text(text)
+            except Exception:
+                dead.append(ws)
+        for ws in dead:
+            self.disconnect_logs(ws)
+
+    async def broadcast_telemetry(self, data: dict):
+        dead = []
+        for ws in self.telemetry_clients:
+            try:
+                await ws.send_json(data)
+            except Exception:
+                dead.append(ws)
+        for ws in dead:
+            self.disconnect_telemetry(ws)
+
+BROADCASTER = TelemetryBroadcaster()
+ASYNC_LOOP = None
+
 def append_sim_log(message: str):
     """Append a bounded simulation log entry; callers must hold SIM_LOCK."""
     SIM_STATE["logs"].append(message)
     if len(SIM_STATE["logs"]) > MAX_LOG_LINES:
         del SIM_STATE["logs"][:-MAX_LOG_LINES]
+    if ASYNC_LOOP and ASYNC_LOOP.is_running():
+        try:
+            asyncio.run_coroutine_threadsafe(BROADCASTER.broadcast_log(message), ASYNC_LOOP)
+        except Exception:
+            pass
 
-app = FastAPI(title="NexaSim Studio API", description="Control Center for NexaSim")
+
+# ---------------------------------------------------------------------------
+# Real-time telemetry frame generation (from parsed .vec / KPI data)
+# ---------------------------------------------------------------------------
+_TELEMETRY_CACHE: Dict[str, Dict[str, Any]] = {}
+_TELEMETRY_CACHE_MTIME: Dict[str, float] = {}
+_RAT_SCALAR_CACHE: Dict[str, Any] = {}
+
+def _latest_data_source(results_dir: Path) -> Optional[Path]:
+    """Pick the most recent vector source: *.vec first, then the CSV-R export."""
+    if not results_dir.exists():
+        return None
+    vec_files = [p for p in results_dir.glob("*.vec") if p.is_file()]
+    if vec_files:
+        return max(vec_files, key=lambda p: p.stat().st_mtime)
+    csv_file = results_dir / "exported_vectors.csv"
+    if csv_file.is_file():
+        return csv_file
+    return None
+
+
+def _scalar_rat_map(results_dir: Path) -> Dict[int, str]:
+    """Per-vehicle link state from the recorded ``activeInterface:last`` scalar.
+
+    Fallback used when the ``activeInterface`` vectors are not recorded:
+    the hybrid manager emits this scalar per node in the ``.sca`` file (same
+    semantics as the vector). Cached by file mtime; nodes without a finite
+    recorded value stay absent (rendered as "not recorded").
+    """
+    if not results_dir.exists():
+        return {}
+    sca_files = [p for p in results_dir.glob("*.sca") if p.is_file()]
+    if not sca_files:
+        return {}
+    source = max(sca_files, key=lambda p: p.stat().st_mtime)
+    try:
+        mtime = source.stat().st_mtime
+    except OSError:
+        return {}
+    key = str(source.resolve())
+    cached = _RAT_SCALAR_CACHE.get(key)
+    if cached is not None and cached[0] == mtime:
+        return cached[1]
+    from tools.dashboard import parse_scalar_rat_map
+    rat_map = parse_scalar_rat_map(source)
+    _RAT_SCALAR_CACHE[key] = (mtime, rat_map)
+    return rat_map
+
+
+def _cached_vector_series(results_dir: Path) -> Dict[str, Dict[str, Dict[str, Any]]]:
+    """Return parsed vector series, re-parsing only when the source file changes.
+
+    Supports both native OMNeT++ ``*.vec`` recordings and the scavetool
+    ``exported_vectors.csv`` export (same fallback order as dashboard.py).
+    """
+    source = _latest_data_source(results_dir)
+    if source is None:
+        return {}
+    try:
+        mtime = source.stat().st_mtime
+    except OSError:
+        return {}
+    key = str(source.resolve())
+    if _TELEMETRY_CACHE.get(key) and _TELEMETRY_CACHE_MTIME.get(key) == mtime:
+        return _TELEMETRY_CACHE[key]
+    from tools.dashboard import parse_vector_file, parse_csv_file
+    if source.suffix == '.csv':
+        series = parse_csv_file(source)
+    else:
+        series = parse_vector_file(source)
+    _TELEMETRY_CACHE[key] = series
+    _TELEMETRY_CACHE_MTIME[key] = mtime
+    return series
+
+
+def _interpolate_at(series_points: List[Tuple[float, float]], t: float) -> Optional[float]:
+    """Linear interpolation of (x, y) points at time t; None if no data."""
+    if not series_points:
+        return None
+    xs = [p[0] for p in series_points]
+    ys = [p[1] for p in series_points]
+    if t <= xs[0]:
+        return ys[0]
+    if t >= xs[-1]:
+        return ys[-1]
+    # binary search
+    import bisect
+    idx = bisect.bisect_left(xs, t)
+    if idx == 0:
+        return ys[0]
+    if idx >= len(xs):
+        return ys[-1]
+    x0, x1 = xs[idx - 1], xs[idx]
+    y0, y1 = ys[idx - 1], ys[idx]
+    if x1 == x0:
+        return y0
+    frac = (t - x0) / (x1 - x0)
+    return y0 + frac * (y1 - y0)
+
+
+def _vehicle_sort_key(label: str):
+    parts = label.split()
+    if len(parts) >= 2 and parts[-1].isdigit():
+        return (0, int(parts[-1]), label)
+    return (1, 0, label)
+
+
+def _series_points(metrics: Dict[str, Any], metric: str) -> List[Tuple[float, float]]:
+    """(time, value) samples of a recorded metric; [] when it is not recorded."""
+    entry = metrics.get(metric) or {}
+    xs = entry.get('x') or []
+    ys = entry.get('y') or []
+    return [(float(x), float(y)) for x, y in zip(xs, ys)]
+
+
+def _value_at(metrics: Dict[str, Any], metric: str, sim_time: Optional[float]) -> Optional[float]:
+    """Interpolated metric value at sim_time; latest sample when sim_time is None."""
+    points = _series_points(metrics, metric)
+    if not points:
+        return None
+    if sim_time is None:
+        return points[-1][1]
+    return _interpolate_at(points, sim_time)
+
+
+def _median_of(points: List[Tuple[float, float]]) -> Optional[float]:
+    values = [v for _, v in points if v is not None]
+    return statistics.median(values) if values else None
+
+
+def _datarate_mbps(raw: Optional[float]) -> Optional[float]:
+    """datarateSelected is recorded in bit/s (12e6 => 12 Mbps)."""
+    if raw is None:
+        return None
+    return round(raw / 1.0e6, 4) if raw > 1000.0 else raw
+
+
+def _mec_latency_ms(raw: Optional[float], typical_raw: Optional[float]) -> Optional[float]:
+    """mecTaskLatency unit detection: the model emits seconds, older runs ms."""
+    if raw is None:
+        return None
+    scale = 1.0 if (typical_raw is not None and typical_raw >= 1.0) else 1000.0
+    return round(raw * scale, 3)
+
+
+def _battery_pct(raw: Optional[float]) -> Optional[float]:
+    if raw is None:
+        return None
+    return round(raw * 100.0, 2) if raw <= 1.0 else raw
+
+
+def build_live_telemetry_frame(scenario_name: str, sim_time: Optional[float] = None) -> Optional[Dict[str, Any]]:
+    """Build a live telemetry frame at sim_time from recorded vectors/KPIs.
+
+    Only genuinely recorded values are reported: missing metrics become None
+    (rendered as "not recorded" by the Studio) instead of synthesized defaults.
+    ``sim_time=None`` returns the latest recorded state. Returns None when the
+    scenario has no recordings at all.
+    """
+    from tools.nexasim import resolve_generated_dir
+    target_dir = resolve_generated_dir(scenario_name)
+    results_dir = target_dir / 'results'
+    series = _cached_vector_series(results_dir)
+
+    kpi_file = results_dir / 'kpi_summary.json'
+    kpis: Dict[str, Any] = {}
+    if kpi_file.exists():
+        try:
+            with open(kpi_file, 'r', encoding='utf-8') as f:
+                kpis = json.load(f)
+        except Exception:
+            pass
+
+    if not series and not kpis:
+        return None
+
+    scalar_rat = _scalar_rat_map(results_dir)
+
+    vehicles: List[Dict[str, Any]] = []
+    for node_label in sorted(series.keys(), key=_vehicle_sort_key):
+        metrics = series[node_label]
+        if not metrics:
+            continue
+
+        vidx = 0
+        parts = node_label.split()
+        if len(parts) >= 2 and parts[1].isdigit():
+            vidx = int(parts[1])
+
+        active_raw = _value_at(metrics, 'activeInterface', sim_time)
+        switch_raw = _value_at(metrics, 'switchCount', sim_time)
+        latency_raw = _value_at(metrics, 'mecTaskLatency', sim_time)
+        latency_typical = _median_of(_series_points(metrics, 'mecTaskLatency'))
+
+        active_rat = None if active_raw is None else ("LEO" if active_raw >= 0.5 else "5G")
+        if active_rat is None:
+            # Fallback: dominant link from the recorded hybridManager usage
+            # ratio scalars (run aggregate) — recorded data, never guessed.
+            active_rat = scalar_rat.get(vidx)
+
+        vehicles.append({
+            "id": vidx,
+            "name": node_label,
+            "lat": None,
+            "lon": None,
+            "speed_kmh": _value_at(metrics, 'speedKmh', sim_time),
+            "throughput_mbps": _datarate_mbps(_value_at(metrics, 'datarateSelected', sim_time)),
+            "mec_latency_ms": _mec_latency_ms(latency_raw, latency_typical),
+            "qos_score": _value_at(metrics, 'qosScore', sim_time),
+            "battery_soc_pct": _battery_pct(_value_at(metrics, 'batterySoC', sim_time)),
+            "vho_count": int(switch_raw) if switch_raw is not None else None,
+            "active_rat": active_rat,
+            "in_blind": False,
+        })
+
+    # Without per-vehicle vectors, expose the KPI scalars as a single aggregate row
+    if not vehicles and kpis:
+        sat_pct = kpis.get('sat_usage_pct')
+        mean_qos = kpis.get('mean_qos_score')  # may legitimately be None
+        final_soc = kpis.get('final_battery_soc')
+        vehicles.append({
+            "id": 0,
+            "name": "Aggregate",
+            "lat": None,
+            "lon": None,
+            "speed_kmh": None,
+            "throughput_mbps": float(kpis['throughput_mbps']) if kpis.get('throughput_mbps') is not None else None,
+            "mec_latency_ms": float(kpis['avg_latency_ms']) if kpis.get('avg_latency_ms') is not None else None,
+            "qos_score": float(mean_qos) if mean_qos is not None else None,
+            "battery_soc_pct": float(final_soc) if final_soc is not None else None,
+            "vho_count": int(kpis['total_vho_switches']) if kpis.get('total_vho_switches') is not None else None,
+            "active_rat": None if sat_pct is None else ("LEO" if float(sat_pct) > 50.0 else "5G"),
+            "in_blind": False,
+        })
+
+    def fleet_mean(key: str) -> Optional[float]:
+        values = [v[key] for v in vehicles if v.get(key) is not None]
+        return round(sum(values) / len(values), 4) if values else None
+
+    throughput = fleet_mean('throughput_mbps')
+    latency = fleet_mean('mec_latency_ms')
+    if throughput is None and kpis.get('throughput_mbps') is not None:
+        throughput = float(kpis['throughput_mbps'])
+    if latency is None and kpis.get('avg_latency_ms') is not None:
+        latency = float(kpis['avg_latency_ms'])
+
+    rat_votes = [v['active_rat'] for v in vehicles if v.get('active_rat')]
+    if rat_votes:
+        active_rat = max(set(rat_votes), key=rat_votes.count)
+    elif kpis.get('sat_usage_pct') is not None:
+        active_rat = "LEO" if float(kpis['sat_usage_pct']) > 50.0 else "5G"
+    else:
+        active_rat = "UNKNOWN"
+
+    return {
+        "type": "telemetry",
+        "sim_time": sim_time,
+        "throughput_mbps": throughput,
+        "latency_ms": latency,
+        "active_rat": active_rat,
+        "vehicles": vehicles,
+    }
+
+
+# Background telemetry broadcast loop state
+TELEMETRY_LOOP_TASK: Optional[asyncio.Task] = None
+TELEMETRY_SIM_T: Dict[str, float] = {}  # scenario_name -> sim time progress
+
+def _schedule_telemetry_loop():
+    """Start the background telemetry broadcast loop if not running."""
+    global TELEMETRY_LOOP_TASK
+    if TELEMETRY_LOOP_TASK is None or TELEMETRY_LOOP_TASK.done():
+        if ASYNC_LOOP and ASYNC_LOOP.is_running():
+            TELEMETRY_LOOP_TASK = ASYNC_LOOP.create_task(_telemetry_broadcast_loop())
+
+
+def _default_telemetry_scenario() -> Optional[str]:
+    """Most recently updated generated scenario that actually has recordings."""
+    candidates = []
+    if GENERATED_DIR.exists():
+        for entry in GENERATED_DIR.iterdir():
+            if not entry.is_dir():
+                continue
+            results = entry / 'results'
+            if (results / 'kpi_summary.json').exists() or _latest_data_source(results):
+                try:
+                    candidates.append((entry.stat().st_mtime, entry.name))
+                except OSError:
+                    pass
+    if candidates:
+        candidates.sort(reverse=True)
+        return candidates[0][1]
+    return None
+
+async def _telemetry_broadcast_loop():
+    """Periodically broadcast interpolated telemetry frames to connected clients."""
+    while True:
+        await asyncio.sleep(0.5)  # 2 Hz telemetry tick
+        if not BROADCASTER.telemetry_clients:
+            continue
+        with SIM_LOCK:
+            running = SIM_STATE["running"]
+            sc = SIM_STATE["current_scenario"]
+        if not sc:
+            continue
+        t = TELEMETRY_SIM_T.get(sc, 0.0)
+        # Advance sim time while running; loop at scenario duration
+        duration = 300.0
+        try:
+            import yaml as _yaml
+            from tools.nexasim import resolve_scenario_yaml
+            _ypath = resolve_scenario_yaml(sc)
+            if _ypath:
+                with open(_ypath, 'r', encoding='utf-8') as _f:
+                    _doc = _yaml.safe_load(_f)
+                duration = float((_doc.get('scenario', {}).get('time', {}) or {}).get('duration_s', 300.0))
+        except Exception:
+            pass
+        if running:
+            t += 0.5  # advance in step with tick
+        frame = build_live_telemetry_frame(sc, t)
+        if frame:
+            TELEMETRY_SIM_T[sc] = t
+            try:
+                await BROADCASTER.broadcast_telemetry(frame)
+            except Exception:
+                pass
+        if running and duration > 0 and t >= duration:
+            TELEMETRY_SIM_T[sc] = 0.0
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global ASYNC_LOOP
+    try:
+        ASYNC_LOOP = asyncio.get_running_loop()
+    except Exception:
+        pass
+    _schedule_telemetry_loop()
+    yield
+
+app = FastAPI(
+    title="NexaSim Studio API",
+    description="Control Center for NexaSim",
+    lifespan=lifespan
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -82,11 +481,20 @@ class SaveRequest(BaseModel):
     yaml: Optional[str] = None
     data: Optional[Dict[str, Any]] = None
 
+class NodeDeleteRequest(BaseModel):
+    id: str
+    type: str  # 'gnb', 'gs', 'blind'
+    name: str
+
 # HTML rendering
 def render_studio_html() -> str:
-    html_file = Path(__file__).resolve().parent / 'studio.html'
-    with open(html_file, 'r', encoding='utf-8') as f:
-        content = f.read()
+    if (STUDIO_DIST_DIR / 'index.html').exists():
+        with open(STUDIO_DIST_DIR / 'index.html', 'r', encoding='utf-8') as f:
+            content = f.read()
+    else:
+        html_file = Path(__file__).resolve().parent / 'studio.html'
+        with open(html_file, 'r', encoding='utf-8') as f:
+            content = f.read()
 
     carto_key = os.environ.get('CARTO_API_KEY', '')
     content = content.replace('__CARTO_API_KEY__', carto_key)
@@ -212,39 +620,146 @@ async def get_results(name: str):
 
 @app.get("/api/telemetry")
 async def get_telemetry(name: str):
-    """Return dashboard telemetry from recorded vectors or scalar KPI data."""
-    from tools.dashboard import parse_vector_file
+    """Fleet-aggregated timeseries for the dashboard charts (real units).
+
+    Throughput is converted to Mbps, MEC latency to ms, QoS is the fleet mean,
+    and handover events are derived from observed interface transitions
+    (falling back to the scalar KPI total when only summary data exists).
+    Unrecorded metrics are returned as null entries, never synthesized.
+    """
     from tools.nexasim import resolve_generated_dir
 
     target_dir = resolve_generated_dir(name)
     results_dir = target_dir / 'results'
-    vector_files = sorted(results_dir.glob('*.vec')) if results_dir.exists() else []
-
-    if vector_files:
-        structured = parse_vector_file(vector_files[0])
-        series = next(iter(structured.values()), {})
-        timestamps = series.get('activeInterface', {}).get('x', [])
-        if timestamps:
-            return {
-                "timestamps": timestamps,
-                "throughput_mbps": series.get('datarateSelected', {}).get('y', [0.0] * len(timestamps)),
-                "rtt_ms": series.get('mecTaskLatency', {}).get('y', [0.0] * len(timestamps)),
-                "handover_events": series.get('switchCount', {}).get('y', [0] * len(timestamps)),
-                "active_interface": series.get('activeInterface', {}).get('y', [0] * len(timestamps)),
-            }
+    series = _cached_vector_series(results_dir)
 
     kpi_file = results_dir / 'kpi_summary.json'
-    kpis = {}
+    kpis: Dict[str, Any] = {}
     if kpi_file.exists():
-        with open(kpi_file, 'r', encoding='utf-8') as f:
-            kpis = json.load(f)
+        try:
+            with open(kpi_file, 'r', encoding='utf-8') as f:
+                kpis = json.load(f)
+        except Exception:
+            kpis = {}
+
+    if series:
+        # Master timeline: the richest per-time axis actually recorded
+        master: List[float] = []
+        for metric in ('datarateSelected', 'activeInterface', 'qosScore', 'switchCount', 'mecTaskLatency'):
+            axis = set()
+            for metrics in series.values():
+                axis.update(x for x, _ in _series_points(metrics, metric))
+            if axis:
+                master = sorted(axis)
+                break
+
+        if master:
+            stride = max(1, -(-len(master) // 600))  # ceil division: cap at ~600 points
+            grid = master[::stride]
+            vels = list(series.values())
+
+            lat_samples = [v for m in vels for _, v in _series_points(m, 'mecTaskLatency')]
+            lat_typical = statistics.median(lat_samples) if lat_samples else None
+
+            def rate_scale(v: float) -> float:
+                return v / 1.0e6 if v > 1000.0 else v
+
+            def lat_scale(v: float) -> float:
+                return v * 1000.0 if (lat_typical is not None and lat_typical < 1.0) else v
+
+            def fleet_curve(metric: str, scale=None) -> List[Optional[float]]:
+                per_vehicle = []
+                for m in vels:
+                    pts = _series_points(m, metric)
+                    if not pts:
+                        continue
+                    if scale is not None:
+                        pts = [(t, scale(v)) for t, v in pts]
+                    per_vehicle.append(pts)
+                if not per_vehicle:
+                    return [None] * len(grid)
+                out: List[Optional[float]] = []
+                for t in grid:
+                    vals = [_interpolate_at(pts, t) for pts in per_vehicle]
+                    vals = [v for v in vals if v is not None]
+                    out.append(round(sum(vals) / len(vals), 4) if vals else None)
+                return out
+
+            throughput_series = fleet_curve('datarateSelected', rate_scale)
+            rtt_series = fleet_curve('mecTaskLatency', lat_scale)
+            qos_series = fleet_curve('qosScore')
+
+            # Handover events: prefer explicit switchCount, else count genuine
+            # activeInterface transitions, else the scalar KPI total.
+            handover_series: List[Optional[float]] = [None] * len(grid)
+            switch_vehicles = [_series_points(m, 'switchCount') for m in vels]
+            switch_vehicles = [pts for pts in switch_vehicles if pts]
+            rat_vehicles = [_series_points(m, 'activeInterface') for m in vels]
+            rat_vehicles = [pts for pts in rat_vehicles if pts]
+
+            if switch_vehicles:
+                for i, t in enumerate(grid):
+                    total = 0.0
+                    found = False
+                    for pts in switch_vehicles:
+                        val = _interpolate_at(pts, t)
+                        if val is not None:
+                            total += val
+                            found = True
+                    handover_series[i] = int(total) if found else None
+            elif rat_vehicles:
+                transition_times: List[float] = []
+                for pts in rat_vehicles:
+                    for (_, v0), (t1, v1) in zip(pts, pts[1:]):
+                        if v1 != v0:
+                            transition_times.append(t1)
+                transition_times.sort()
+                for i, t in enumerate(grid):
+                    handover_series[i] = bisect.bisect_right(transition_times, t)
+            elif kpis.get('total_vho_switches') is not None:
+                handover_series = [int(kpis['total_vho_switches'])] * len(grid)
+
+            # Active interface: fleet majority (0 = 5G, 1 = LEO) per timestep
+            if rat_vehicles:
+                active_series: List[Optional[int]] = []
+                for t in grid:
+                    votes = [_interpolate_at(pts, t) for pts in rat_vehicles]
+                    votes = [v for v in votes if v is not None]
+                    active_series.append(None if not votes else (1 if sum(votes) >= len(votes) / 2.0 else 0))
+            elif kpis.get('sat_usage_pct') is not None:
+                active_series = [1 if float(kpis['sat_usage_pct']) > 50.0 else 0] * len(grid)
+            else:
+                active_series = [None] * len(grid)
+
+            return {
+                "timestamps": grid,
+                "throughput_mbps": throughput_series,
+                "rtt_ms": rtt_series,
+                "handover_events": handover_series,
+                "active_interface": active_series,
+                "qos_score": qos_series,
+            }
 
     return {
         "timestamps": [0.0],
-        "throughput_mbps": [float(kpis.get('throughput_mbps', 0.0) or 0.0)],
-        "rtt_ms": [float(kpis.get('avg_latency_ms', 0.0) or 0.0)],
-        "handover_events": [int(kpis.get('total_vho_switches', 0) or 0)],
-        "active_interface": [1 if (kpis.get('sat_usage_pct', 0) or 0) > 50 else 0],
+        "throughput_mbps": [float(kpis['throughput_mbps']) if kpis.get('throughput_mbps') is not None else None],
+        "rtt_ms": [float(kpis['avg_latency_ms']) if kpis.get('avg_latency_ms') is not None else None],
+        "handover_events": [int(kpis['total_vho_switches']) if kpis.get('total_vho_switches') is not None else None],
+        "active_interface": [1 if float(kpis['sat_usage_pct']) > 50.0 else 0] if kpis.get('sat_usage_pct') is not None else [None],
+        "qos_score": [float(kpis['mean_qos_score']) if kpis.get('mean_qos_score') is not None else None],
+    }
+
+@app.get("/api/fleet")
+async def get_fleet(name: str, t: Optional[float] = None):
+    """Latest per-vehicle telemetry snapshot for the Fleet Matrix table."""
+    frame = build_live_telemetry_frame(name, t)
+    if frame is None:
+        return {"scenario": name, "sim_time": t, "vehicles": []}
+    return {
+        "scenario": name,
+        "sim_time": frame.get("sim_time"),
+        "active_rat": frame.get("active_rat"),
+        "vehicles": frame.get("vehicles", []),
     }
 
 @app.get("/api/route")
@@ -291,6 +806,57 @@ async def post_save(req: SaveRequest):
         f.write(content_to_write)
     return {"status": "saved", "path": str(target_file)}
 
+@app.post("/api/scenario/node/delete")
+async def post_delete_node(req: NodeDeleteRequest):
+    target_file = (LIBRARY_DIR / f"{req.id}.yaml").resolve()
+    if LIBRARY_DIR.resolve() not in target_file.parents or not target_file.exists():
+        raise HTTPException(status_code=404, detail="Scenario not found")
+
+    with open(target_file, 'r', encoding='utf-8') as f:
+        doc = yaml.safe_load(f)
+
+    sc = doc.get('scenario', {})
+    terr = sc.get('terrestrial', {})
+    const = sc.get('constellation', {})
+    deleted = False
+
+    if req.type == 'gnb':
+        sites = terr.get('gnb', {}).get('sites', [])
+        before = len(sites)
+        sites = [s for s in sites if s.get('name') != req.name]
+        if len(sites) < before:
+            terr['gnb']['sites'] = sites
+            terr['gnb']['count'] = len(sites)
+            deleted = True
+    elif req.type == 'gs':
+        gws = const.get('ground_stations', [])
+        before = len(gws)
+        gws = [g for g in gws if g.get('name') != req.name]
+        if len(gws) < before:
+            const['ground_stations'] = gws
+            deleted = True
+    elif req.type == 'blind':
+        blind = terr.get('blind_spots', [])
+        before = len(blind)
+        blind = [b for b in blind if b.get('name') != req.name]
+        if len(blind) < before:
+            terr['blind_spots'] = blind
+            deleted = True
+
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"Node '{req.name}' of type '{req.type}' not found")
+
+    from tools.schema import ScenarioDocument
+    try:
+        ScenarioDocument(**doc)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Schema validation error after delete: {str(e)}")
+
+    with open(target_file, 'w', encoding='utf-8') as f:
+        yaml.dump(doc, f, sort_keys=False, default_flow_style=False)
+
+    return {"status": "deleted", "type": req.type, "name": req.name}
+
 @app.post("/api/generate")
 async def post_generate(req: IdRequest):
     from tools.nexasim import resolve_scenario_yaml, resolve_generated_dir
@@ -329,9 +895,71 @@ async def post_run(req: IdRequest, background_tasks: BackgroundTasks):
         SIM_STATE["logs"] = []
         SIM_STATE["exit_code"] = None
         run_id = SIM_STATE["run_id"]
+        # Reset telemetry sim-time for the new run
+        TELEMETRY_SIM_T[req.id] = 0.0
 
     background_tasks.add_task(run_simulation_worker, req.id, run_id)
     return {"status": "started", "scenario": req.id, "run_id": run_id}
+
+# WebSocket Endpoints for Real-Time Streaming
+@app.websocket("/ws/logs")
+async def websocket_logs(websocket: WebSocket):
+    await BROADCASTER.connect_logs(websocket)
+    with SIM_LOCK:
+        recent = list(SIM_STATE["logs"][-80:])
+    for line in recent:
+        try:
+            await websocket.send_text(line)
+        except Exception:
+            break
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        BROADCASTER.disconnect_logs(websocket)
+    except Exception:
+        BROADCASTER.disconnect_logs(websocket)
+
+@app.websocket("/ws/telemetry")
+async def websocket_telemetry(websocket: WebSocket):
+    await BROADCASTER.connect_telemetry(websocket)
+
+    def current_frame() -> Dict[str, Any]:
+        with SIM_LOCK:
+            sc = SIM_STATE["current_scenario"]
+        if not sc:
+            sc = _default_telemetry_scenario()
+        if sc:
+            frame = build_live_telemetry_frame(sc, TELEMETRY_SIM_T.get(sc, 0.0))
+            if frame:
+                return frame
+        return {
+            "type": "telemetry",
+            "sim_time": 0.0,
+            "throughput_mbps": None,
+            "latency_ms": None,
+            "active_rat": "IDLE",
+            "vehicles": [],
+        }
+
+    # Send an immediate snapshot so the client is never left idle.
+    try:
+        await websocket.send_json(current_frame())
+    except Exception:
+        pass
+    try:
+        while True:
+            # Client pings are answered with the freshest available frame;
+            # live frames are also pushed by the background broadcast loop.
+            await websocket.receive_text()
+            try:
+                await websocket.send_json(current_frame())
+            except Exception:
+                break
+    except WebSocketDisconnect:
+        BROADCASTER.disconnect_telemetry(websocket)
+    except Exception:
+        BROADCASTER.disconnect_telemetry(websocket)
 
 def run_simulation_worker(scenario_id: str, run_id: Optional[str] = None):
     """Background worker to run simulation, record terminal logs and trigger KPI analysis."""
@@ -401,9 +1029,13 @@ def run_simulation_worker(scenario_id: str, run_id: Optional[str] = None):
         with SIM_LOCK:
             SIM_STATE["running"] = False
             SIM_STATE["exit_code"] = exit_code if proc is None else proc.returncode
+            finished_scenario = SIM_STATE["current_scenario"]
             append_sim_log(
                 f"\n[+] Simulation run completed (Exit Code {SIM_STATE['exit_code']})"
             )
+        # Clear telemetry sim-time for the finished scenario
+        if finished_scenario:
+            TELEMETRY_SIM_T.pop(finished_scenario, None)
 
 # Dynamic results handler with token injection for Cesium & Carto
 @app.get("/results/{scenario}/results/{filename}")
@@ -424,13 +1056,25 @@ async def serve_scenario_result_file(scenario: str, filename: str):
     return FileResponse(file_path)
 
 # Static files for /results/ path, inherently secure against Path Traversal
-if GENERATED_DIR.exists():
-    app.mount("/results", StaticFiles(directory=str(GENERATED_DIR)), name="results")
-    app.mount("/assets", StaticFiles(directory=str(STATIC_DIR)), name="assets")
-else:
+if not GENERATED_DIR.exists():
     os.makedirs(GENERATED_DIR, exist_ok=True)
-    app.mount("/results", StaticFiles(directory=str(GENERATED_DIR)), name="results")
+app.mount("/results", StaticFiles(directory=str(GENERATED_DIR)), name="results")
 
+# Legacy Studio assets stay reachable even when the modern React build is
+# mounted below, so both front-ends can coexist (and tooling/tests keep working).
+@app.get("/assets/studio.css", include_in_schema=False)
+async def legacy_studio_css():
+    return FileResponse(STATIC_DIR / "studio.css", media_type="text/css")
+
+@app.get("/assets/studio.js", include_in_schema=False)
+async def legacy_studio_js():
+    return FileResponse(STATIC_DIR / "studio.js", media_type="application/javascript")
+
+# Support modern React production assets if compiled, otherwise fallback to tools/static
+if (STUDIO_DIST_DIR / 'assets').exists():
+    app.mount("/assets", StaticFiles(directory=str(STUDIO_DIST_DIR / 'assets')), name="assets")
+else:
+    app.mount("/assets", StaticFiles(directory=str(STATIC_DIR)), name="assets")
 
 def start_studio_server(port: int = 8080, host: str = '127.0.0.1', open_browser: bool = False):
     """Starts the NexaSim Studio local web control center using Uvicorn."""

@@ -54,8 +54,8 @@ __pycache__/
 .pytest_cache/
 pytest-cache-files-*/
 node_modules/
-package.json
-package-lock.json
+/package.json
+/package-lock.json
 
 # Local skills and development assistant configurations
 .agents/
