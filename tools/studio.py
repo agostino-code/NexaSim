@@ -535,6 +535,21 @@ class NodeDeleteRequest(BaseModel):
     type: str  # 'gnb', 'gs', 'blind'
     name: str
 
+class ValidateRequest(BaseModel):
+    yaml: Optional[str] = None
+    data: Optional[Dict[str, Any]] = None
+
+class SaveAndGenerateRequest(BaseModel):
+    id: str
+    yaml: Optional[str] = None
+    data: Optional[Dict[str, Any]] = None
+    generate_sumo: bool = False
+
+class OsmSumoRequest(BaseModel):
+    bbox: List[float]  # [min_lon, min_lat, max_lon, max_lat]
+    scenario_id: str
+    area_name: Optional[str] = "custom_area"
+
 # HTML rendering
 def render_studio_html() -> str:
     html_file = STUDIO_DIST_DIR / 'index.html'
@@ -631,6 +646,66 @@ async def get_scenario(name: str):
         "id": yaml_file.stem,
         "yaml": raw_text,
         "data": parsed
+    }
+
+@app.get("/api/scenarios/schema")
+async def get_scenarios_schema():
+    schema_path = REPO_ROOT / "scenarios" / "schema" / "scenario.schema.json"
+    if not schema_path.exists():
+        schema_path = REPO_ROOT / "config" / "schemas" / "scenario.yaml"
+    if schema_path.exists():
+        with open(schema_path, 'r', encoding='utf-8') as f:
+            if schema_path.suffix == '.json':
+                return json.load(f)
+            return yaml.safe_load(f)
+    return {}
+
+@app.get("/api/scenarios/{scenario_id}/raw")
+async def get_scenario_raw(scenario_id: str):
+    from tools.nexasim import resolve_scenario_yaml, resolve_generated_dir
+    yaml_file = resolve_scenario_yaml(scenario_id)
+    if not yaml_file or not yaml_file.exists():
+        raise HTTPException(status_code=404, detail="Scenario not found")
+
+    with open(yaml_file, 'r', encoding='utf-8') as f:
+        raw_text = f.read()
+        f.seek(0)
+        parsed = yaml.safe_load(f)
+
+    gen_dir = resolve_generated_dir(scenario_id)
+    tle_text = ""
+    tle_file = gen_dir / "constellation.tle"
+    if tle_file.exists():
+        try:
+            tle_text = tle_file.read_text(encoding='utf-8')
+        except Exception:
+            pass
+
+    route_geo = None
+    route_file = gen_dir / "route_geo.json"
+    if route_file.exists():
+        try:
+            with open(route_file, 'r', encoding='utf-8') as rf:
+                route_geo = json.load(rf)
+        except Exception:
+            pass
+
+    kpis = None
+    kpi_file = gen_dir / "results" / "kpi_summary.json"
+    if kpi_file.exists():
+        try:
+            with open(kpi_file, 'r', encoding='utf-8') as kf:
+                kpis = json.load(kf)
+        except Exception:
+            pass
+
+    return {
+        "id": yaml_file.stem,
+        "yaml": raw_text,
+        "data": parsed,
+        "constellation_tle": tle_text,
+        "route_geo": route_geo,
+        "kpis": kpis
     }
 
 @app.get("/api/status")
@@ -1045,6 +1120,103 @@ async def post_delete_node(req: NodeDeleteRequest):
 
     return {"status": "deleted", "type": req.type, "name": req.name}
 
+@app.post("/api/scenarios/validate")
+async def post_validate_scenario(req: ValidateRequest):
+    content = req.yaml
+    if content is None and req.data is not None:
+        content = yaml.dump(req.data, sort_keys=False)
+
+    if not content:
+        raise HTTPException(status_code=400, detail="Empty scenario content")
+
+    try:
+        parsed = yaml.safe_load(content)
+        from tools.schema import ScenarioDocument
+        ScenarioDocument(**parsed)
+        return {"valid": True, "errors": []}
+    except Exception as e:
+        error_msgs = []
+        if hasattr(e, 'errors'):
+            for err in e.errors():
+                loc = " -> ".join(str(x) for x in err.get('loc', []))
+                msg = err.get('msg', 'validation error')
+                error_msgs.append(f"{loc}: {msg}")
+        else:
+            error_msgs.append(str(e))
+        return {"valid": False, "errors": error_msgs}
+
+@app.post("/api/scenarios/save-and-generate")
+async def post_save_and_generate(req: SaveAndGenerateRequest):
+    target_file = (LIBRARY_DIR / f"{req.id}.yaml").resolve()
+    if LIBRARY_DIR.resolve() not in target_file.parents:
+        raise HTTPException(status_code=403, detail="Invalid scenario ID")
+
+    content_to_write = ""
+    parsed_doc = None
+    if req.yaml is not None:
+        try:
+            parsed_doc = yaml.safe_load(req.yaml)
+            from tools.schema import ScenarioDocument
+            ScenarioDocument(**parsed_doc)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Validation failed: {str(e)}")
+        content_to_write = req.yaml
+    elif req.data is not None:
+        try:
+            from tools.schema import ScenarioDocument
+            ScenarioDocument(**req.data)
+            parsed_doc = req.data
+            content_to_write = yaml.dump(req.data, sort_keys=False, default_flow_style=False)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Validation failed: {str(e)}")
+    else:
+        raise HTTPException(status_code=400, detail="Either 'yaml' or 'data' required")
+
+    with open(target_file, 'w', encoding='utf-8') as f:
+        f.write(content_to_write)
+
+    from tools.nexasim import resolve_generated_dir
+    from tools.gen_scenario import ScenarioGenerator
+    out_dir = resolve_generated_dir(req.id)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    gen = ScenarioGenerator(str(target_file))
+    gen.generate(str(out_dir))
+
+    if req.generate_sumo and parsed_doc:
+        try:
+            from tools.sumo_generator import generate_sumo_scenario
+            generate_sumo_scenario(parsed_doc, out_dir)
+        except Exception as e:
+            print(f"[!] Warning: SUMO generation failed: {e}")
+
+    generated_files = [p.name for p in out_dir.iterdir() if p.is_file()]
+    return {
+        "status": "generated",
+        "scenario_id": req.id,
+        "path": str(target_file),
+        "output_directory": str(out_dir),
+        "generated_files": generated_files
+    }
+
+@app.post("/api/builder/osm-sumo")
+async def post_builder_osm_sumo(req: OsmSumoRequest):
+    if len(req.bbox) != 4:
+        raise HTTPException(status_code=400, detail="Bbox must contain [min_lon, min_lat, max_lon, max_lat]")
+
+    from tools.osm_downloader import download_osm_bbox
+    from tools.nexasim import resolve_generated_dir
+
+    out_dir = resolve_generated_dir(req.scenario_id)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    osm_path = await asyncio.to_thread(download_osm_bbox, req.bbox, out_dir / f"{req.scenario_id}.osm")
+    return {
+        "status": "downloaded",
+        "bbox": req.bbox,
+        "osm_file": str(osm_path) if osm_path else None
+    }
+
 @app.post("/api/generate")
 async def post_generate(req: IdRequest):
     from tools.nexasim import resolve_scenario_yaml, resolve_generated_dir
@@ -1148,6 +1320,49 @@ async def websocket_telemetry(websocket: WebSocket):
         BROADCASTER.disconnect_telemetry(websocket)
     except Exception:
         BROADCASTER.disconnect_telemetry(websocket)
+
+@app.websocket("/ws/simulation")
+async def websocket_simulation(websocket: WebSocket):
+    """Unified telemetry + categorized logs stream for modern Mission Control studio."""
+    await websocket.accept()
+    await BROADCASTER.connect_telemetry(websocket)
+    await BROADCASTER.connect_logs(websocket)
+
+    def current_payload() -> Dict[str, Any]:
+        with SIM_LOCK:
+            sc = SIM_STATE["current_scenario"]
+            st = dict(SIM_STATE)
+        if not sc:
+            sc = _default_telemetry_scenario()
+        frame = build_live_telemetry_frame(sc, TELEMETRY_SIM_T.get(sc, 0.0)) if sc else None
+        return {
+            "type": "simulation_frame",
+            "status": {
+                "running": st.get("running", False),
+                "scenario": st.get("current_scenario"),
+                "run_id": st.get("run_id")
+            },
+            "telemetry": frame or {
+                "sim_time": 0.0,
+                "throughput_mbps": None,
+                "latency_ms": None,
+                "active_rat": "IDLE",
+                "vehicles": []
+            }
+        }
+
+    try:
+        await websocket.send_json(current_payload())
+        while True:
+            msg = await websocket.receive_text()
+            # Respond to client tick / ping
+            await websocket.send_json(current_payload())
+    except WebSocketDisconnect:
+        BROADCASTER.disconnect_telemetry(websocket)
+        BROADCASTER.disconnect_logs(websocket)
+    except Exception:
+        BROADCASTER.disconnect_telemetry(websocket)
+        BROADCASTER.disconnect_logs(websocket)
 
 def run_simulation_worker(scenario_id: str, run_id: Optional[str] = None):
     """Background worker to run simulation, record terminal logs and trigger KPI analysis."""

@@ -8,6 +8,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '#wasm-multi-thread': path.resolve(__dirname, './node_modules/satellite.js/dist/index.js'),
+      '#wasm-single-thread': path.resolve(__dirname, './node_modules/satellite.js/dist/index.js'),
     },
   },
   server: {
@@ -31,6 +33,7 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     sourcemap: false,
-    chunkSizeWarningLimit: 1500,
+    chunkSizeWarningLimit: 2000,
+    target: 'esnext',
   },
 });

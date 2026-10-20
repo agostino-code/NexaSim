@@ -21,6 +21,77 @@ export async function fetchScenario(id: string, signal?: AbortSignal): Promise<S
   return res.json();
 }
 
+export async function fetchScenarioSchema(signal?: AbortSignal): Promise<any> {
+  const res = await fetch('/api/scenarios/schema', { signal });
+  if (!res.ok) return {};
+  return res.json();
+}
+
+export async function fetchScenarioRaw(id: string, signal?: AbortSignal): Promise<{
+  id: string;
+  yaml: string;
+  data: any;
+  constellation_tle?: string;
+  route_geo?: any;
+  kpis?: any;
+}> {
+  const res = await fetch(`/api/scenarios/${encodeURIComponent(id)}/raw`, { signal });
+  if (!res.ok) throw new Error(`Failed to fetch raw scenario ${id}`);
+  return res.json();
+}
+
+export async function validateScenario(payload: { yaml?: string; data?: any }, signal?: AbortSignal): Promise<{ valid: boolean; errors: string[] }> {
+  const res = await fetch('/api/scenarios/validate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    signal,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    return { valid: false, errors: [err.detail || 'Validation error'] };
+  }
+  return res.json();
+}
+
+export async function saveAndGenerateScenario(
+  id: string,
+  yamlText?: string,
+  data?: any,
+  generateSumo: boolean = false,
+  signal?: AbortSignal
+): Promise<{ status: string; generated_files: string[]; output_directory: string }> {
+  const res = await fetch('/api/scenarios/save-and-generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, yaml: yamlText, data, generate_sumo: generateSumo }),
+    signal,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to save and generate scenario');
+  }
+  return res.json();
+}
+
+export async function downloadOsmBbox(
+  bbox: [number, number, number, number],
+  scenarioId: string,
+  signal?: AbortSignal
+): Promise<{ status: string; osm_file?: string }> {
+  const res = await fetch('/api/builder/osm-sumo', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ bbox, scenario_id: scenarioId }),
+    signal,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to download OSM bbox');
+  }
+  return res.json();
+}
+
 export async function fetchStatus(signal?: AbortSignal): Promise<SimStatus> {
   const res = await fetch('/api/status', { signal });
   if (!res.ok) throw new Error('Failed to fetch status');

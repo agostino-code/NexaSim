@@ -2,7 +2,9 @@ import React, { useEffect, useRef } from 'react';
 import { DockviewApi } from 'dockview';
 import { Header } from './components/layout/Header';
 import { SystemStrip } from './components/layout/SystemStrip';
+import { TimelineControlBar } from './components/layout/TimelineControlBar';
 import { WorkspaceDock } from './components/dockview/WorkspaceDock';
+import { CommandPalette } from './components/common/CommandPalette';
 import { DataProvenanceModal } from './components/common/DataProvenanceModal';
 import { useStudioStore } from './store/useStudioStore';
 import { fetchScenarios, fetchFleet, fetchFleetTimeline, fetchCompare } from './services/api';
@@ -44,8 +46,7 @@ export const App: React.FC = () => {
     };
   }, [setScenarios, selectScenario]);
 
-  // Load the recorded fleet snapshot (latest per-vehicle state) for the
-  // selected scenario. While a live run is active, ws frames take over.
+  // Load the recorded fleet snapshot for the selected scenario
   useEffect(() => {
     if (!currentScenario) return;
     const abortCtrl = new AbortController();
@@ -80,37 +81,13 @@ export const App: React.FC = () => {
     };
   }, [currentScenario?.id, setVehicles, setFleetTimeline, setCompareData]);
 
-  const handleLayoutPreset = (preset: 'dual' | '2d' | '3d' | 'analytics') => {
-    const api = dockApiRef.current;
-    if (!api) return;
-
-    const panel2D = api.getPanel('panel_2d');
-    const panel3D = api.getPanel('panel_3d');
-    const panelDash = api.getPanel('panel_dashboard');
-
-    try {
-      if (preset === 'dual') {
-        // Restore the split workspace (exit any maximized group)
-        api.exitMaximizedGroup();
-        if (panel2D) panel2D.api.setActive();
-        if (panel3D) panel3D.api.setActive();
-      } else {
-        const target = preset === '2d' ? panel2D : preset === '3d' ? panel3D : panelDash;
-        if (target) {
-          target.api.setActive();
-          api.maximizeGroup(target);
-        }
-      }
-    } catch (err) {
-      console.warn('Layout preset failed:', err);
-    }
-  };
-
   return (
     <div className="flex flex-col w-screen h-screen overflow-hidden bg-bg-base font-sans select-none">
-      <Header onLayoutPreset={handleLayoutPreset} />
+      <Header />
       <SystemStrip />
       <WorkspaceDock apiRef={dockApiRef} />
+      <TimelineControlBar />
+      <CommandPalette />
       <DataProvenanceModal />
     </div>
   );

@@ -14,6 +14,11 @@ export interface GroundStationSite {
   lat: number;
   lon: number;
   altitude_m?: number;
+  elevation_mask_deg?: number;
+  feeder_link?: {
+    frequency_ghz: number;
+    bandwidth_mhz: number;
+  };
 }
 
 export interface BlindSpotZone {
@@ -23,6 +28,115 @@ export interface BlindSpotZone {
   lon_min: number;
   lon_max: number;
   attenuation_db?: number;
+}
+
+export interface ConstellationShell {
+  name: string;
+  altitude_km: number;
+  inclination_deg: number;
+  num_planes: number;
+  sats_per_plane: number;
+  phase_offset?: number;
+}
+
+export interface SatelliteISLConfig {
+  enabled: boolean;
+  type?: string;
+  wavelength_nm?: number;
+  max_range_km?: number;
+  num_ports_per_sat?: number;
+}
+
+export interface MecServerConfig {
+  name: string;
+  lat: number;
+  lon: number;
+  compute_capacity_mips?: number;
+  storage_gb?: number;
+  assigned_gnb?: string;
+}
+
+export interface ScenarioAreaConfig {
+  name: string;
+  center_lat: number;
+  center_lon: number;
+  altitude_m?: number | null;
+  bbox: [number, number, number, number]; // [min_lon, min_lat, max_lon, max_lat]
+  elevation_mask_deg?: number | null;
+  environment_profile?: 'urban' | 'suburban' | 'rural' | 'alpine' | string;
+}
+
+export interface ScenarioTimeConfig {
+  start?: string;
+  duration_s: number;
+  warmup_s?: number;
+  timezone?: string;
+}
+
+export interface ScenarioConstellationConfig {
+  type?: string;
+  shells?: ConstellationShell[];
+  isl?: SatelliteISLConfig;
+  ground_stations?: GroundStationSite[];
+}
+
+export interface ScenarioTerrestrialConfig {
+  gnb?: {
+    deployment?: string;
+    count?: number;
+    sites?: GnbSite[];
+    inter_site_distance_m?: number;
+  };
+  ue?: {
+    count?: number;
+    mobility?: string;
+    speed_kmh?: number;
+  };
+  blind_spots?: BlindSpotZone[];
+  switching_mode?: string;
+  alpine_weather?: {
+    rain_rate_mm_hr?: number;
+    cloud_attenuation_db?: number;
+  };
+  mec?: {
+    enabled?: boolean;
+    servers?: MecServerConfig[];
+  };
+  services?: string[];
+}
+
+export interface ScenarioUavConfig {
+  corridor_name?: string;
+  altitude_m?: number;
+  waypoints?: [number, number, number][]; // [lon, lat, alt]
+  uas_count?: number;
+}
+
+export interface ScenarioMaritimeConfig {
+  area_name?: string;
+  vessels_count?: number;
+  sar_mission?: boolean;
+}
+
+export interface ScenarioRailConfig {
+  track_id?: string;
+  trains_count?: number;
+  frequency_ghz?: number;
+}
+
+export interface ScenarioConfig {
+  scenario: {
+    name: string;
+    description?: string;
+    version?: string;
+    time: ScenarioTimeConfig;
+    area: ScenarioAreaConfig;
+    constellation?: ScenarioConstellationConfig;
+    terrestrial?: ScenarioTerrestrialConfig;
+    uav?: ScenarioUavConfig;
+    maritime?: ScenarioMaritimeConfig;
+    rail?: ScenarioRailConfig;
+  };
 }
 
 export interface ScenarioSummary {
@@ -54,12 +168,6 @@ export interface ScenarioDetail {
 
 export type RatType = '5G' | 'LEO' | 'V2X';
 
-/**
- * Per-vehicle telemetry. Every metric is `null` when it was not recorded by
- * the simulation (e.g. empty TraCI FCD timesteps, missing vector files).
- * The Studio renders `null` as "not recorded" — it is never replaced with
- * synthesized values.
- */
 export interface VehicleTelemetry {
   id: number;
   name: string;
@@ -73,13 +181,15 @@ export interface VehicleTelemetry {
   vho_count: number | null;
   active_rat: RatType | null;
   in_blind: boolean;
-  // HUD / kinematic vectors (populated from real .vec traces or live telemetry)
-  elevation_deg?: number | null;   // Elevation angle to zenith satellite
-  slant_range_km?: number | null;  // Slant range to serving satellite (km)
-  doppler_khz?: number | null;     // Doppler shift (kHz)
-  carrier_ghz?: number | null;     // Active carrier frequency (GHz)
-  heading_deg?: number | null;     // Vehicle heading
-  last_updated_s?: number | null;  // Simulation time of last update
+  elevation_deg?: number | null;
+  slant_range_km?: number | null;
+  doppler_khz?: number | null;
+  carrier_ghz?: number | null;
+  heading_deg?: number | null;
+  last_updated_s?: number | null;
+  // Multi-domain support
+  domain?: 'vehicle' | 'uav' | 'ship' | 'train';
+  altitude_m?: number | null;
 }
 
 export interface SimStatus {
@@ -100,7 +210,6 @@ export interface LiveTelemetryFrame {
   vehicles: VehicleTelemetry[];
 }
 
-/** Response of GET /api/fleet — latest per-vehicle snapshot or honest empty list. */
 export interface FleetSnapshot {
   scenario: string;
   sim_time: number | null;
@@ -108,11 +217,6 @@ export interface FleetSnapshot {
   vehicles: VehicleTelemetry[];
 }
 
-/**
- * Fleet-aggregated series from GET /api/telemetry. Entries are null where the
- * metric was not recorded. `qos_score` is optional because older payloads do
- * not include it.
- */
 export interface TelemetrySeries {
   timestamps: number[];
   throughput_mbps: (number | null)[];
@@ -165,6 +269,8 @@ export interface FleetTimelinePoint {
   doppler_khz?: number | null;
   carrier_ghz?: number | null;
   heading_deg?: number | null;
+  domain?: string;
+  altitude_m?: number | null;
 }
 
 export interface FleetTimelineResponse {
@@ -179,4 +285,95 @@ export interface CompareResponse {
   baseline_strategy?: string | null;
   kpis?: KpiSummary | null;
   telemetry?: TelemetrySeries | null;
+}
+
+export type SelectedNodeType = 'gnb' | 'gs' | 'blind' | 'veh' | 'sat' | 'uav' | 'ship' | 'train' | 'mec';
+
+export interface SelectedNode {
+  type: SelectedNodeType;
+  index: number;
+  data: any;
+}
+
+// -------------------------------------------------------------
+// Multi-Scale 2D/3D Unified Engine & Digital Twin Entity Types
+// -------------------------------------------------------------
+export type SimulationDomain = 'terrestrial' | 'space' | 'aerial' | 'maritime' | 'rail';
+
+export interface SatelliteEntity {
+  id: string;
+  name: string;
+  planeIndex: number;
+  satIndex: number;
+  altitudeKm: number;
+  lat: number;
+  lon: number;
+  altM: number;
+  tleLine1?: string;
+  tleLine2?: string;
+  footprintRadiusKm?: number;
+  elevationDeg?: number;
+}
+
+export interface SimulationRadioLink {
+  id: string;
+  sourceId: string;
+  targetId: string;
+  sourcePos: [number, number, number]; // [lon, lat, alt]
+  targetPos: [number, number, number]; // [lon, lat, alt]
+  rat: 'ITS-G5' | '5G-NR' | 'LEO-NTN' | 'ISL' | 'MEC';
+  state: 'los' | 'nlos_v' | 'nlos_b' | 'active' | 'outage';
+  sinrDb?: number;
+  latencyMs?: number;
+  color?: [number, number, number, number];
+}
+
+export interface SimulationFrame {
+  simTime: number;
+  vehicles: VehicleTelemetry[];
+  satellites: SatelliteEntity[];
+  links: SimulationRadioLink[];
+  aggregates?: {
+    throughput_mbps: number | null;
+    latency_ms: number | null;
+    active_rat: string | null;
+  };
+}
+
+export type WorkspaceMode = 'design' | 'live' | 'analyze';
+
+export interface LayersVisibility {
+  vehicles: boolean;
+  uavs: boolean;
+  ships: boolean;
+  trains: boolean;
+  rsuAndGnb: boolean;
+  groundStations: boolean;
+  leoSatellites: boolean;
+  leoOrbits: boolean;
+  islLinks: boolean;
+  v2xLinks: boolean;
+  nrLinks: boolean;
+  ntnLinks: boolean;
+  sensorCones: boolean;
+  gemv2LosRays: boolean;
+  buildings3D: boolean;
+  terrain3D: boolean;
+}
+
+export type DrawingToolType =
+  | 'select'
+  | 'bbox_osm'
+  | 'route_polyline'
+  | 'uav_corridor'
+  | 'place_rsu'
+  | 'place_gnb'
+  | 'place_ground_station'
+  | 'place_blind_spot'
+  | 'region_of_interest';
+
+export interface ValidationError {
+  path: string;
+  message: string;
+  keyword?: string;
 }

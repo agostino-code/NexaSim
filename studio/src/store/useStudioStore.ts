@@ -1,79 +1,159 @@
 import { create } from 'zustand';
+import { subscribeWithSelector } from 'zustand/middleware';
+import { immer } from 'zustand/middleware/immer';
 import {
   ScenarioSummary,
+  ScenarioConfig,
   SimStatus,
   VehicleTelemetry,
-  GnbSite,
-  GroundStationSite,
-  BlindSpotZone,
   LiveTelemetryFrame,
   TelemetrySeries,
   KpiSummary,
-  RatType,
   FleetTimelineResponse,
   CompareResponse,
+  SelectedNodeType,
+  SelectedNode,
+  WorkspaceMode,
+  LayersVisibility,
+  DrawingToolType,
+  ValidationError,
+  SimulationFrame,
+  SimulationRadioLink,
+  SatelliteEntity,
 } from '../types/scenario';
 
-export type SelectedNodeType = 'gnb' | 'gs' | 'blind' | 'veh';
-
-export interface SelectedNode {
-  type: SelectedNodeType;
-  index: number;
-  data: any;
-}
-
-/** One-shot "fly to node" request consumed by the 2D map / 3D globe. */
 export interface FlyToRequest {
   target: SelectedNodeType;
   index: number;
   lat: number;
   lon: number;
-  /** Monotonic nonce so repeated requests to the same node re-trigger. */
   nonce: number;
 }
 
-interface StudioState {
+export interface StudioState {
+  // -------------------------------------------------------------
+  // 1. WorkspaceSlice
+  // -------------------------------------------------------------
+  activeMode: WorkspaceMode;
+  activePresetLayout: string;
+  isCommandPaletteOpen: boolean;
+  setActiveMode: (mode: WorkspaceMode) => void;
+  setActivePresetLayout: (layout: string) => void;
+  setCommandPaletteOpen: (open: boolean) => void;
+  toggleCommandPalette: () => void;
+
+  // -------------------------------------------------------------
+  // 2. TimelineSlice
+  // -------------------------------------------------------------
+  currentTime: number;
+  simTime: number; // Backwards-compatible alias for currentTime
+  duration: number;
+  isPlaying: boolean;
+  playbackSpeed: number;
+  telemetryBuffer: Record<number, SimulationFrame>; // timestamp (rounded to 0.1s) -> frame
+  availableTimestamps: number[];
+  play: () => void;
+  pause: () => void;
+  togglePlay: () => void;
+  seek: (time: number) => void;
+  setSimTime: (time: number) => void; // Alias for seek
+  stepForward: (delta?: number) => void;
+  stepBackward: (delta?: number) => void;
+  setPlaybackSpeed: (speed: number) => void;
+  ingestFrame: (frame: SimulationFrame | Partial<LiveTelemetryFrame>) => void;
+  clearBuffer: () => void;
+  startPlayback: () => void;
+  stopPlayback: () => void;
+
+  // -------------------------------------------------------------
+  // 3. ViewportSlice
+  // -------------------------------------------------------------
+  viewState: {
+    longitude: number;
+    latitude: number;
+    zoom: number;
+    pitch: number;
+    bearing: number;
+    transitionDuration?: number;
+  };
+  projection: 'globe' | 'mercator';
+  trackedNodeId: string | null;
+  layersVisibility: LayersVisibility;
+  setViewState: (
+    patch: Partial<{
+      longitude: number;
+      latitude: number;
+      zoom: number;
+      pitch: number;
+      bearing: number;
+      transitionDuration?: number;
+    }>
+  ) => void;
+  setProjection: (projection: 'globe' | 'mercator') => void;
+  setTrackedNodeId: (id: string | null) => void;
+  toggleLayerVisibility: (layer: keyof LayersVisibility) => void;
+  setLayersVisibility: (patch: Partial<LayersVisibility>) => void;
+
+  // -------------------------------------------------------------
+  // 4. ScenarioBuilderSlice
+  // -------------------------------------------------------------
+  draftScenario: ScenarioConfig | null;
+  validationErrors: ValidationError[];
+  drawingTool: DrawingToolType;
+  isDirty: boolean;
+  isGenerating: boolean;
+  setDraftScenario: (draft: ScenarioConfig | null) => void;
+  updateDraftSection: (path: string, value: any) => void;
+  setValidationErrors: (errors: ValidationError[]) => void;
+  setDrawingTool: (tool: DrawingToolType) => void;
+  setIsDirty: (dirty: boolean) => void;
+  setIsGenerating: (generating: boolean) => void;
+  exportToYaml: () => string;
+
+  // -------------------------------------------------------------
+  // 5. SelectionSlice
+  // -------------------------------------------------------------
+  selectedNodeId: string | null;
+  hoveredNodeId: string | null;
+  selectedLinkId: string | null;
+  comparedRunIds: string[];
+  selectedNode: SelectedNode | null; // Backwards compatibility
+  selectNode: (node: SelectedNode | null) => void;
+  setSelectedNodeId: (id: string | null) => void;
+  setHoveredNodeId: (id: string | null) => void;
+  setSelectedLinkId: (id: string | null) => void;
+  toggleComparedRun: (runId: string) => void;
+
+  // -------------------------------------------------------------
+  // Legacy & Shared Simulation Context (Backwards Compatibility)
+  // -------------------------------------------------------------
   scenarios: ScenarioSummary[];
   currentScenario: ScenarioSummary | null;
   status: SimStatus;
   logs: string[];
-  simTime: number;
-  isPlaying: boolean;
-  playbackSpeed: number;
-  selectedNode: SelectedNode | null;
-  // Fleet aggregates: null until a recorded run or live frame provides them
   throughputMbps: number | null;
   latencyMs: number | null;
   activeRat: string | null;
   vehicles: VehicleTelemetry[];
+  satellites: SatelliteEntity[];
+  activeLinks: SimulationRadioLink[];
   wsConnected: boolean;
-
-  /** One-shot fly-to request for the viewports (nonce-guarded). */
   flyToRequest: FlyToRequest | null;
-  /** Data provenance modal visibility (global: opened from Header or Dashboard). */
   provenanceOpen: boolean;
-
-  // Real telemetry series from /api/telemetry (parsed .vec / KPI data)
   telemetrySeries: TelemetrySeries | null;
   kpis: KpiSummary | null;
   hasRunData: boolean;
-
-  // Time-machine & Multi-Strategy comparison data
   fleetTimeline: FleetTimelineResponse | null;
   compareData: CompareResponse | null;
   compareBaselineEnabled: boolean;
 
-  // Actions
+  // Legacy actions
   setScenarios: (scenarios: ScenarioSummary[]) => void;
   selectScenario: (scenario: ScenarioSummary) => void;
   setStatus: (status: SimStatus) => void;
   appendLog: (log: string) => void;
   appendLogs: (logs: string[]) => void;
   clearLogs: () => void;
-  setSimTime: (time: number) => void;
-  togglePlay: () => void;
-  setPlaybackSpeed: (speed: number) => void;
-  selectNode: (node: SelectedNode | null) => void;
   updateNode: (type: SelectedNodeType, index: number, updatedData: any) => void;
   updateScenarioParams: (patch: Partial<ScenarioSummary>) => void;
   addNode: (type: Exclude<SelectedNodeType, 'veh'>, data: any) => void;
@@ -94,317 +174,577 @@ interface StudioState {
     latency_ms: number | null;
     active_rat: string | null;
   }) => void;
-  // Tick loop control
-  startPlayback: () => void;
-  stopPlayback: () => void;
 }
 
-const SECOND = 1000;
+const defaultLayersVisibility: LayersVisibility = {
+  vehicles: true,
+  uavs: true,
+  ships: true,
+  trains: true,
+  rsuAndGnb: true,
+  groundStations: true,
+  leoSatellites: true,
+  leoOrbits: true,
+  islLinks: true,
+  v2xLinks: true,
+  nrLinks: true,
+  ntnLinks: true,
+  sensorCones: true,
+  gemv2LosRays: true,
+  buildings3D: true,
+  terrain3D: true,
+};
 
-export const useStudioStore = create<StudioState>((set, get) => ({
-  scenarios: [],
-  currentScenario: null,
-  status: {
-    running: false,
-    run_id: null,
-    scenario: null,
-    started_at: null,
-    logs: [],
-    exit_code: null,
-  },
-  logs: ['NexaSim Studio Enterprise v4.0 (React 18 + TypeScript + Dockview)\nReady for dispatch.'],
-  simTime: 0.0,
-  isPlaying: false,
-  playbackSpeed: 2.0,
-  selectedNode: null,
-  throughputMbps: null,
-  latencyMs: null,
-  activeRat: null,
-  vehicles: [],
-  wsConnected: false,
-  telemetrySeries: null,
-  kpis: null,
-  hasRunData: false,
-  flyToRequest: null,
-  provenanceOpen: false,
-  fleetTimeline: null,
-  compareData: null,
-  compareBaselineEnabled: false,
+let playbackTimer: number | null = null;
 
-  setScenarios: (scenarios) => set({ scenarios }),
+export const useStudioStore = create<StudioState>()(
+  subscribeWithSelector(
+    immer((set, get) => ({
+      // -------------------------------------------------------------
+      // 1. WorkspaceSlice Implementation
+      // -------------------------------------------------------------
+      activeMode: 'live',
+      activePresetLayout: 'mission_control',
+      isCommandPaletteOpen: false,
 
-  selectScenario: (scenario) =>
-    set({
-      currentScenario: scenario,
-      simTime: 0.0,
+      setActiveMode: (mode) =>
+        set((state) => {
+          state.activeMode = mode;
+          if (mode === 'design') {
+            state.activePresetLayout = 'builder';
+          } else if (mode === 'analyze') {
+            state.activePresetLayout = 'analytics';
+          } else {
+            state.activePresetLayout = 'mission_control';
+          }
+        }),
+
+      setActivePresetLayout: (layout) =>
+        set((state) => {
+          state.activePresetLayout = layout;
+        }),
+
+      setCommandPaletteOpen: (open) =>
+        set((state) => {
+          state.isCommandPaletteOpen = open;
+        }),
+
+      toggleCommandPalette: () =>
+        set((state) => {
+          state.isCommandPaletteOpen = !state.isCommandPaletteOpen;
+        }),
+
+      // -------------------------------------------------------------
+      // 2. TimelineSlice Implementation
+      // -------------------------------------------------------------
+      currentTime: 0,
+      simTime: 0,
+      duration: 300,
+      isPlaying: false,
+      playbackSpeed: 1,
+      telemetryBuffer: {},
+      availableTimestamps: [],
+
+      play: () => {
+        const { isPlaying } = get();
+        if (isPlaying) return;
+        set((state) => {
+          state.isPlaying = true;
+        });
+        get().startPlayback();
+      },
+
+      pause: () => {
+        set((state) => {
+          state.isPlaying = false;
+        });
+        get().stopPlayback();
+      },
+
+      togglePlay: () => {
+        if (get().isPlaying) {
+          get().pause();
+        } else {
+          get().play();
+        }
+      },
+
+      seek: (time) =>
+        set((state) => {
+          const maxDur = state.duration > 0 ? state.duration : 3600;
+          const clamped = Math.max(0, Math.min(time, maxDur));
+          state.currentTime = clamped;
+          state.simTime = clamped;
+
+          // Lookup closest frame from telemetryBuffer if available
+          const roundedKey = Math.round(clamped * 10) / 10;
+          const frame = state.telemetryBuffer[roundedKey];
+          if (frame) {
+            state.vehicles = frame.vehicles;
+            state.satellites = frame.satellites;
+            state.activeLinks = frame.links;
+            if (frame.aggregates) {
+              state.throughputMbps = frame.aggregates.throughput_mbps;
+              state.latencyMs = frame.aggregates.latency_ms;
+              state.activeRat = frame.aggregates.active_rat;
+            }
+          }
+        }),
+
+      setSimTime: (time) => get().seek(time),
+
+      stepForward: (delta = 0.5) => {
+        const { currentTime, duration, seek } = get();
+        seek(Math.min(currentTime + delta, duration));
+      },
+
+      stepBackward: (delta = 0.5) => {
+        const { currentTime, seek } = get();
+        seek(Math.max(currentTime - delta, 0));
+      },
+
+      setPlaybackSpeed: (speed) =>
+        set((state) => {
+          state.playbackSpeed = speed;
+          if (state.isPlaying) {
+            get().stopPlayback();
+            get().startPlayback();
+          }
+        }),
+
+      ingestFrame: (frame: any) =>
+        set((state) => {
+          const t = frame.sim_time !== undefined ? frame.sim_time : frame.simTime ?? state.currentTime;
+          const roundedT = Math.round(t * 10) / 10;
+          const vehs = frame.vehicles || [];
+          const sats = frame.satellites || state.satellites || [];
+          const links = frame.links || state.activeLinks || [];
+
+          state.telemetryBuffer[roundedT] = {
+            simTime: t,
+            vehicles: vehs,
+            satellites: sats,
+            links: links,
+            aggregates: {
+              throughput_mbps: frame.throughput_mbps ?? state.throughputMbps,
+              latency_ms: frame.latency_ms ?? state.latencyMs,
+              active_rat: frame.active_rat ?? state.activeRat,
+            },
+          };
+
+          if (!state.availableTimestamps.includes(roundedT)) {
+            state.availableTimestamps.push(roundedT);
+            state.availableTimestamps.sort((a, b) => a - b);
+          }
+
+          // If close to live time, update current telemetry
+          if (Math.abs(state.currentTime - t) < 1.0 || state.isPlaying) {
+            state.currentTime = t;
+            state.simTime = t;
+            state.vehicles = vehs;
+            if (frame.throughput_mbps !== undefined) state.throughputMbps = frame.throughput_mbps;
+            if (frame.latency_ms !== undefined) state.latencyMs = frame.latency_ms;
+            if (frame.active_rat !== undefined) state.activeRat = frame.active_rat;
+          }
+        }),
+
+      clearBuffer: () =>
+        set((state) => {
+          state.telemetryBuffer = {};
+          state.availableTimestamps = [];
+        }),
+
+      startPlayback: () => {
+        if (playbackTimer !== null) clearInterval(playbackTimer);
+        const tickInterval = 50; // 20 FPS ticks
+        playbackTimer = window.setInterval(() => {
+          const { isPlaying, currentTime, duration, playbackSpeed, seek, pause } = get();
+          if (!isPlaying) {
+            clearInterval(playbackTimer!);
+            playbackTimer = null;
+            return;
+          }
+          const dt = (tickInterval / 1000) * playbackSpeed;
+          const nextTime = currentTime + dt;
+          if (nextTime >= duration) {
+            seek(duration);
+            pause();
+          } else {
+            seek(nextTime);
+          }
+        }, tickInterval);
+      },
+
+      stopPlayback: () => {
+        if (playbackTimer !== null) {
+          clearInterval(playbackTimer);
+          playbackTimer = null;
+        }
+      },
+
+      // -------------------------------------------------------------
+      // 3. ViewportSlice Implementation
+      // -------------------------------------------------------------
+      viewState: {
+        longitude: 10.5,
+        latitude: 46.5,
+        zoom: 3.5,
+        pitch: 45,
+        bearing: 0,
+      },
+      projection: 'globe',
+      trackedNodeId: null,
+      layersVisibility: defaultLayersVisibility,
+
+      setViewState: (patch) =>
+        set((state) => {
+          state.viewState = { ...state.viewState, ...patch };
+        }),
+
+      setProjection: (projection) =>
+        set((state) => {
+          state.projection = projection;
+        }),
+
+      setTrackedNodeId: (id) =>
+        set((state) => {
+          state.trackedNodeId = id;
+        }),
+
+      toggleLayerVisibility: (layer) =>
+        set((state) => {
+          state.layersVisibility[layer] = !state.layersVisibility[layer];
+        }),
+
+      setLayersVisibility: (patch) =>
+        set((state) => {
+          state.layersVisibility = { ...state.layersVisibility, ...patch };
+        }),
+
+      // -------------------------------------------------------------
+      // 4. ScenarioBuilderSlice Implementation
+      // -------------------------------------------------------------
+      draftScenario: null,
+      validationErrors: [],
+      drawingTool: 'select',
+      isDirty: false,
+      isGenerating: false,
+
+      setDraftScenario: (draft) =>
+        set((state) => {
+          state.draftScenario = draft;
+          state.isDirty = false;
+        }),
+
+      updateDraftSection: (path, value) =>
+        set((state) => {
+          if (!state.draftScenario) return;
+          const keys = path.split('.');
+          let curr: any = state.draftScenario;
+          for (let i = 0; i < keys.length - 1; i++) {
+            if (curr[keys[i]] === undefined) curr[keys[i]] = {};
+            curr = curr[keys[i]];
+          }
+          curr[keys[keys.length - 1]] = value;
+          state.isDirty = true;
+        }),
+
+      setValidationErrors: (errors) =>
+        set((state) => {
+          state.validationErrors = errors;
+        }),
+
+      setDrawingTool: (tool) =>
+        set((state) => {
+          state.drawingTool = tool;
+        }),
+
+      setIsDirty: (dirty) =>
+        set((state) => {
+          state.isDirty = dirty;
+        }),
+
+      setIsGenerating: (generating) =>
+        set((state) => {
+          state.isGenerating = generating;
+        }),
+
+      exportToYaml: () => {
+        const { draftScenario } = get();
+        if (!draftScenario) return '';
+        try {
+          const yaml = (window as any).jsyaml || null;
+          if (yaml) return yaml.dump(draftScenario);
+          return JSON.stringify(draftScenario, null, 2);
+        } catch {
+          return JSON.stringify(draftScenario, null, 2);
+        }
+      },
+
+      // -------------------------------------------------------------
+      // 5. SelectionSlice Implementation
+      // -------------------------------------------------------------
+      selectedNodeId: null,
+      hoveredNodeId: null,
+      selectedLinkId: null,
+      comparedRunIds: [],
       selectedNode: null,
+
+      selectNode: (selectedNode) =>
+        set((state) => {
+          state.selectedNode = selectedNode;
+          state.selectedNodeId = selectedNode
+            ? `${selectedNode.type}.${selectedNode.data?.name || selectedNode.data?.id || selectedNode.index}`
+            : null;
+        }),
+
+      setSelectedNodeId: (id) =>
+        set((state) => {
+          state.selectedNodeId = id;
+        }),
+
+      setHoveredNodeId: (id) =>
+        set((state) => {
+          state.hoveredNodeId = id;
+        }),
+
+      setSelectedLinkId: (id) =>
+        set((state) => {
+          state.selectedLinkId = id;
+        }),
+
+      toggleComparedRun: (runId) =>
+        set((state) => {
+          if (state.comparedRunIds.includes(runId)) {
+            state.comparedRunIds = state.comparedRunIds.filter((r) => r !== runId);
+          } else {
+            state.comparedRunIds.push(runId);
+          }
+        }),
+
+      // -------------------------------------------------------------
+      // Shared Simulation Context & Legacy Actions
+      // -------------------------------------------------------------
+      scenarios: [],
+      currentScenario: null,
+      status: {
+        running: false,
+        run_id: null,
+        scenario: null,
+        started_at: null,
+        logs: [],
+        exit_code: null,
+      },
+      logs: [],
+      throughputMbps: null,
+      latencyMs: null,
+      activeRat: null,
+      vehicles: [],
+      satellites: [],
+      activeLinks: [],
+      wsConnected: false,
+      flyToRequest: null,
+      provenanceOpen: false,
       telemetrySeries: null,
       kpis: null,
       hasRunData: false,
       fleetTimeline: null,
       compareData: null,
       compareBaselineEnabled: false,
-      throughputMbps: null,
-      latencyMs: null,
-      activeRat: null,
-      vehicles: [],
-    }),
 
-  setStatus: (status) => set({ status }),
+      setScenarios: (scenarios) =>
+        set((state) => {
+          state.scenarios = scenarios;
+        }),
 
-  appendLog: (log) =>
-    set((state) => ({
-      logs: [...state.logs.slice(-1500), log],
-    })),
+      selectScenario: (scenario) =>
+        set((state) => {
+          state.currentScenario = scenario;
+          state.duration = scenario.duration_s || 300;
+          state.currentTime = 0;
+          state.simTime = 0;
+          state.vehicles = [];
+          state.activeLinks = [];
+          state.selectedNode = null;
+          state.selectedNodeId = null;
+          state.telemetrySeries = null;
+          state.kpis = null;
+          state.hasRunData = false;
+          state.fleetTimeline = null;
+          state.compareData = null;
+          state.telemetryBuffer = {};
+          state.availableTimestamps = [];
 
-  appendLogs: (newLogs) =>
-    set((state) => {
-      if (!newLogs.length) return state;
-      const combined = state.logs.concat(newLogs);
-      return {
-        logs: combined.length > 1500 ? combined.slice(-1500) : combined,
-      };
-    }),
-
-  clearLogs: () => set({ logs: ['Console cleared.'] }),
-
-  setSimTime: (simTime) =>
-    set((state) => {
-      // If we have fleet timeline and simulation is not currently running live,
-      // update vehicle states through O(log N) binary search lookup at simTime!
-      if (!state.status.running && state.fleetTimeline && state.fleetTimeline.timestamps.length > 0) {
-        const ts = state.fleetTimeline.timestamps;
-        let low = 0;
-        let high = ts.length - 1;
-        let sampleIdx = 0;
-        while (low <= high) {
-          const mid = (low + high) >> 1;
-          if (ts[mid] <= simTime) {
-            sampleIdx = mid;
-            low = mid + 1;
-          } else {
-            high = mid - 1;
+          // Center view on scenario area
+          if (scenario.center) {
+            state.viewState.latitude = scenario.center[0];
+            state.viewState.longitude = scenario.center[1];
+            state.viewState.zoom = 10;
           }
-        }
+        }),
 
-        const updatedVehicles: VehicleTelemetry[] = state.vehicles.map((v) => {
-          const vtl = state.fleetTimeline?.vehicles_timeline[String(v.id)];
-          if (!vtl || !vtl[sampleIdx]) return v;
-          const pt = vtl[sampleIdx];
-          return {
-            ...v,
-            speed_kmh: pt.speed_kmh ?? v.speed_kmh,
-            throughput_mbps: pt.throughput_mbps ?? v.throughput_mbps,
-            mec_latency_ms: pt.mec_latency_ms ?? v.mec_latency_ms,
-            qos_score: pt.qos_score ?? v.qos_score,
-            battery_soc_pct: pt.battery_soc_pct ?? v.battery_soc_pct,
-            vho_count: pt.vho_count ?? v.vho_count,
-            active_rat: pt.active_rat ?? v.active_rat,
-            elevation_deg: pt.elevation_deg ?? v.elevation_deg,
-            slant_range_km: pt.slant_range_km ?? v.slant_range_km,
-            doppler_khz: pt.doppler_khz ?? v.doppler_khz,
-            carrier_ghz: pt.carrier_ghz ?? v.carrier_ghz,
-            heading_deg: pt.heading_deg ?? v.heading_deg,
-            last_updated_s: pt.t,
-          };
-        });
+      setStatus: (status) =>
+        set((state) => {
+          state.status = status;
+        }),
 
-        // Also update selectedNode if it is a vehicle
-        let selectedNode = state.selectedNode;
-        if (selectedNode && selectedNode.type === 'veh') {
-          const currentV = updatedVehicles.find((v) => v.id === selectedNode?.index);
-          if (currentV) {
-            selectedNode = { ...selectedNode, data: currentV };
+      appendLog: (log) =>
+        set((state) => {
+          state.logs.push(log);
+          if (state.logs.length > 500) {
+            state.logs.shift();
           }
-        }
+        }),
 
-        return { simTime, vehicles: updatedVehicles, selectedNode };
-      }
-      return { simTime };
-    }),
+      appendLogs: (newLogs) =>
+        set((state) => {
+          state.logs.push(...newLogs);
+          if (state.logs.length > 500) {
+            state.logs = state.logs.slice(-500);
+          }
+        }),
 
-  togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
+      clearLogs: () =>
+        set((state) => {
+          state.logs = [];
+        }),
 
-  setPlaybackSpeed: (playbackSpeed) => set({ playbackSpeed }),
+      updateNode: (type, index, updatedData) =>
+        set((state) => {
+          if (!state.currentScenario) return;
+          const sc = state.currentScenario;
+          let updatedNodeData = updatedData;
+          if (type === 'gnb' && sc.gnbs[index]) {
+            sc.gnbs[index] = { ...sc.gnbs[index], ...updatedData };
+            updatedNodeData = sc.gnbs[index];
+          } else if (type === 'gs' && sc.ground_stations[index]) {
+            sc.ground_stations[index] = { ...sc.ground_stations[index], ...updatedData };
+            updatedNodeData = sc.ground_stations[index];
+          } else if (type === 'blind' && sc.blind_spots[index]) {
+            sc.blind_spots[index] = { ...sc.blind_spots[index], ...updatedData };
+            updatedNodeData = sc.blind_spots[index];
+          }
+          if (state.selectedNode && state.selectedNode.type === type && state.selectedNode.index === index) {
+            state.selectedNode.data = updatedNodeData;
+          }
+        }),
 
-  selectNode: (selectedNode) => set({ selectedNode }),
+      updateScenarioParams: (patch) =>
+        set((state) => {
+          if (!state.currentScenario) return;
+          Object.assign(state.currentScenario, patch);
+          const scId = state.currentScenario.id;
+          const idx = state.scenarios.findIndex((s) => s.id === scId);
+          if (idx !== -1) {
+            Object.assign(state.scenarios[idx], patch);
+          }
+          if (patch.duration_s !== undefined) {
+            state.duration = patch.duration_s;
+          }
+        }),
 
-  updateNode: (type, index, updatedData) =>
-    set((state) => {
-      if (!state.currentScenario) return state;
-      const sc = { ...state.currentScenario };
-      let updatedNodeData = updatedData;
-      if (type === 'gnb' && sc.gnbs[index]) {
-        sc.gnbs = [...sc.gnbs];
-        sc.gnbs[index] = { ...sc.gnbs[index], ...updatedData };
-        updatedNodeData = sc.gnbs[index];
-      } else if (type === 'gs' && sc.ground_stations[index]) {
-        sc.ground_stations = [...sc.ground_stations];
-        sc.ground_stations[index] = { ...sc.ground_stations[index], ...updatedData };
-        updatedNodeData = sc.ground_stations[index];
-      } else if (type === 'blind' && sc.blind_spots[index]) {
-        sc.blind_spots = [...sc.blind_spots];
-        sc.blind_spots[index] = { ...sc.blind_spots[index], ...updatedData };
-        updatedNodeData = sc.blind_spots[index];
-      }
-      const selectedNode =
-        state.selectedNode && state.selectedNode.type === type && state.selectedNode.index === index
-          ? { ...state.selectedNode, data: updatedNodeData }
-          : state.selectedNode;
-      return { currentScenario: sc, selectedNode };
-    }),
+      addNode: (type, data) =>
+        set((state) => {
+          if (!state.currentScenario) return;
+          const sc = state.currentScenario;
+          if (type === 'gnb') {
+            sc.gnbs = sc.gnbs || [];
+            sc.gnbs.push(data);
+          } else if (type === 'gs') {
+            sc.ground_stations = sc.ground_stations || [];
+            sc.ground_stations.push(data);
+          } else if (type === 'blind') {
+            sc.blind_spots = sc.blind_spots || [];
+            sc.blind_spots.push(data);
+          }
+        }),
 
-  updateScenarioParams: (patch) =>
-    set((state) => {
-      if (!state.currentScenario) return state;
-      const updated = { ...state.currentScenario, ...patch };
-      const scenarios = state.scenarios.map((s) => (s.id === updated.id ? updated : s));
-      return { currentScenario: updated, scenarios };
-    }),
+      removeNode: (type, index) =>
+        set((state) => {
+          if (!state.currentScenario) return;
+          const sc = state.currentScenario;
+          if (type === 'gnb' && sc.gnbs) {
+            sc.gnbs.splice(index, 1);
+          } else if (type === 'gs' && sc.ground_stations) {
+            sc.ground_stations.splice(index, 1);
+          } else if (type === 'blind' && sc.blind_spots) {
+            sc.blind_spots.splice(index, 1);
+          }
+          state.selectedNode = null;
+          state.selectedNodeId = null;
+        }),
 
-  addNode: (type, data) =>
-    set((state) => {
-      if (!state.currentScenario) return state;
-      const sc = { ...state.currentScenario };
-      if (type === 'gnb') sc.gnbs = [...(sc.gnbs || []), data];
-      else if (type === 'gs') sc.ground_stations = [...(sc.ground_stations || []), data];
-      else if (type === 'blind') sc.blind_spots = [...(sc.blind_spots || []), data];
-      return { currentScenario: sc };
-    }),
+      requestFlyTo: (target, index, lat, lon) =>
+        set((state) => {
+          state.flyToRequest = { target, index, lat, lon, nonce: Date.now() };
+          state.viewState.latitude = lat;
+          state.viewState.longitude = lon;
+          state.viewState.zoom = Math.max(state.viewState.zoom, 12);
+        }),
 
-  requestFlyTo: (target, index, lat, lon) =>
-    set({ flyToRequest: { target, index, lat, lon, nonce: Date.now() } }),
+      setProvenanceOpen: (open) =>
+        set((state) => {
+          state.provenanceOpen = open;
+        }),
 
-  setProvenanceOpen: (provenanceOpen) => set({ provenanceOpen }),
+      setWsConnected: (connected) =>
+        set((state) => {
+          state.wsConnected = connected;
+        }),
 
-  removeNode: (type, index) =>
-    set((state) => {
-      if (!state.currentScenario) return state;
-      const sc = { ...state.currentScenario };
-      if (type === 'gnb' && sc.gnbs) {
-        sc.gnbs = sc.gnbs.filter((_, i) => i !== index);
-      } else if (type === 'gs' && sc.ground_stations) {
-        sc.ground_stations = sc.ground_stations.filter((_, i) => i !== index);
-      } else if (type === 'blind' && sc.blind_spots) {
-        sc.blind_spots = sc.blind_spots.filter((_, i) => i !== index);
-      }
-      return { currentScenario: sc, selectedNode: null };
-    }),
+      updateLiveTelemetry: (frame) =>
+        set((state) => {
+          if (frame.sim_time !== undefined) {
+            state.currentTime = frame.sim_time;
+            state.simTime = frame.sim_time;
+          }
+          if (frame.throughput_mbps !== undefined) state.throughputMbps = frame.throughput_mbps;
+          if (frame.latency_ms !== undefined) state.latencyMs = frame.latency_ms;
+          if (frame.active_rat !== undefined) state.activeRat = frame.active_rat;
+          if (frame.vehicles) state.vehicles = frame.vehicles;
+        }),
 
-  setWsConnected: (wsConnected) => set({ wsConnected }),
+      setTelemetrySeries: (series) =>
+        set((state) => {
+          state.telemetrySeries = series;
+        }),
 
-  updateLiveTelemetry: (frame) =>
-    set((state) => {
-      const scenarioMatches =
-        !state.status.scenario || state.status.scenario === state.currentScenario?.id;
-      if (!state.status.running || !scenarioMatches) return {};
-      return {
-        throughputMbps: frame.throughput_mbps ?? state.throughputMbps,
-        latencyMs: frame.latency_ms ?? state.latencyMs,
-        activeRat: frame.active_rat ?? state.activeRat,
-        vehicles: frame.vehicles ?? state.vehicles,
-        simTime: frame.sim_time ?? state.simTime,
-        hasRunData:
-          state.hasRunData ||
-          (frame.vehicles?.length ?? 0) > 0 ||
-          frame.throughput_mbps != null,
-      };
-    }),
+      setKpis: (kpis) =>
+        set((state) => {
+          state.kpis = kpis;
+        }),
 
-  setTelemetrySeries: (series) => set({ telemetrySeries: series, hasRunData: true }),
+      setHasRunData: (hasData) =>
+        set((state) => {
+          state.hasRunData = hasData;
+        }),
 
-  setKpis: (kpis) => set({ kpis, hasRunData: true }),
+      setVehicles: (vehicles) =>
+        set((state) => {
+          state.vehicles = vehicles;
+        }),
 
-  setHasRunData: (hasData) => set({ hasRunData: hasData }),
+      setFleetTimeline: (timeline) =>
+        set((state) => {
+          state.fleetTimeline = timeline;
+        }),
 
-  setVehicles: (vehicles) => set({ vehicles }),
+      setCompareData: (data) =>
+        set((state) => {
+          state.compareData = data;
+        }),
 
-  setFleetTimeline: (fleetTimeline) => set({ fleetTimeline }),
+      toggleCompareBaseline: () =>
+        set((state) => {
+          state.compareBaselineEnabled = !state.compareBaselineEnabled;
+        }),
 
-  setCompareData: (compareData) => set({ compareData }),
-
-  toggleCompareBaseline: () => set((state) => ({ compareBaselineEnabled: !state.compareBaselineEnabled })),
-
-  setFleetAggregates: (agg) =>
-    set({
-      throughputMbps: agg.throughput_mbps,
-      latencyMs: agg.latency_ms,
-      activeRat: agg.active_rat,
-    }),
-
-  startPlayback: () => set({ isPlaying: true }),
-
-  stopPlayback: () => set({ isPlaying: false }),
-}));
-
-/**
- * Playback ticker: advances simTime smoothly while isPlaying is true,
- * looping 0 -> currentScenario.duration_s. While a live simulation is
- * running the ws telemetry frames own the clock, so the ticker idles.
- */
-let rafId: number | null = null;
-let lastTimestamp = 0;
-const MIN_FRAME_DELTA_MS = 16.0; // ~60 FPS update throttle to avoid excessive React state dispatch
-
-export function startStudioPlayback() {
-  if (rafId !== null) return;
-  lastTimestamp = performance.now();
-  const tick = (now: number) => {
-    const state = useStudioStore.getState();
-    if (!state.isPlaying || !state.currentScenario) {
-      rafId = null;
-      return;
-    }
-    if (state.status.running) {
-      // Live run: sim_time arrives from /ws/telemetry frames.
-      lastTimestamp = now;
-      rafId = requestAnimationFrame(tick);
-      return;
-    }
-    const elapsed = now - lastTimestamp;
-    if (elapsed < MIN_FRAME_DELTA_MS) {
-      rafId = requestAnimationFrame(tick);
-      return;
-    }
-    const dt = elapsed / SECOND;
-    lastTimestamp = now;
-
-    const duration = state.currentScenario.duration_s || 0;
-    if (duration <= 0) {
-      rafId = null;
-      return;
-    }
-    const next = state.simTime + dt * state.playbackSpeed;
-    if (next >= duration) {
-      // Loop back to 0 while still playing
-      useStudioStore.setState({ simTime: 0 });
-    } else {
-      useStudioStore.setState({ simTime: next });
-    }
-    rafId = requestAnimationFrame(tick);
-  };
-  rafId = requestAnimationFrame(tick);
-}
-
-export function stopStudioPlayback() {
-  if (rafId !== null) {
-    cancelAnimationFrame(rafId);
-    rafId = null;
-  }
-}
-
-/**
- * Single source of truth for the ticker: whenever `isPlaying` flips, the
- * rAF loop is started/stopped accordingly (covers togglePlay from Header,
- * keyboard shortcuts, external setState calls, ...).
- */
-let wasPlaying = false;
-useStudioStore.subscribe((state) => {
-  if (state.isPlaying === wasPlaying) return;
-  wasPlaying = state.isPlaying;
-  if (state.isPlaying) {
-    startStudioPlayback();
-  } else {
-    stopStudioPlayback();
-  }
-});
+      setFleetAggregates: (agg) =>
+        set((state) => {
+          state.throughputMbps = agg.throughput_mbps;
+          state.latencyMs = agg.latency_ms;
+          state.activeRat = agg.active_rat;
+        }),
+    }))
+  )
+);

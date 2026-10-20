@@ -1,76 +1,35 @@
 import React, { useState } from 'react';
 import {
-  Play,
-  Pause,
-  StepForward,
-  RefreshCw,
   Rocket,
-  LayoutGrid,
-  Map,
-  Globe,
-  BarChart3,
-  Loader2,
+  Search,
+  Sliders,
+  Radio,
+  FileCode,
+  Sparkles,
   Database,
+  Loader2,
+  ChevronDown,
+  RotateCw,
 } from 'lucide-react';
 import { useStudioStore } from '../../store/useStudioStore';
 import { runSimulation, build3dTwin } from '../../services/api';
+import { WorkspaceMode } from '../../types/scenario';
 
-interface HeaderProps {
-  onLayoutPreset?: (preset: 'dual' | '2d' | '3d' | 'analytics') => void;
-}
-
-/**
- * Isolated scrubber & timer component subscribing directly to simTime,
- * preventing Header from re-rendering on 60 FPS clock ticks.
- */
-export const PlaybackScrubber: React.FC = () => {
-  const simTime = useStudioStore((s) => s.simTime);
-  const duration = useStudioStore((s) => s.currentScenario?.duration_s ?? 0);
-  const setSimTime = useStudioStore((s) => s.setSimTime);
-
-  const minutes = Math.floor(simTime / 60);
-  const seconds = (simTime % 60).toFixed(1);
-
-  return (
-    <div className="flex items-center gap-1.5">
-      <input
-        type="range"
-        min={0}
-        max={duration}
-        step={0.1}
-        value={Math.min(simTime, duration)}
-        onChange={(e) => setSimTime(Number(e.target.value))}
-        disabled={duration <= 0}
-        className="nx-range w-28 hidden sm:block"
-        title="Scrub simulation time"
-        aria-label="Simulation time scrubber"
-      />
-      <div
-        className="font-mono text-xs font-semibold text-brand-cyan px-2 border-x border-border-subtle tabular-nums min-w-[76px] text-center"
-        title="Simulated time (simTime)"
-      >
-        T+{String(minutes).padStart(2, '0')}:{String(seconds).padStart(4, '0')}s
-      </div>
-    </div>
-  );
-};
-
-export const Header: React.FC<HeaderProps> = ({ onLayoutPreset }) => {
+export const Header: React.FC = () => {
   const currentScenario = useStudioStore((s) => s.currentScenario);
   const scenarios = useStudioStore((s) => s.scenarios);
   const selectScenario = useStudioStore((s) => s.selectScenario);
-  const isPlaying = useStudioStore((s) => s.isPlaying);
-  const playbackSpeed = useStudioStore((s) => s.playbackSpeed);
-  const togglePlay = useStudioStore((s) => s.togglePlay);
-  const setSimTime = useStudioStore((s) => s.setSimTime);
-  const setPlaybackSpeed = useStudioStore((s) => s.setPlaybackSpeed);
+  const activeMode = useStudioStore((s) => s.activeMode);
+  const setActiveMode = useStudioStore((s) => s.setActiveMode);
+  const setCommandPaletteOpen = useStudioStore((s) => s.setCommandPaletteOpen);
+  const setProvenanceOpen = useStudioStore((s) => s.setProvenanceOpen);
+  const wsConnected = useStudioStore((s) => s.wsConnected);
+  const status = useStudioStore((s) => s.status);
   const setStatus = useStudioStore((s) => s.setStatus);
   const appendLog = useStudioStore((s) => s.appendLog);
-  const setProvenanceOpen = useStudioStore((s) => s.setProvenanceOpen);
 
   const [isRunning, setIsRunning] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [activePreset, setActivePreset] = useState<'dual' | '2d' | '3d' | 'analytics'>('dual');
 
   const handleRun = async () => {
     if (!currentScenario || isRunning) return;
@@ -100,164 +59,142 @@ export const Header: React.FC<HeaderProps> = ({ onLayoutPreset }) => {
     appendLog(`[*] Regenerating 3D Orbital Digital Twin for '${currentScenario.id}'...`);
     try {
       await build3dTwin(currentScenario.id);
-      appendLog(`[+] 3D Digital Twin synchronized successfully.`);
+      appendLog(`[+] 3D Digital Twin synchronized.`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      appendLog(`[!] 3D Twin sync error: ${msg}`);
+      appendLog(`[!] 3D sync error: ${msg}`);
     } finally {
       setIsSyncing(false);
     }
   };
 
-  const handlePreset = (preset: 'dual' | '2d' | '3d' | 'analytics') => {
-    setActivePreset(preset);
-    onLayoutPreset?.(preset);
-  };
+  const MODES: { id: WorkspaceMode; label: string; icon: React.FC<{ className?: string }>; color: string }[] = [
+    { id: 'design', label: 'DESIGN', icon: Sliders, color: 'text-brand-cyan' },
+    { id: 'live', label: 'LIVE', icon: Radio, color: 'text-emerald-400' },
+    { id: 'analyze', label: 'ANALYZE', icon: FileCode, color: 'text-accent-purple' },
+  ];
 
   return (
-    <header className="h-14 bg-bg-panel border-b border-border-subtle flex items-center justify-between px-4 z-50 gap-4 flex-shrink-0">
-      {/* Brand Box */}
+    <header className="h-12 bg-bg-panel border-b border-border-subtle px-3 flex items-center justify-between select-none z-30 shrink-0">
+      {/* Brand & Scenario Selector */}
       <div className="flex items-center gap-3">
-        <span className="bg-amber-500/10 text-accent-amber border border-amber-500/40 text-[10px] font-mono font-bold px-2 py-0.5 rounded tracking-wider">
-          NEXASPHERE
-        </span>
-        <div>
-          <span className="font-bold text-sm text-slate-100 tracking-tight">NexaSim Studio</span>
-          <span className="text-xs text-slate-400 font-medium ml-2 hidden sm:inline">
-            Enterprise Control Center
-          </span>
+        <div className="flex items-center gap-2 pr-3 border-r border-border-subtle">
+          <div className="w-6 h-6 rounded bg-gradient-to-br from-brand-cyan to-brand-blue flex items-center justify-center font-bold text-xs text-slate-950 font-mono shadow-md">
+            NX
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xs font-bold tracking-wider text-slate-100 flex items-center gap-1 font-mono">
+              NEXASPHERE <span className="text-[10px] text-brand-cyan font-normal font-sans">STUDIO</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Scenario Picker */}
+        <div className="relative flex items-center">
+          <select
+            value={currentScenario?.id || ''}
+            onChange={(e) => {
+              const sc = scenarios.find((s) => s.id === e.target.value);
+              if (sc) selectScenario(sc);
+            }}
+            className="appearance-none bg-bg-card border border-border-subtle hover:border-border-medium rounded px-2.5 py-1 pr-7 text-xs text-slate-200 font-mono outline-none cursor-pointer transition focus:border-brand-cyan max-w-[200px] truncate"
+          >
+            {scenarios.map((sc) => (
+              <option key={sc.id} value={sc.id}>
+                {sc.name}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 pointer-events-none" />
+        </div>
+
+        {/* WebSocket Connection Status */}
+        <div
+          className="flex items-center gap-1.5 px-2 py-0.5 rounded border border-border-subtle bg-bg-card text-[10px] font-mono"
+          title={wsConnected ? 'Telemetry Stream Active' : 'WebSocket Disconnected'}
+        >
+          <div className={`w-1.5 h-1.5 rounded-full ${wsConnected ? 'bg-emerald-400' : 'bg-accent-red'}`} />
+          <span className="text-slate-400 hidden md:inline">{wsConnected ? 'STREAM' : 'OFFLINE'}</span>
         </div>
       </div>
 
-      {/* Scenario Switcher */}
-      <div className="hidden lg:flex items-center gap-2 min-w-0">
-        <select
-          value={currentScenario?.id ?? ''}
-          onChange={(e) => {
-            const sc = scenarios.find((s) => s.id === e.target.value);
-            if (sc) selectScenario(sc);
-          }}
-          className="bg-bg-card border border-border-subtle text-slate-200 text-xs font-semibold rounded px-2 py-1.5 outline-none focus:border-brand-cyan cursor-pointer max-w-[220px] truncate"
-          title="Active scenario"
-        >
-          {!currentScenario && (
-            <option value="" className="bg-bg-panel text-slate-100">
-              Select scenario…
-            </option>
-          )}
-          {scenarios.map((s) => (
-            <option key={s.id} value={s.id} className="bg-bg-panel text-slate-100">
-              {s.name}
-            </option>
-          ))}
-        </select>
+      {/* Mode Switcher Tabs (Design | Live | Analyze) */}
+      <div className="flex items-center bg-bg-card/70 border border-border-subtle p-0.5 rounded-lg shadow-inner">
+        {MODES.map((m) => {
+          const Icon = m.icon;
+          const isActive = activeMode === m.id;
+          return (
+            <button
+              key={m.id}
+              onClick={() => setActiveMode(m.id)}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold transition ${
+                isActive
+                  ? 'bg-bg-panel text-slate-100 shadow-sm border border-border-highlight/40'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-bg-card'
+              }`}
+            >
+              <Icon className={`w-3.5 h-3.5 ${isActive ? m.color : 'text-slate-500'}`} />
+              <span className="tracking-wide">{m.label}</span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Workspace Layout Presets */}
-      <div className="hidden md:flex items-center bg-bg-card border border-border-subtle rounded p-0.5 gap-0.5">
-        <button
-          onClick={() => handlePreset('dual')}
-          className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded transition ${
-            activePreset === 'dual'
-              ? 'bg-brand-blue text-white shadow'
-              : 'text-slate-400 hover:text-slate-100'
-          }`}
-          title="Dual 2D Map & 3D Globe Split View"
-        >
-          <LayoutGrid size={12} /> Dual
-        </button>
-        <button
-          onClick={() => handlePreset('2d')}
-          className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded transition ${
-            activePreset === '2d'
-              ? 'bg-brand-blue text-white shadow'
-              : 'text-slate-400 hover:text-slate-100'
-          }`}
-          title="Tactical 2D Map View"
-        >
-          <Map size={12} /> 2D Map
-        </button>
-        <button
-          onClick={() => handlePreset('3d')}
-          className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded transition ${
-            activePreset === '3d'
-              ? 'bg-brand-blue text-white shadow'
-              : 'text-slate-400 hover:text-slate-100'
-          }`}
-          title="3D Digital Twin View"
-        >
-          <Globe size={12} /> 3D Twin
-        </button>
-        <button
-          onClick={() => handlePreset('analytics')}
-          className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded transition ${
-            activePreset === 'analytics'
-              ? 'bg-brand-blue text-white shadow'
-              : 'text-slate-400 hover:text-slate-100'
-          }`}
-          title="Executive KPI Analytics View"
-        >
-          <BarChart3 size={12} /> Analytics
-        </button>
-      </div>
-
-      {/* Simulation Playback Bar */}
-      <div className="flex items-center bg-bg-card border border-border-subtle rounded px-2 py-0.5 gap-1.5">
-        <button
-          onClick={togglePlay}
-          className="w-7 h-7 flex items-center justify-center text-slate-300 hover:text-brand-cyan hover:bg-sky-500/10 rounded transition"
-          title={isPlaying ? 'Pause simulation' : 'Resume simulation'}
-        >
-          {isPlaying ? <Pause size={13} /> : <Play size={13} />}
-        </button>
-        <button
-          onClick={() => setSimTime(useStudioStore.getState().simTime + 2.0)}
-          className="w-7 h-7 flex items-center justify-center text-slate-300 hover:text-brand-cyan hover:bg-sky-500/10 rounded transition"
-          title="Step forward +2.0 s"
-        >
-          <StepForward size={13} />
-        </button>
-        <PlaybackScrubber />
-        <select
-          value={playbackSpeed}
-          onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
-          className="bg-transparent text-slate-300 font-mono text-[11px] font-semibold outline-none cursor-pointer px-1 py-0.5"
-          title="Simulation Speed Multiplier"
-        >
-          <option value="1" className="bg-bg-panel text-slate-100">1x</option>
-          <option value="2" className="bg-bg-panel text-slate-100">2x</option>
-          <option value="5" className="bg-bg-panel text-slate-100">5x</option>
-          <option value="10" className="bg-bg-panel text-slate-100">10x</option>
-        </select>
-      </div>
-
-      {/* Action Buttons */}
+      {/* Actions & Utilities */}
       <div className="flex items-center gap-2">
+        {/* Command Palette Trigger */}
         <button
-          onClick={() => setProvenanceOpen(true)}
-          className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-bg-card border border-border-medium hover:border-brand-cyan hover:text-brand-cyan text-slate-200 text-xs font-semibold rounded transition"
-          title="Data & Sources — what is recorded, derived, and never synthesized"
+          onClick={() => setCommandPaletteOpen(true)}
+          className="flex items-center gap-2 px-2.5 py-1 rounded bg-bg-card border border-border-subtle hover:border-border-highlight/50 text-slate-400 hover:text-slate-200 text-xs transition"
+          title="Open Command Palette (Ctrl+K)"
         >
-          <Database size={13} />
-          <span>Sources</span>
+          <Search className="w-3.5 h-3.5 text-brand-cyan" />
+          <span className="hidden lg:inline text-[11px] font-mono text-slate-400">Search / Cmd</span>
+          <kbd className="hidden sm:inline font-mono text-[9px] bg-bg-panel px-1 py-0.5 rounded text-slate-500 border border-border-subtle">
+            Ctrl+K
+          </kbd>
         </button>
+
+        {/* 3D Twin Sync */}
         <button
           onClick={handleSync3D}
-          disabled={!currentScenario || isSyncing}
-          className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-bg-card border border-border-medium hover:border-brand-cyan hover:text-brand-cyan text-slate-200 text-xs font-semibold rounded transition disabled:opacity-50"
-          title="Regenerate 3D CZML orbital digital twin"
+          disabled={isSyncing || !currentScenario}
+          className="p-1.5 rounded bg-bg-card border border-border-subtle hover:border-border-highlight/50 text-slate-400 hover:text-brand-cyan transition disabled:opacity-50"
+          title="Rebuild 3D Orbital CZML Twin"
         >
-          <RefreshCw size={13} className={isSyncing ? 'animate-spin' : ''} />
-          <span>Sync 3D</span>
+          {isSyncing ? <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-cyan" /> : <RotateCw className="w-3.5 h-3.5" />}
         </button>
+
+        {/* Data Provenance modal trigger */}
+        <button
+          onClick={() => setProvenanceOpen(true)}
+          className="p-1.5 rounded bg-bg-card border border-border-subtle hover:border-border-highlight/50 text-slate-400 hover:text-brand-cyan transition"
+          title="Data Provenance & Scientific References"
+        >
+          <Database className="w-3.5 h-3.5" />
+        </button>
+
+        {/* Run Simulation Primary Action */}
         <button
           onClick={handleRun}
-          disabled={!currentScenario || isRunning}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-accent-amber hover:bg-amber-400 text-slate-950 font-bold text-xs rounded shadow-lg shadow-amber-500/20 transition disabled:opacity-50"
-          title="Run scenario co-simulation in Docker"
+          disabled={isRunning || !currentScenario || status.running}
+          className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-bold font-mono transition shadow-md ${
+            status.running || isRunning
+              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+              : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-400'
+          } disabled:opacity-50`}
         >
-          {isRunning ? <Loader2 size={13} className="animate-spin" /> : <Rocket size={13} />}
-          <span>Run Simulation</span>
+          {status.running || isRunning ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>SIMULATING</span>
+            </>
+          ) : (
+            <>
+              <Rocket className="w-3.5 h-3.5 fill-current" />
+              <span>RUN SIM</span>
+            </>
+          )}
         </button>
       </div>
     </header>

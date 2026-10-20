@@ -1,4 +1,5 @@
 #include "artery/ntn/ConstellationManager.h"
+#include "artery/ntn/NTNChannelModel.h"
 #include <omnetpp.h>
 #include <cmath>
 #include <fstream>
@@ -19,7 +20,7 @@ constexpr double WGS84_E_PRIME2 = (WGS84_A * WGS84_A - WGS84_B * WGS84_B) / (WGS
 constexpr double EARTH_ROTATION_OMEGA = 7.2921159e-5; // rad/s (Earth sidereal rotation)
 constexpr double GM_EARTH = 3.986004418e14;          // Standard gravitational parameter (m^3/s^2)
 constexpr double J2_EARTH = 1.08263e-3;               // J2 zonal perturbation coefficient
-constexpr double SPEED_OF_LIGHT = 299792458.0;        // Speed of light in vacuum (m/s)
+constexpr double C_LIGHT_VACUUM = 299792458.0;        // Speed of light in vacuum (m/s)
 }
 
 Define_Module(ConstellationManager);
@@ -985,11 +986,11 @@ ConstellationManager::TopocentricMetrics ConstellationManager::calculateTopocent
     inet::Coord vRel = satVel - obsVel;
     double vLos = (vRel.x * rhoEcef.x + vRel.y * rhoEcef.y + vRel.z * rhoEcef.z) / slantRangeM;
     double fcHz = carrierFreqGhz * 1e9;
-    m.dopplerShiftHz = -(vLos / SPEED_OF_LIGHT) * fcHz;
+    m.dopplerShiftHz = -(vLos / C_LIGHT_VACUUM) * fcHz;
 
     // Doppler rate: d(f_d)/dt
     double vRelLen2 = vRel.x * vRel.x + vRel.y * vRel.y + vRel.z * vRel.z;
-    m.dopplerRateHzPerSec = -(fcHz / SPEED_OF_LIGHT) * ((vRelLen2 - vLos * vLos) / slantRangeM);
+    m.dopplerRateHzPerSec = -(fcHz / C_LIGHT_VACUUM) * ((vRelLen2 - vLos * vLos) / slantRangeM);
 
     return m;
 }

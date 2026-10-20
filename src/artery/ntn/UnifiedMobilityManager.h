@@ -2,6 +2,7 @@
 #define ARTERY_NTN_UNIFIED_MOBILITY_MANAGER_H
 
 #include "artery/ntn/interfaces/INetworkMobilityProvider.h"
+#include <inet/common/geometry/common/Coord.h>
 #include <omnetpp.h>
 #include <cmath>
 #include <vector>
